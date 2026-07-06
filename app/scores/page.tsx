@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { jugadores, type Jugador } from "../datos/jugadores";
 
 export default function Scores() {
+  const router = useRouter();
+
   const [general, setGeneral] = useState<Jugador[]>([]);
   const [viejitos, setViejitos] = useState<Jugador[]>([]);
   const [scores, setScores] = useState<Record<number, string>>({});
@@ -30,6 +33,15 @@ export default function Scores() {
       ...scores,
       [id]: valor,
     });
+  }
+
+  function calcularResultados() {
+    localStorage.setItem(
+      "laChangueadaScores",
+      JSON.stringify(scores)
+    );
+
+    router.push("/resultados");
   }
 
   const jugadoresUnicos = [...general, ...viejitos].filter(
@@ -83,6 +95,7 @@ export default function Scores() {
       </div>
 
       <button
+        onClick={calcularResultados}
         className="w-full bg-white text-green-900 rounded-xl p-5 text-2xl font-bold"
       >
         Calcular resultados
