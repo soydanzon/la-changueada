@@ -1,36 +1,30 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-green-900 text-white flex flex-col items-center p-8">
-      <h1 className="text-5xl font-bold mt-10">
+    <main className="min-h-screen bg-green-900 text-white flex flex-col items-center justify-center gap-6">
+      <h1 className="text-5xl font-bold">
         La Changueada
       </h1>
 
-      <p className="mt-3 text-green-200">
-        Organizador de torneos
-      </p>
+      <a
+        href="/nueva-fecha"
+        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+      >
+        Nueva Fecha
+      </a>
 
-      <div className="flex flex-col gap-5 mt-16 w-full max-w-sm">
-
-        <a
-  href="/nueva-fecha"
-  className="bg-white text-green-900 text-2xl font-bold rounded-xl p-5 text-center"
+      <a
+  href="/configuracion"
+  className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
 >
-  ➕ Nueva Fecha
+  Configuración
 </a>
 
-        <button className="bg-white text-green-900 text-2xl font-bold rounded-xl p-5">
-          👥 Jugadores
-        </button>
-
-        <button className="bg-white text-green-900 text-2xl font-bold rounded-xl p-5">
-          📜 Historial
-        </button>
-
-        <button className="bg-white text-green-900 text-2xl font-bold rounded-xl p-5">
-          ⚙️ Configuración
-        </button>
-
-      </div>
+<a
+  href="/jugadores"
+  className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+>
+  Jugadores
+</a>
     </main>
   );
 }

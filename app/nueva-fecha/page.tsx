@@ -30,6 +30,12 @@ export default function NuevaFecha() {
         Nueva Fecha
       </h1>
 
+<a
+  href="/"
+  className="inline-block mb-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
+>
+  ← Menú principal
+</a>
       <div className="space-y-4">
 
         {jugadores.map((jugador) => (
