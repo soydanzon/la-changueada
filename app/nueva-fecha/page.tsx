@@ -6,6 +6,7 @@ import { jugadores, type Jugador } from "../datos/jugadores";
 
 export default function NuevaFecha() {
   const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
+  const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
 
@@ -35,6 +36,10 @@ export default function NuevaFecha() {
     }
   }
 
+  const jugadoresFiltrados = listaJugadores.filter((jugador) =>
+    jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-6">
@@ -48,20 +53,25 @@ export default function NuevaFecha() {
         ← Menú principal
       </a>
 
-      <div className="space-y-4">
+      <input
+        type="text"
+        placeholder="Buscar jugador..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="mb-6 w-full rounded-lg p-4 text-black text-xl"
+      />
 
-        {listaJugadores.map((jugador) => (
+      <div className="space-y-4">
+        {jugadoresFiltrados.map((jugador) => (
           <div
             key={jugador.id}
             className="bg-white rounded-xl p-4 text-green-900"
           >
-
             <div className="font-bold text-xl mb-3">
               {jugador.nombre}
             </div>
 
             <div className="flex items-center gap-3">
-
               <button
                 onClick={() => cambiarGeneral(jugador.id)}
                 className={`flex-1 h-12 rounded-lg font-bold ${
@@ -83,16 +93,12 @@ export default function NuevaFecha() {
               >
                 Viejitos
               </button>
-
             </div>
-
           </div>
         ))}
-
       </div>
 
       <div className="mt-8 bg-white rounded-xl p-5 text-green-900">
-
         <p className="text-xl">
           General: {general.length} jugadores
         </p>
@@ -110,7 +116,6 @@ export default function NuevaFecha() {
           Pozo: $
           {(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
         </p>
-
       </div>
     </main>
   );
