@@ -1,12 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { jugadores } from "../datos/jugadores";
+import { useEffect, useState } from "react";
 import { config } from "../config/config";
+import { jugadores, type Jugador } from "../datos/jugadores";
 
 export default function NuevaFecha() {
+  const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
+
+  useEffect(() => {
+    const guardados = localStorage.getItem("laChangueadaJugadores");
+
+    if (guardados) {
+      setListaJugadores(JSON.parse(guardados));
+    } else {
+      setListaJugadores(jugadores);
+    }
+  }, []);
 
   function cambiarGeneral(id: number) {
     if (general.includes(id)) {
@@ -30,15 +41,16 @@ export default function NuevaFecha() {
         Nueva Fecha
       </h1>
 
-<a
-  href="/"
-  className="inline-block mb-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
->
-  ← Menú principal
-</a>
+      <a
+        href="/"
+        className="inline-block mb-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
+      >
+        ← Menú principal
+      </a>
+
       <div className="space-y-4">
 
-        {jugadores.map((jugador) => (
+        {listaJugadores.map((jugador) => (
           <div
             key={jugador.id}
             className="bg-white rounded-xl p-4 text-green-900"
