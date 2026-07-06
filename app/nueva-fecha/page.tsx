@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { config } from "../config/config";
 import { jugadores, type Jugador } from "../datos/jugadores";
 
 export default function NuevaFecha() {
+  const router = useRouter();
+
   const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
@@ -21,19 +24,28 @@ export default function NuevaFecha() {
   }, []);
 
   function cambiarGeneral(id: number) {
-    if (general.includes(id)) {
-      setGeneral(general.filter((j) => j !== id));
-    } else {
-      setGeneral([...general, id]);
-    }
+    setGeneral((actual) =>
+      actual.includes(id)
+        ? actual.filter((j) => j !== id)
+        : [...actual, id]
+    );
   }
 
   function cambiarViejitos(id: number) {
-    if (viejitos.includes(id)) {
-      setViejitos(viejitos.filter((j) => j !== id));
-    } else {
-      setViejitos([...viejitos, id]);
-    }
+    setViejitos((actual) =>
+      actual.includes(id)
+        ? actual.filter((j) => j !== id)
+        : [...actual, id]
+    );
+  }
+
+  function continuar() {
+    localStorage.setItem(
+      "laChangueadaFechaActual",
+      JSON.stringify({ general, viejitos })
+    );
+
+    router.push("/scores");
   }
 
   const jugadoresFiltrados = listaJugadores.filter((jugador) =>
@@ -117,6 +129,13 @@ export default function NuevaFecha() {
           {(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
         </p>
       </div>
+
+      <button
+        onClick={continuar}
+        className="mt-8 w-full bg-white text-green-900 rounded-xl p-5 text-2xl font-bold"
+      >
+        Continuar →
+      </button>
     </main>
   );
 }
