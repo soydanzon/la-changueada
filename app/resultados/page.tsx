@@ -7,17 +7,46 @@ import { tablaPremios } from "../premios/tablaPremios";
 type Resultado = {
   jugador: Jugador;
   score: number;
+  puesto: number;
   premio: number;
 };
 
-function calcularPremios(resultados: Omit<Resultado, "premio">[]): Resultado[] {
+type ResultadoBase = {
+  jugador: Jugador;
+  score: number;
+};
+
+function calcularPremios(resultados: ResultadoBase[]): Resultado[] {
   const fila = tablaPremios.find((f) => f.jugadores === resultados.length);
   const premios = fila ? fila.premios : [];
 
-  return resultados.map((resultado, index) => ({
-    ...resultado,
-    premio: premios[index] || 0,
-  }));
+  const finales: Resultado[] = [];
+  let i = 0;
+
+  while (i < resultados.length) {
+    const scoreActual = resultados[i].score;
+    const empatados = resultados.filter((r) => r.score === scoreActual);
+
+    const inicio = i;
+    const cantidad = empatados.length;
+
+    const premiosInvolucrados = premios.slice(inicio, inicio + cantidad);
+    const totalPremios = premiosInvolucrados.reduce((suma, p) => suma + p, 0);
+    const premioPorJugador =
+      cantidad > 0 ? Math.round(totalPremios / cantidad) : 0;
+
+    empatados.forEach((resultado) => {
+      finales.push({
+        ...resultado,
+        puesto: inicio + 1,
+        premio: premioPorJugador,
+      });
+    });
+
+    i += cantidad;
+  }
+
+  return finales;
 }
 
 function formatearPesos(valor: number) {
@@ -27,6 +56,7 @@ function formatearPesos(valor: number) {
 export default function Resultados() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
+  const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
     const fecha = localStorage.getItem("laChangueadaFechaActual");
@@ -62,6 +92,25 @@ export default function Resultados() {
     setViejitos(calcularPremios(viejitosOrdenado));
   }, []);
 
+  function guardarFecha() {
+    const historialGuardado = localStorage.getItem("laChangueadaHistorial");
+    const historial = historialGuardado ? JSON.parse(historialGuardado) : [];
+
+    const nuevaFecha = {
+      id: Date.now(),
+      fecha: new Date().toLocaleDateString("es-AR"),
+      general,
+      viejitos,
+    };
+
+    localStorage.setItem(
+      "laChangueadaHistorial",
+      JSON.stringify([nuevaFecha, ...historial])
+    );
+
+    setMensaje("✅ Fecha guardada");
+  }
+
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-8">
@@ -73,13 +122,13 @@ export default function Resultados() {
           General
         </h2>
 
-        {general.map((r, index) => (
+        {general.map((r) => (
           <div
             key={r.jugador.id}
             className="flex justify-between items-center border-b py-3 gap-4"
           >
             <span>
-              {index + 1}. {r.jugador.nombre} - {r.score}
+              {r.puesto}. {r.jugador.nombre} - {r.score}
             </span>
 
             <strong>
@@ -94,13 +143,13 @@ export default function Resultados() {
           Viejitos
         </h2>
 
-        {viejitos.map((r, index) => (
+        {viejitos.map((r) => (
           <div
             key={r.jugador.id}
             className="flex justify-between items-center border-b py-3 gap-4"
           >
             <span>
-              {index + 1}. {r.jugador.nombre} - {r.score}
+              {r.puesto}. {r.jugador.nombre} - {r.score}
             </span>
 
             <strong>
@@ -109,6 +158,17 @@ export default function Resultados() {
           </div>
         ))}
       </div>
+
+      <button
+        onClick={guardarFecha}
+        className="mt-8 w-full bg-white text-green-900 rounded-xl p-5 text-2xl font-bold"
+      >
+        Guardar fecha
+      </button>
+
+      <p className="mt-4 text-xl">
+        {mensaje}
+      </p>
 
       <a
         href="/scores"
