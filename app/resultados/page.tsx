@@ -2,11 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { jugadores, type Jugador } from "../datos/jugadores";
+import { tablaPremios } from "../premios/tablaPremios";
 
 type Resultado = {
   jugador: Jugador;
   score: number;
+  premio: number;
 };
+
+function calcularPremios(resultados: Omit<Resultado, "premio">[]): Resultado[] {
+  const fila = tablaPremios.find((f) => f.jugadores === resultados.length);
+  const premios = fila ? fila.premios : [];
+
+  return resultados.map((resultado, index) => ({
+    ...resultado,
+    premio: premios[index] || 0,
+  }));
+}
+
+function formatearPesos(valor: number) {
+  return `$${valor.toLocaleString("es-AR")}`;
+}
 
 export default function Resultados() {
   const [general, setGeneral] = useState<Resultado[]>([]);
@@ -42,19 +58,17 @@ export default function Resultados() {
       }))
       .sort((a, b) => a.score - b.score);
 
-    setGeneral(generalOrdenado);
-    setViejitos(viejitosOrdenado);
+    setGeneral(calcularPremios(generalOrdenado));
+    setViejitos(calcularPremios(viejitosOrdenado));
   }, []);
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
-
       <h1 className="text-4xl font-bold mb-8">
         Resultados
       </h1>
 
       <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
-
         <h2 className="text-2xl font-bold mb-4">
           General
         </h2>
@@ -62,20 +76,20 @@ export default function Resultados() {
         {general.map((r, index) => (
           <div
             key={r.jugador.id}
-            className="flex justify-between border-b py-3"
+            className="flex justify-between items-center border-b py-3 gap-4"
           >
             <span>
-              {index + 1}. {r.jugador.nombre}
+              {index + 1}. {r.jugador.nombre} - {r.score}
             </span>
 
-            <strong>{r.score}</strong>
+            <strong>
+              {r.premio > 0 ? formatearPesos(r.premio) : "-"}
+            </strong>
           </div>
         ))}
-
       </div>
 
       <div className="bg-white text-green-900 rounded-xl p-5">
-
         <h2 className="text-2xl font-bold mb-4">
           Viejitos
         </h2>
@@ -83,16 +97,17 @@ export default function Resultados() {
         {viejitos.map((r, index) => (
           <div
             key={r.jugador.id}
-            className="flex justify-between border-b py-3"
+            className="flex justify-between items-center border-b py-3 gap-4"
           >
             <span>
-              {index + 1}. {r.jugador.nombre}
+              {index + 1}. {r.jugador.nombre} - {r.score}
             </span>
 
-            <strong>{r.score}</strong>
+            <strong>
+              {r.premio > 0 ? formatearPesos(r.premio) : "-"}
+            </strong>
           </div>
         ))}
-
       </div>
 
       <a
@@ -101,7 +116,6 @@ export default function Resultados() {
       >
         ← Volver
       </a>
-
     </main>
   );
 }

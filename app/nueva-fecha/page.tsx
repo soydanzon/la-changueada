@@ -14,6 +14,8 @@ export default function NuevaFecha() {
   const [viejitos, setViejitos] = useState<number[]>([]);
 
   useEffect(() => {
+    localStorage.removeItem("laChangueadaScores");
+
     const guardados = localStorage.getItem("laChangueadaJugadores");
 
     if (guardados) {

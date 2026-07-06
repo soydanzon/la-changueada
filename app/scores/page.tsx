@@ -13,6 +13,11 @@ export default function Scores() {
 
   useEffect(() => {
     const fecha = localStorage.getItem("laChangueadaFechaActual");
+    const scoresGuardados = localStorage.getItem("laChangueadaScores");
+
+    if (scoresGuardados) {
+      setScores(JSON.parse(scoresGuardados));
+    }
 
     if (!fecha) return;
 
@@ -29,10 +34,17 @@ export default function Scores() {
   }, []);
 
   function cambiarScore(id: number, valor: string) {
-    setScores({
+    const nuevosScores = {
       ...scores,
       [id]: valor,
-    });
+    };
+
+    setScores(nuevosScores);
+
+    localStorage.setItem(
+      "laChangueadaScores",
+      JSON.stringify(nuevosScores)
+    );
   }
 
   function calcularResultados() {
