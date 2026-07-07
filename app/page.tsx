@@ -1,51 +1,45 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-green-900 text-white flex flex-col items-center justify-center gap-6">
-      <h1 className="text-5xl font-bold">
-        La Changueada
-      </h1>
+    <main className="min-h-screen bg-green-950 text-white p-6 flex flex-col">
+      <div className="text-center mt-8 mb-10">
+        <div className="text-6xl mb-4">
+          ⚽
+        </div>
 
-      <a
-        href="/nueva-fecha"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        Nueva Fecha
-      </a>
+        <h1 className="text-5xl font-black">
+          La Changueada
+        </h1>
 
-      <a
-        href="/historial"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        Historial
-      </a>
+        <p className="mt-3 text-green-200 font-bold">
+          Torneo amateur de footgolf
+        </p>
+      </div>
 
-      <a
-        href="/estadisticas"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        Estadísticas
-      </a>
+      <div className="space-y-4">
+        <a href="/nueva-fecha" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          ➕ Nueva Fecha
+        </a>
 
-      <a
-        href="/ranking"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        🏆 Ranking
-      </a>
+        <a href="/historial" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          📜 Historial
+        </a>
 
-      <a
-        href="/jugadores"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        Jugadores
-      </a>
+        <a href="/estadisticas" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          📊 Estadísticas
+        </a>
 
-      <a
-        href="/configuracion"
-        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
-      >
-        Configuración
-      </a>
+        <a href="/ranking" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          🏆 Ranking
+        </a>
+
+        <a href="/jugadores" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          👤 Jugadores
+        </a>
+
+        <a href="/configuracion" className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black">
+          ⚙️ Configuración
+        </a>
+      </div>
     </main>
   );
 }

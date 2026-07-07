@@ -69,13 +69,16 @@ export default function Configuracion() {
         Guardar valor
       </button>
 
-      <p className="mt-8 text-xl">
-        Tabla de premios
-      </p>
+      <a
+        href="/tabla-premios"
+        className="block mt-8 bg-white text-green-900 px-5 py-4 rounded-xl font-bold text-center"
+      >
+        🏆 Tabla de premios
+      </a>
 
       <button
         onClick={borrarDatosPrueba}
-        className="mt-10 bg-red-600 px-6 py-4 rounded-xl font-bold text-xl"
+        className="mt-10 w-full bg-red-600 px-6 py-4 rounded-xl font-bold text-xl"
       >
         🧹 Borrar datos de prueba
       </button>
