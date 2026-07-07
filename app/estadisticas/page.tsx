@@ -1,34 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type Resultado = {
-  jugador: {
-    nombre: string;
-  };
-  score: number;
-  puesto: number;
-  premio: number;
-};
-
-type FechaGuardada = {
-  id: number;
-  fecha: string;
-  general: Resultado[];
-  viejitos: Resultado[];
-};
-
-type EstadisticaJugador = {
-  nombre: string;
-  jugadas: number;
-  aportado: number;
-  ganado: number;
-  balance: number;
-  victorias: number;
-  podios: number;
-};
-
-const VALOR_CHANGUEADA = 10000;
+import {
+  calcularEstadisticas,
+  type EstadisticaJugador,
+  type FechaGuardada,
+} from "../utils/estadisticas";
 
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
@@ -44,45 +21,9 @@ export default function Estadisticas() {
     if (!datos) return;
 
     const historial: FechaGuardada[] = JSON.parse(datos);
-    const mapa = new Map<string, EstadisticaJugador>();
-
-    function sumarResultado(resultado: Resultado) {
-      const nombre = resultado.jugador.nombre;
-
-      const actual = mapa.get(nombre) || {
-        nombre,
-        jugadas: 0,
-        aportado: 0,
-        ganado: 0,
-        balance: 0,
-        victorias: 0,
-        podios: 0,
-      };
-
-      actual.jugadas += 1;
-      actual.aportado += VALOR_CHANGUEADA;
-      actual.ganado += resultado.premio;
-
-      if (resultado.puesto === 1) {
-        actual.victorias += 1;
-      }
-
-      if (resultado.puesto <= 3) {
-        actual.podios += 1;
-      }
-
-      actual.balance = actual.ganado - actual.aportado;
-
-      mapa.set(nombre, actual);
-    }
-
-    historial.forEach((fecha) => {
-      fecha.general.forEach(sumarResultado);
-      fecha.viejitos.forEach(sumarResultado);
-    });
 
     setEstadisticas(
-      Array.from(mapa.values()).sort((a, b) => b.balance - a.balance)
+      calcularEstadisticas(historial).sort((a, b) => b.balance - a.balance)
     );
   }, []);
 
@@ -110,9 +51,12 @@ export default function Estadisticas() {
             key={jugador.nombre}
             className="bg-white text-green-900 rounded-xl p-5"
           >
-            <h2 className="text-2xl font-bold">
+            <a
+              href={`/estadisticas/${encodeURIComponent(jugador.nombre)}`}
+              className="text-2xl font-bold underline"
+            >
               {jugador.nombre}
-            </h2>
+            </a>
 
             <p className="mt-2">
               Jugadas: {jugador.jugadas}

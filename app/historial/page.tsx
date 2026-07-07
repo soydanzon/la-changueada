@@ -35,6 +35,10 @@ function verPlaca(id: number) {
   window.location.href = "/compartir";
 }
 
+function verDetalle(id: number) {
+  window.location.href = `/historial/${id}`;
+}
+
 export default function Historial() {
   const [historial, setHistorial] = useState<FechaGuardada[]>([]);
 
@@ -122,8 +126,15 @@ export default function Historial() {
             </p>
 
             <button
+              onClick={() => verDetalle(fecha.id)}
+              className="mt-5 w-full bg-green-700 text-white px-5 py-3 rounded-xl font-bold"
+            >
+              👁 Ver resultados completos
+            </button>
+
+            <button
               onClick={() => verPlaca(fecha.id)}
-              className="mt-5 w-full bg-blue-600 text-white px-5 py-3 rounded-xl font-bold"
+              className="mt-3 w-full bg-blue-600 text-white px-5 py-3 rounded-xl font-bold"
             >
               📤 Ver placa
             </button>
