@@ -13,18 +13,25 @@ export default function Home() {
       </a>
 
       <a
-  href="/configuracion"
-  className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
->
-  Configuración
-</a>
+        href="/configuracion"
+        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+      >
+        Configuración
+      </a>
 
-<a
-  href="/jugadores"
-  className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
->
-  Jugadores
-</a>
+      <a
+        href="/jugadores"
+        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+      >
+        Jugadores
+      </a>
+
+      <a
+        href="/historial"
+        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+      >
+        Historial
+      </a>
     </main>
   );
 }
