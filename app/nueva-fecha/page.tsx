@@ -9,7 +9,10 @@ import { canchas } from "../datos/canchas";
 export default function NuevaFecha() {
   const router = useRouter();
 
-  const cancha = canchas[0];
+  const [canchaId, setCanchaId] = useState(canchas[0].id);
+
+  const cancha =
+    canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
   const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
   const [busqueda, setBusqueda] = useState("");
@@ -85,12 +88,24 @@ export default function NuevaFecha() {
           📅 {new Date().toLocaleDateString("es-AR")}
         </p>
 
-        <p className="mt-2">
-          ⛳ Cancha: {cancha.nombre}
-        </p>
+        <label className="block mt-4 font-bold">
+          ⛳ Cancha
+        </label>
 
-        <p>
-          🏌️ Par: {cancha.par}
+        <select
+          value={canchaId}
+          onChange={(e) => setCanchaId(Number(e.target.value))}
+          className="mt-2 w-full rounded-lg border p-3"
+        >
+          {canchas.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nombre}
+            </option>
+          ))}
+        </select>
+
+        <p className="mt-4">
+          🏌️ Par: <strong>{cancha.par}</strong>
         </p>
       </div>
 
