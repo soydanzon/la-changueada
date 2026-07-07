@@ -2,33 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-
-type Resultado = {
-  jugador: {
-    nombre: string;
-  };
-  score: number;
-  puesto: number;
-  premio: number;
-};
-
-type FechaGuardada = {
-  id: number;
-  fecha: string;
-  general: Resultado[];
-  viejitos: Resultado[];
-};
-
-type ResumenJugador = {
-  jugadas: number;
-  aportado: number;
-  ganado: number;
-  balance: number;
-  victorias: number;
-  podios: number;
-  promedio: number;
-  mejorScore: number;
-};
+import {
+  calcularEstadisticas,
+  type EstadisticaJugador,
+  type FechaGuardada,
+} from "../../utils/estadisticas";
 
 type HistorialJugador = {
   fecha: string;
@@ -37,8 +15,6 @@ type HistorialJugador = {
   puesto: number;
   premio: number;
 };
-
-const VALOR_CHANGUEADA = 10000;
 
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
@@ -55,20 +31,8 @@ export default function PerfilJugador() {
   const params = useParams();
   const nombre = decodeURIComponent(params.nombre as string);
 
-  const [resumen, setResumen] = useState<ResumenJugador>({
-    jugadas: 0,
-    aportado: 0,
-    ganado: 0,
-    balance: 0,
-    victorias: 0,
-    podios: 0,
-    promedio: 0,
-    mejorScore: 0,
-  });
-
-  const [historialJugador, setHistorialJugador] = useState<
-    HistorialJugador[]
-  >([]);
+  const [resumen, setResumen] = useState<EstadisticaJugador | null>(null);
+  const [historialJugador, setHistorialJugador] = useState<HistorialJugador[]>([]);
 
   useEffect(() => {
     const datos = localStorage.getItem("laChangueadaHistorial");
@@ -77,37 +41,34 @@ export default function PerfilJugador() {
 
     const fechas: FechaGuardada[] = JSON.parse(datos);
 
-    let jugadas = 0;
-    let aportado = 0;
-    let ganado = 0;
-    let victorias = 0;
-    let podios = 0;
-    let sumaScores = 0;
-    let mejorScore = 999;
+    const estadisticas = calcularEstadisticas(fechas);
+    const jugador = estadisticas.find((j) => j.nombre === nombre);
+
+    if (jugador) {
+      setResumen(jugador);
+    }
 
     const historial: HistorialJugador[] = [];
 
     fechas.forEach((fecha) => {
-      [...fecha.general, ...fecha.viejitos].forEach((resultado) => {
+      fecha.general.forEach((resultado) => {
         if (resultado.jugador.nombre !== nombre) return;
-
-        jugadas++;
-        aportado += VALOR_CHANGUEADA;
-        ganado += resultado.premio;
-        sumaScores += resultado.score;
-
-        if (resultado.score < mejorScore) {
-          mejorScore = resultado.score;
-        }
-
-        if (resultado.puesto === 1) victorias++;
-        if (resultado.puesto <= 3) podios++;
 
         historial.push({
           fecha: fecha.fecha,
-          categoria: fecha.general.includes(resultado)
-            ? "General"
-            : "Viejitos",
+          categoria: "General",
+          score: resultado.score,
+          puesto: resultado.puesto,
+          premio: resultado.premio,
+        });
+      });
+
+      fecha.viejitos.forEach((resultado) => {
+        if (resultado.jugador.nombre !== nombre) return;
+
+        historial.push({
+          fecha: fecha.fecha,
+          categoria: "Viejitos",
           score: resultado.score,
           puesto: resultado.puesto,
           premio: resultado.premio,
@@ -115,19 +76,16 @@ export default function PerfilJugador() {
       });
     });
 
-    setResumen({
-      jugadas,
-      aportado,
-      ganado,
-      balance: ganado - aportado,
-      victorias,
-      podios,
-      promedio: jugadas ? sumaScores / jugadas : 0,
-      mejorScore: jugadas ? mejorScore : 0,
-    });
-
     setHistorialJugador(historial);
   }, [nombre]);
+
+  if (!resumen) {
+    return (
+      <main className="min-h-screen bg-green-900 text-white p-6">
+        Cargando...
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
