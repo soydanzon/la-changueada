@@ -32,6 +32,13 @@ export default function Home() {
       >
         Historial
       </a>
+
+      <a
+        href="/estadisticas"
+        className="bg-white text-green-900 px-6 py-4 rounded-xl text-2xl font-bold"
+      >
+        Estadísticas
+      </a>
     </main>
   );
 }
