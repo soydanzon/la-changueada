@@ -36,6 +36,7 @@ function formatearPesos(valor: number) {
 
 export default function Estadisticas() {
   const [estadisticas, setEstadisticas] = useState<EstadisticaJugador[]>([]);
+  const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
     const datos = localStorage.getItem("laChangueadaHistorial");
@@ -85,14 +86,26 @@ export default function Estadisticas() {
     );
   }, []);
 
+  const estadisticasFiltradas = estadisticas.filter((jugador) =>
+    jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-8">
         Estadísticas
       </h1>
 
+      <input
+        type="text"
+        placeholder="Buscar jugador..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="mb-6 w-full rounded-lg p-4 text-black text-xl"
+      />
+
       <div className="space-y-4">
-        {estadisticas.map((jugador) => (
+        {estadisticasFiltradas.map((jugador) => (
           <div
             key={jugador.nombre}
             className="bg-white text-green-900 rounded-xl p-5"

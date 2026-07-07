@@ -1,12 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { config } from "../config/config";
+
 export default function Configuracion() {
-  function borrarDatosPrueba() {
-    const confirmar = confirm(
-      "¿Borrar todas las fechas y estadísticas de prueba?"
+  const [valor, setValor] = useState(config.valorChangueada);
+
+  useEffect(() => {
+    const guardado = localStorage.getItem("laChangueadaValor");
+
+    if (guardado) {
+      setValor(Number(guardado));
+    }
+  }, []);
+
+  function guardarValor() {
+    localStorage.setItem(
+      "laChangueadaValor",
+      valor.toString()
     );
 
-    if (!confirmar) return;
+    alert("✅ Valor actualizado");
+  }
+
+  function borrarDatosPrueba() {
+    if (
+      !confirm("¿Borrar todas las fechas y estadísticas de prueba?")
+    ) {
+      return;
+    }
 
     localStorage.removeItem("laChangueadaHistorial");
     localStorage.removeItem("laChangueadaScores");
@@ -29,11 +51,25 @@ export default function Configuracion() {
         ← Menú principal
       </a>
 
-      <p className="mt-6 text-xl">
+      <p className="mt-6 text-xl font-bold">
         Valor de la Changueada
       </p>
 
-      <p className="mt-6 text-xl">
+      <input
+        type="number"
+        value={valor}
+        onChange={(e) => setValor(Number(e.target.value))}
+        className="mt-3 w-full rounded-lg p-3 text-black text-xl"
+      />
+
+      <button
+        onClick={guardarValor}
+        className="mt-4 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
+      >
+        Guardar valor
+      </button>
+
+      <p className="mt-8 text-xl">
         Tabla de premios
       </p>
 
