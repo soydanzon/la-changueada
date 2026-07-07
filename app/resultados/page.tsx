@@ -32,14 +32,15 @@ function calcularPremios(resultados: ResultadoBase[]): Resultado[] {
 
     const premiosInvolucrados = premios.slice(inicio, inicio + cantidad);
     const totalPremios = premiosInvolucrados.reduce((suma, p) => suma + p, 0);
-    const premioPorJugador =
-      cantidad > 0 ? Math.round(totalPremios / cantidad) : 0;
 
-    empatados.forEach((resultado) => {
+    const premioBase = Math.floor(totalPremios / cantidad);
+    const resto = totalPremios - premioBase * cantidad;
+
+    empatados.forEach((resultado, index) => {
       finales.push({
         ...resultado,
         puesto: inicio + 1,
-        premio: premioPorJugador,
+        premio: premioBase + (index === 0 ? resto : 0),
       });
     });
 
