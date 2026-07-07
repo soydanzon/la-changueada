@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "../config/config";
 import { jugadores, type Jugador } from "../datos/jugadores";
+import { canchas } from "../datos/canchas";
 
 export default function NuevaFecha() {
   const router = useRouter();
+
+  const cancha = canchas[0];
 
   const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
   const [busqueda, setBusqueda] = useState("");
@@ -44,7 +47,11 @@ export default function NuevaFecha() {
   function continuar() {
     localStorage.setItem(
       "laChangueadaFechaActual",
-      JSON.stringify({ general, viejitos })
+      JSON.stringify({
+        general,
+        viejitos,
+        cancha: cancha.id,
+      })
     );
 
     router.push("/scores");
@@ -72,6 +79,20 @@ export default function NuevaFecha() {
       >
         ← Menú principal
       </a>
+
+      <div className="mb-6 bg-white text-green-900 rounded-2xl p-5">
+        <p className="font-bold text-xl">
+          📅 {new Date().toLocaleDateString("es-AR")}
+        </p>
+
+        <p className="mt-2">
+          ⛳ Cancha: {cancha.nombre}
+        </p>
+
+        <p>
+          🏌️ Par: {cancha.par}
+        </p>
+      </div>
 
       <input
         type="text"
