@@ -64,7 +64,7 @@ export default function Configuracion() {
 
       <button
         onClick={guardarValor}
-        className="mt-4 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
+        className="mt-4 w-full bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
       >
         Guardar valor
       </button>
@@ -74,6 +74,13 @@ export default function Configuracion() {
         className="block mt-8 bg-white text-green-900 px-5 py-4 rounded-xl font-bold text-center"
       >
         🏆 Tabla de premios
+      </a>
+
+      <a
+        href="/canchas"
+        className="block mt-4 bg-white text-green-900 px-5 py-4 rounded-xl font-bold text-center"
+      >
+        ⚽ Canchas
       </a>
 
       <button

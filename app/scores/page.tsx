@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { jugadores, type Jugador } from "../datos/jugadores";
+import { canchas } from "../datos/canchas";
 
 export default function Scores() {
   const router = useRouter();
@@ -10,6 +11,8 @@ export default function Scores() {
   const [general, setGeneral] = useState<Jugador[]>([]);
   const [viejitos, setViejitos] = useState<Jugador[]>([]);
   const [scores, setScores] = useState<Record<number, string>>({});
+  const [nombreCancha, setNombreCancha] = useState("");
+  const [parCancha, setParCancha] = useState(0);
 
   useEffect(() => {
     const fecha = localStorage.getItem("laChangueadaFechaActual");
@@ -22,6 +25,13 @@ export default function Scores() {
     if (!fecha) return;
 
     const datos = JSON.parse(fecha);
+
+    const cancha = canchas.find((c) => c.id === datos.cancha);
+
+    if (cancha) {
+      setNombreCancha(cancha.nombre);
+      setParCancha(cancha.par);
+    }
 
     const guardados = localStorage.getItem("laChangueadaJugadores");
 
@@ -66,6 +76,16 @@ export default function Scores() {
       <h1 className="text-4xl font-bold mb-8">
         Cargar Scores
       </h1>
+
+      <div className="bg-white text-green-900 rounded-xl p-5 mb-6">
+        <p className="font-bold">
+          ⛳ {nombreCancha}
+        </p>
+
+        <p>
+          🏌️ Par {parCancha}
+        </p>
+      </div>
 
       <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
         <h2 className="text-2xl font-bold mb-4">

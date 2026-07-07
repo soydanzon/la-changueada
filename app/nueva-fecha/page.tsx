@@ -89,7 +89,7 @@ export default function NuevaFecha() {
         </p>
 
         <label className="block mt-4 font-bold">
-          ⛳ Cancha
+          🚩 Cancha
         </label>
 
         <select
@@ -104,8 +104,8 @@ export default function NuevaFecha() {
           ))}
         </select>
 
-        <p className="mt-4">
-          🏌️ Par: <strong>{cancha.par}</strong>
+        <p className="mt-4 font-bold">
+          E {cancha.par}
         </p>
       </div>
 
@@ -155,23 +155,29 @@ export default function NuevaFecha() {
         ))}
       </div>
 
-      <div className="mt-8 bg-white rounded-xl p-5 text-green-900">
-        <p className="text-xl">
-          General: {general.length} jugadores
+      <div className="mt-8 bg-white rounded-xl p-5 text-green-900 space-y-2">
+        <p className="font-bold text-lg">
+          🚩 {cancha.nombre} &nbsp;&nbsp; E {cancha.par}
         </p>
 
-        <p className="mb-4">
-          Pozo: $
-          {(general.length * config.valorChangueada).toLocaleString("es-AR")}
-        </p>
+        <hr />
 
-        <p className="text-xl">
-          Viejitos: {viejitos.length} jugadores
+        <p>
+          ⚽ General: <strong>{general.length}</strong>
         </p>
 
         <p>
-          Pozo: $
-          {(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
+          💰 ${(general.length * config.valorChangueada).toLocaleString("es-AR")}
+        </p>
+
+        <hr />
+
+        <p>
+          ⚽ Viejitos: <strong>{viejitos.length}</strong>
+        </p>
+
+        <p>
+          💰 ${(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
         </p>
       </div>
 
