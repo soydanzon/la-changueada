@@ -18,7 +18,7 @@ function RankingBloque({
 }: {
   titulo: string;
   jugadores: EstadisticaJugador[];
-  tipo: "victorias" | "podios" | "ganado" | "balance";
+  tipo: "victorias" | "podios" | "ganado" | "balance" | "promedio" | "mejorScore";
 }) {
   return (
     <div className="bg-white text-green-900 rounded-xl p-5">
@@ -40,6 +40,8 @@ function RankingBloque({
             {tipo === "podios" && jugador.podios}
             {tipo === "ganado" && formatearPesos(jugador.ganado)}
             {tipo === "balance" && formatearPesos(jugador.balance)}
+            {tipo === "promedio" && jugador.promedio.toFixed(1)}
+            {tipo === "mejorScore" && jugador.mejorScore}
           </strong>
         </div>
       ))}
@@ -60,21 +62,12 @@ export default function Ranking() {
     setEstadisticas(calcularEstadisticas(historial));
   }, []);
 
-  const porVictorias = [...estadisticas].sort(
-    (a, b) => b.victorias - a.victorias
-  );
-
-  const porPodios = [...estadisticas].sort(
-    (a, b) => b.podios - a.podios
-  );
-
-  const porGanado = [...estadisticas].sort(
-    (a, b) => b.ganado - a.ganado
-  );
-
-  const porBalance = [...estadisticas].sort(
-    (a, b) => b.balance - a.balance
-  );
+  const porVictorias = [...estadisticas].sort((a, b) => b.victorias - a.victorias);
+  const porPodios = [...estadisticas].sort((a, b) => b.podios - a.podios);
+  const porGanado = [...estadisticas].sort((a, b) => b.ganado - a.ganado);
+  const porBalance = [...estadisticas].sort((a, b) => b.balance - a.balance);
+  const porPromedio = [...estadisticas].sort((a, b) => a.promedio - b.promedio);
+  const porMejorScore = [...estadisticas].sort((a, b) => a.mejorScore - b.mejorScore);
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
@@ -83,29 +76,12 @@ export default function Ranking() {
       </h1>
 
       <div className="space-y-4">
-        <RankingBloque
-          titulo="🥇 Más victorias"
-          jugadores={porVictorias}
-          tipo="victorias"
-        />
-
-        <RankingBloque
-          titulo="🏆 Más podios"
-          jugadores={porPodios}
-          tipo="podios"
-        />
-
-        <RankingBloque
-          titulo="💰 Más dinero ganado"
-          jugadores={porGanado}
-          tipo="ganado"
-        />
-
-        <RankingBloque
-          titulo="📈 Mejor balance"
-          jugadores={porBalance}
-          tipo="balance"
-        />
+        <RankingBloque titulo="🥇 Más victorias" jugadores={porVictorias} tipo="victorias" />
+        <RankingBloque titulo="🏆 Más podios" jugadores={porPodios} tipo="podios" />
+        <RankingBloque titulo="💰 Más dinero ganado" jugadores={porGanado} tipo="ganado" />
+        <RankingBloque titulo="📈 Mejor balance" jugadores={porBalance} tipo="balance" />
+        <RankingBloque titulo="🎯 Mejor promedio" jugadores={porPromedio} tipo="promedio" />
+        <RankingBloque titulo="⭐ Mejor score" jugadores={porMejorScore} tipo="mejorScore" />
       </div>
 
       <a
