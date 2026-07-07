@@ -50,9 +50,15 @@ export default function NuevaFecha() {
     router.push("/scores");
   }
 
-  const jugadoresFiltrados = listaJugadores.filter((jugador) =>
-    jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const jugadoresFiltrados = listaJugadores
+    .filter((jugador) =>
+      jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (a.frecuente && !b.frecuente) return -1;
+      if (!a.frecuente && b.frecuente) return 1;
+      return a.nombre.localeCompare(b.nombre);
+    });
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
@@ -82,6 +88,7 @@ export default function NuevaFecha() {
             className="bg-white rounded-xl p-4 text-green-900"
           >
             <div className="font-bold text-xl mb-3">
+              {jugador.frecuente ? "⭐ " : ""}
               {jugador.nombre}
             </div>
 

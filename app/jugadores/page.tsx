@@ -45,18 +45,22 @@ export default function Jugadores() {
     guardarLista(nuevaLista);
   }
 
-  function eliminarJugador(jugador: Jugador) {
-    const confirmar = confirm(
-      `¿Eliminar a ${jugador.nombre}?`
-    );
-
-    if (!confirmar) return;
-
-    const nuevaLista = listaJugadores.filter(
-      (j) => j.id !== jugador.id
+  function cambiarFrecuente(jugador: Jugador) {
+    const nuevaLista = listaJugadores.map((j) =>
+      j.id === jugador.id
+        ? { ...j, frecuente: !j.frecuente }
+        : j
     );
 
     guardarLista(nuevaLista);
+  }
+
+  function eliminarJugador(jugador: Jugador) {
+    if (!confirm(`¿Eliminar a ${jugador.nombre}?`)) return;
+
+    guardarLista(
+      listaJugadores.filter((j) => j.id !== jugador.id)
+    );
   }
 
   return (
@@ -79,20 +83,28 @@ export default function Jugadores() {
             className="bg-white text-green-900 rounded-lg p-4 flex items-center justify-between gap-4"
           >
             <span className="text-xl font-bold">
+              {jugador.frecuente ? "⭐ " : ""}
               {jugador.nombre}
             </span>
 
             <div className="flex gap-2">
               <button
+                onClick={() => cambiarFrecuente(jugador)}
+                className="bg-yellow-500 text-white px-3 py-2 rounded-lg"
+              >
+                ⭐
+              </button>
+
+              <button
                 onClick={() => editarJugador(jugador)}
-                className="bg-yellow-300 text-black px-3 py-2 rounded-lg font-bold"
+                className="bg-yellow-300 text-black px-3 py-2 rounded-lg"
               >
                 ✏️
               </button>
 
               <button
                 onClick={() => eliminarJugador(jugador)}
-                className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold"
+                className="bg-red-600 text-white px-3 py-2 rounded-lg"
               >
                 🗑️
               </button>
