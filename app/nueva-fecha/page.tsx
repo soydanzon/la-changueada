@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "../config/config";
 import { jugadores, type Jugador } from "../datos/jugadores";
-import { canchas } from "../datos/canchas";
+import {
+  obtenerCanchasGuardadas,
+  type Cancha,
+} from "../datos/canchas";
 
 export default function NuevaFecha() {
   const router = useRouter();
 
-  const [canchaId, setCanchaId] = useState(canchas[0].id);
+  const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [canchaId, setCanchaId] = useState(0);
 
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
@@ -21,6 +25,13 @@ export default function NuevaFecha() {
 
   useEffect(() => {
     localStorage.removeItem("laChangueadaScores");
+
+    const canchasGuardadas = obtenerCanchasGuardadas().filter(
+      (c) => c.activa
+    );
+
+    setCanchas(canchasGuardadas);
+    setCanchaId(canchasGuardadas[0]?.id ?? 0);
 
     const guardados = localStorage.getItem("laChangueadaJugadores");
 
@@ -48,6 +59,8 @@ export default function NuevaFecha() {
   }
 
   function continuar() {
+    if (!cancha) return;
+
     localStorage.setItem(
       "laChangueadaFechaActual",
       JSON.stringify({
@@ -83,31 +96,33 @@ export default function NuevaFecha() {
         ← Menú principal
       </a>
 
-      <div className="mb-6 bg-white text-green-900 rounded-2xl p-5">
-        <p className="font-bold text-xl">
-          📅 {new Date().toLocaleDateString("es-AR")}
-        </p>
+      {cancha && (
+        <div className="mb-6 bg-white text-green-900 rounded-2xl p-5">
+          <p className="font-bold text-xl">
+            📅 {new Date().toLocaleDateString("es-AR")}
+          </p>
 
-        <label className="block mt-4 font-bold">
-          🚩 Cancha
-        </label>
+          <label className="block mt-4 font-bold">
+            🚩 Cancha
+          </label>
 
-        <select
-          value={canchaId}
-          onChange={(e) => setCanchaId(Number(e.target.value))}
-          className="mt-2 w-full rounded-lg border p-3"
-        >
-          {canchas.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
+          <select
+            value={canchaId}
+            onChange={(e) => setCanchaId(Number(e.target.value))}
+            className="mt-2 w-full rounded-lg border p-3"
+          >
+            {canchas.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
 
-        <p className="mt-4 font-bold">
-          E {cancha.par}
-        </p>
-      </div>
+          <p className="mt-4 font-bold">
+            E {cancha.par}
+          </p>
+        </div>
+      )}
 
       <input
         type="text"
@@ -155,31 +170,33 @@ export default function NuevaFecha() {
         ))}
       </div>
 
-      <div className="mt-8 bg-white rounded-xl p-5 text-green-900 space-y-2">
-        <p className="font-bold text-lg">
-          🚩 {cancha.nombre} &nbsp;&nbsp; E {cancha.par}
-        </p>
+      {cancha && (
+        <div className="mt-8 bg-white rounded-xl p-5 text-green-900 space-y-2">
+          <p className="font-bold text-lg">
+            🚩 {cancha.nombre} &nbsp;&nbsp; E {cancha.par}
+          </p>
 
-        <hr />
+          <hr />
 
-        <p>
-          ⚽ General: <strong>{general.length}</strong>
-        </p>
+          <p>
+            ⚽ General: <strong>{general.length}</strong>
+          </p>
 
-        <p>
-          💰 ${(general.length * config.valorChangueada).toLocaleString("es-AR")}
-        </p>
+          <p>
+            💰 ${(general.length * config.valorChangueada).toLocaleString("es-AR")}
+          </p>
 
-        <hr />
+          <hr />
 
-        <p>
-          ⚽ Viejitos: <strong>{viejitos.length}</strong>
-        </p>
+          <p>
+            ⚽ Viejitos: <strong>{viejitos.length}</strong>
+          </p>
 
-        <p>
-          💰 ${(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
-        </p>
-      </div>
+          <p>
+            💰 ${(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
+          </p>
+        </div>
+      )}
 
       <button
         onClick={continuar}

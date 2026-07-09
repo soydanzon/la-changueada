@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { jugadores, type Jugador } from "../datos/jugadores";
-import { canchas } from "../datos/canchas";
+import { obtenerCanchasGuardadas } from "../datos/canchas";
 
 export default function Scores() {
   const router = useRouter();
@@ -26,7 +26,9 @@ export default function Scores() {
 
     const datos = JSON.parse(fecha);
 
-    const cancha = canchas.find((c) => c.id === datos.cancha);
+    const cancha = obtenerCanchasGuardadas().find(
+      (c) => c.id === datos.cancha
+    );
 
     if (cancha) {
       setNombreCancha(cancha.nombre);
@@ -79,11 +81,11 @@ export default function Scores() {
 
       <div className="bg-white text-green-900 rounded-xl p-5 mb-6">
         <p className="font-bold">
-          ⛳ {nombreCancha}
+          🚩 {nombreCancha}
         </p>
 
         <p>
-          🏌️ Par {parCancha}
+          E {parCancha}
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { jugadores, type Jugador } from "../datos/jugadores";
-import { canchas } from "../datos/canchas";
+import { obtenerCanchasGuardadas } from "../datos/canchas";
 import { tablaPremios } from "../premios/tablaPremios";
 
 type Resultado = {
@@ -77,7 +77,9 @@ export default function Resultados() {
     const datos = JSON.parse(fecha);
     const scores = JSON.parse(scoresGuardados);
 
-    const canchaEncontrada = canchas.find((c) => c.id === datos.cancha);
+    const canchaEncontrada = obtenerCanchasGuardadas().find(
+      (c) => c.id === datos.cancha
+    );
 
     if (canchaEncontrada) {
       setCanchaFecha({
