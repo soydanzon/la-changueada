@@ -11,7 +11,8 @@ import {
 
 type FechaHistorial = {
   cancha?: {
-    id: number;
+    id?: number;
+    nombre?: string;
   } | null;
 };
 
@@ -22,9 +23,17 @@ function ordenarCanchasPorUso(canchas: Cancha[]) {
 
   const historial: FechaHistorial[] = JSON.parse(datos);
 
+  function usos(cancha: Cancha) {
+    return historial.filter(
+      (fecha) =>
+        fecha.cancha?.id === cancha.id ||
+        fecha.cancha?.nombre === cancha.nombre
+    ).length;
+  }
+
   return [...canchas].sort((a, b) => {
-    const usosA = historial.filter((f) => f.cancha?.id === a.id).length;
-    const usosB = historial.filter((f) => f.cancha?.id === b.id).length;
+    const usosA = usos(a);
+    const usosB = usos(b);
 
     if (usosB !== usosA) return usosB - usosA;
 
