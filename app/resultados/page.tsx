@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { jugadores, type Jugador } from "../datos/jugadores";
+import { canchas } from "../datos/canchas";
 import { tablaPremios } from "../premios/tablaPremios";
 
 type Resultado = {
@@ -14,6 +15,12 @@ type Resultado = {
 type ResultadoBase = {
   jugador: Jugador;
   score: number;
+};
+
+type CanchaFecha = {
+  id: number;
+  nombre: string;
+  par: number;
 };
 
 function calcularPremios(resultados: ResultadoBase[]): Resultado[] {
@@ -57,6 +64,7 @@ function formatearPesos(valor: number) {
 export default function Resultados() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
+  const [canchaFecha, setCanchaFecha] = useState<CanchaFecha | null>(null);
   const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
@@ -68,6 +76,16 @@ export default function Resultados() {
 
     const datos = JSON.parse(fecha);
     const scores = JSON.parse(scoresGuardados);
+
+    const canchaEncontrada = canchas.find((c) => c.id === datos.cancha);
+
+    if (canchaEncontrada) {
+      setCanchaFecha({
+        id: canchaEncontrada.id,
+        nombre: canchaEncontrada.nombre,
+        par: canchaEncontrada.par,
+      });
+    }
 
     const lista: Jugador[] = jugadoresGuardados
       ? JSON.parse(jugadoresGuardados)
@@ -100,6 +118,7 @@ export default function Resultados() {
     const nuevaFecha = {
       id: Date.now(),
       fecha: new Date().toLocaleDateString("es-AR"),
+      cancha: canchaFecha,
       general,
       viejitos,
     };
@@ -117,6 +136,18 @@ export default function Resultados() {
       <h1 className="text-4xl font-bold mb-8">
         Resultados
       </h1>
+
+      {canchaFecha && (
+        <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
+          <p className="font-bold text-xl">
+            🚩 {canchaFecha.nombre}
+          </p>
+
+          <p>
+            E {canchaFecha.par}
+          </p>
+        </div>
+      )}
 
       <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
         <h2 className="text-2xl font-bold mb-4">

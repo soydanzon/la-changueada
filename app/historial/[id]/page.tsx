@@ -12,9 +12,16 @@ type Resultado = {
   premio: number;
 };
 
+type CanchaFecha = {
+  id: number;
+  nombre: string;
+  par: number;
+};
+
 type FechaGuardada = {
   id: number;
   fecha: string;
+  cancha?: CanchaFecha | null;
   general: Resultado[];
   viejitos: Resultado[];
 };
@@ -30,11 +37,7 @@ function medalla(puesto: number) {
   return `${puesto}.`;
 }
 
-function TablaResultados({
-  resultados,
-}: {
-  resultados: Resultado[];
-}) {
+function TablaResultados({ resultados }: { resultados: Resultado[] }) {
   return (
     <div className="space-y-2">
       {resultados.map((r) => (
@@ -97,6 +100,18 @@ export default function DetalleFecha() {
       <h1 className="text-4xl font-bold">
         {fecha.fecha}
       </h1>
+
+      {fecha.cancha && (
+        <div className="mt-6 bg-white text-green-900 rounded-xl p-5">
+          <p className="text-xl font-bold">
+            🚩 {fecha.cancha.nombre}
+          </p>
+
+          <p className="mt-1 font-bold">
+            E {fecha.cancha.par}
+          </p>
+        </div>
+      )}
 
       <div className="mt-8 bg-white text-green-900 rounded-xl p-5">
         <h2 className="text-2xl font-bold mb-4">
