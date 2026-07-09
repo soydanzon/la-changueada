@@ -34,6 +34,13 @@ export default function Canchas() {
               <p className="mt-2 text-lg">
                 E {cancha.par}
               </p>
+
+              <a
+                href={`/canchas/${cancha.id}`}
+                className="block mt-5 bg-green-900 text-white rounded-xl p-3 text-center font-bold"
+              >
+                ✏️ Editar
+              </a>
             </div>
           ))}
       </div>
