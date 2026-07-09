@@ -9,6 +9,29 @@ import {
   type Cancha,
 } from "../datos/canchas";
 
+type FechaHistorial = {
+  cancha?: {
+    id: number;
+  } | null;
+};
+
+function ordenarCanchasPorUso(canchas: Cancha[]) {
+  const datos = localStorage.getItem("laChangueadaHistorial");
+
+  if (!datos) return canchas;
+
+  const historial: FechaHistorial[] = JSON.parse(datos);
+
+  return [...canchas].sort((a, b) => {
+    const usosA = historial.filter((f) => f.cancha?.id === a.id).length;
+    const usosB = historial.filter((f) => f.cancha?.id === b.id).length;
+
+    if (usosB !== usosA) return usosB - usosA;
+
+    return a.nombre.localeCompare(b.nombre);
+  });
+}
+
 export default function NuevaFecha() {
   const router = useRouter();
 
@@ -30,8 +53,10 @@ export default function NuevaFecha() {
       (c) => c.activa
     );
 
-    setCanchas(canchasGuardadas);
-    setCanchaId(canchasGuardadas[0]?.id ?? 0);
+    const canchasOrdenadas = ordenarCanchasPorUso(canchasGuardadas);
+
+    setCanchas(canchasOrdenadas);
+    setCanchaId(canchasOrdenadas[0]?.id ?? 0);
 
     const guardados = localStorage.getItem("laChangueadaJugadores");
 
@@ -109,7 +134,7 @@ export default function NuevaFecha() {
           <select
             value={canchaId}
             onChange={(e) => setCanchaId(Number(e.target.value))}
-            className="mt-2 w-full rounded-lg border p-3"
+            className="mt-2 w-full rounded-lg border p-3 text-black"
           >
             {canchas.map((c) => (
               <option key={c.id} value={c.id}>
