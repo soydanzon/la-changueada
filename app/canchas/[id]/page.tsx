@@ -6,6 +6,8 @@ import {
   obtenerCanchasGuardadas,
   type Cancha,
 } from "../../datos/canchas";
+import BotonInicio from "../../components/BotonInicio";
+import BotonVolver from "../../components/BotonVolver";
 
 export default function EditarCancha() {
   const params = useParams();
@@ -13,10 +15,14 @@ export default function EditarCancha() {
 
   const [nombre, setNombre] = useState("");
   const [par, setPar] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
   useEffect(() => {
     const canchas = obtenerCanchasGuardadas();
-    const cancha = canchas.find((c) => c.id === Number(params.id));
+
+    const cancha = canchas.find(
+      (c) => c.id === Number(params.id)
+    );
 
     if (!cancha) return;
 
@@ -25,6 +31,11 @@ export default function EditarCancha() {
   }, [params.id]);
 
   function guardar() {
+    if (!nombre.trim() || !par) {
+      setMensaje("⚠️ Completá nombre y par.");
+      return;
+    }
+
     const canchas = obtenerCanchasGuardadas();
 
     const nuevasCanchas: Cancha[] = canchas.map((cancha) =>
@@ -46,10 +57,17 @@ export default function EditarCancha() {
   }
 
   return (
-    <main className="min-h-screen bg-green-950 text-white p-6">
-      <h1 className="text-4xl font-black mb-8">
-        ✏️ Editar cancha
-      </h1>
+    <main className="min-h-screen bg-green-950 p-6 text-white">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-black">
+          ✏️ Editar cancha
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       <label className="font-bold">
         Nombre
@@ -58,8 +76,11 @@ export default function EditarCancha() {
       <input
         type="text"
         value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
-        className="mt-2 mb-6 w-full rounded-xl p-4 text-black text-xl"
+        onChange={(e) => {
+          setNombre(e.target.value);
+          setMensaje("");
+        }}
+        className="mt-2 mb-6 w-full rounded-xl bg-white p-4 text-xl text-black"
       />
 
       <label className="font-bold">
@@ -68,24 +89,27 @@ export default function EditarCancha() {
 
       <input
         type="number"
+        inputMode="numeric"
         value={par}
-        onChange={(e) => setPar(e.target.value)}
-        className="mt-2 w-full rounded-xl p-4 text-black text-xl"
+        onChange={(e) => {
+          setPar(e.target.value);
+          setMensaje("");
+        }}
+        className="mt-2 w-full rounded-xl bg-white p-4 text-xl text-black"
       />
 
       <button
         onClick={guardar}
-        className="mt-8 w-full bg-white text-green-950 rounded-2xl p-4 font-black"
+        className="mt-8 w-full rounded-2xl bg-white p-4 font-black text-green-950"
       >
         💾 Guardar cambios
       </button>
 
-      <a
-        href="/canchas"
-        className="block mt-6 bg-white text-green-950 rounded-2xl p-4 text-center font-black"
-      >
-        ← Volver
-      </a>
+      {mensaje && (
+        <p className="mt-4 text-xl">
+          {mensaje}
+        </p>
+      )}
     </main>
   );
 }

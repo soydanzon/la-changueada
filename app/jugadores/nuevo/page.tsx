@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { jugadores, type Jugador } from "../../datos/jugadores";
+import BotonInicio from "../../components/BotonInicio";
+import BotonVolver from "../../components/BotonVolver";
 
 export default function NuevoJugador() {
   const [nombre, setNombre] = useState("");
@@ -33,9 +35,10 @@ export default function NuevoJugador() {
     }
 
     const nuevoJugador: Jugador = {
-      id: Date.now(),
-      nombre: nombreLimpio,
-    };
+  id: Date.now(),
+  nombre: nombreLimpio,
+  frecuente: false,
+};
 
     const nuevaLista = [...listaActual, nuevoJugador];
 
@@ -48,36 +51,38 @@ export default function NuevoJugador() {
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold">
-        Nuevo jugador
-      </h1>
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">
+          Nuevo jugador
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       <input
         type="text"
         placeholder="Nombre del jugador"
         value={nombre}
         onChange={(e) => setNombre(e.target.value)}
-        className="mt-8 w-full rounded-lg p-4 text-black text-xl"
+        className="mt-8 w-full rounded-lg bg-white p-4 text-xl text-black"
       />
 
       <button
         onClick={guardarJugador}
-        className="mt-6 bg-white text-green-900 px-6 py-3 rounded-xl font-bold text-xl"
+        className="mt-6 rounded-xl bg-white px-6 py-3 text-xl font-bold text-green-900"
       >
         Guardar
       </button>
 
-      <p className="mt-4 text-xl">
-        {mensaje}
-      </p>
-
-      <a
-        href="/jugadores"
-        className="inline-block mt-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
-      >
-        ← Volver
-      </a>
+      {mensaje && (
+        <p className="mt-4 text-xl">
+          {mensaje}
+        </p>
+      )}
     </main>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import BotonInicio from "../../components/BotonInicio";
+import BotonVolver from "../../components/BotonVolver";
 
 type Resultado = {
   jugador: {
@@ -49,7 +51,7 @@ function TablaResultados({ resultados }: { resultados: Resultado[] }) {
             {medalla(r.puesto)}
           </div>
 
-          <div className="flex-1 font-semibold truncate">
+          <div className="flex-1 truncate font-semibold">
             {r.jugador.nombre}
           </div>
 
@@ -89,20 +91,27 @@ export default function DetalleFecha() {
 
   if (!fecha) {
     return (
-      <main className="min-h-screen bg-green-900 text-white p-6">
+      <main className="min-h-screen bg-green-900 p-6 text-white">
         Cargando...
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold">
-        {fecha.fecha}
-      </h1>
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">
+          {fecha.fecha}
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       {fecha.cancha && (
-        <div className="mt-6 bg-white text-green-900 rounded-xl p-5">
+        <div className="mt-6 rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl font-bold">
             🚩 {fecha.cancha.nombre}
           </p>
@@ -113,28 +122,21 @@ export default function DetalleFecha() {
         </div>
       )}
 
-      <div className="mt-8 bg-white text-green-900 rounded-xl p-5">
-        <h2 className="text-2xl font-bold mb-4">
+      <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
+        <h2 className="mb-4 text-2xl font-bold">
           🏆 General
         </h2>
 
         <TablaResultados resultados={fecha.general} />
       </div>
 
-      <div className="mt-8 bg-white text-green-900 rounded-xl p-5">
-        <h2 className="text-2xl font-bold mb-4">
+      <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
+        <h2 className="mb-4 text-2xl font-bold">
           👴 Viejitos
         </h2>
 
         <TablaResultados resultados={fecha.viejitos} />
       </div>
-
-      <a
-        href="/historial"
-        className="inline-block mt-8 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
-      >
-        ← Volver
-      </a>
     </main>
   );
 }

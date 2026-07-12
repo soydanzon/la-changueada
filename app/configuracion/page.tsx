@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { config } from "../config/config";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 export default function Configuracion() {
   const [valor, setValor] = useState(config.valorChangueada);
@@ -39,19 +41,19 @@ export default function Configuracion() {
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold">
-        Configuración
-      </h1>
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">
+          Configuración
+        </h1>
 
-      <a
-        href="/"
-        className="inline-block mb-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
-      >
-        ← Menú principal
-      </a>
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
-      <p className="mt-6 text-xl font-bold">
+      <p className="mt-8 text-xl font-bold">
         Valor de la Changueada
       </p>
 
@@ -59,33 +61,33 @@ export default function Configuracion() {
         type="number"
         value={valor}
         onChange={(e) => setValor(Number(e.target.value))}
-        className="mt-3 w-full rounded-lg p-3 text-black text-xl"
+        className="mt-3 w-full rounded-lg bg-white p-3 text-xl text-black"
       />
 
       <button
         onClick={guardarValor}
-        className="mt-4 w-full bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
+        className="mt-4 w-full rounded-xl bg-white px-5 py-3 font-bold text-green-900"
       >
         Guardar valor
       </button>
 
       <a
         href="/tabla-premios"
-        className="block mt-8 bg-white text-green-900 px-5 py-4 rounded-xl font-bold text-center"
+        className="mt-8 block rounded-xl bg-white px-5 py-4 text-center font-bold text-green-900"
       >
         🏆 Tabla de premios
       </a>
 
       <a
         href="/canchas"
-        className="block mt-4 bg-white text-green-900 px-5 py-4 rounded-xl font-bold text-center"
+        className="mt-4 block rounded-xl bg-white px-5 py-4 text-center font-bold text-green-900"
       >
-        ⚽ Canchas
+        🚩 Canchas
       </a>
 
       <button
         onClick={borrarDatosPrueba}
-        className="mt-10 w-full bg-red-600 px-6 py-4 rounded-xl font-bold text-xl"
+        className="mt-10 w-full rounded-xl bg-red-600 px-6 py-4 text-xl font-bold"
       >
         🧹 Borrar datos de prueba
       </button>

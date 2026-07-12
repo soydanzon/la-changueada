@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { jugadores, type Jugador } from "../datos/jugadores";
 import { obtenerCanchasGuardadas } from "../datos/canchas";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 export default function Scores() {
   const router = useRouter();
@@ -75,9 +77,16 @@ export default function Scores() {
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold mb-8">
-        Cargar Scores
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-4xl font-bold">
+          Cargar Scores
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       <div className="bg-white text-green-900 rounded-xl p-5 mb-6">
         <p className="font-bold">
@@ -105,9 +114,10 @@ export default function Scores() {
 
             <input
               type="number"
+              inputMode="numeric"
               value={scores[jugador.id] || ""}
               onChange={(e) => cambiarScore(jugador.id, e.target.value)}
-              className="w-24 rounded-lg border p-2 text-black text-xl text-center"
+              className="w-24 rounded-lg border bg-white p-2 text-black text-xl text-center"
               placeholder="0"
             />
           </div>
@@ -134,13 +144,6 @@ export default function Scores() {
       >
         Calcular resultados
       </button>
-
-      <a
-        href="/nueva-fecha"
-        className="inline-block mt-8 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
-      >
-        ← Volver
-      </a>
     </main>
   );
 }

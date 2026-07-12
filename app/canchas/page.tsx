@@ -5,6 +5,8 @@ import {
   obtenerCanchasGuardadas,
   type Cancha,
 } from "../datos/canchas";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 export default function Canchas() {
   const [canchas, setCanchas] = useState<Cancha[]>([]);
@@ -14,10 +16,17 @@ export default function Canchas() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-green-950 text-white p-6">
-      <h1 className="text-4xl font-black mb-8">
-        🚩 Canchas
-      </h1>
+    <main className="min-h-screen bg-green-950 p-6 text-white">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-black">
+          🚩 Canchas
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       <div className="space-y-4">
         {canchas
@@ -25,7 +34,7 @@ export default function Canchas() {
           .map((cancha) => (
             <div
               key={cancha.id}
-              className="bg-white text-green-950 rounded-2xl p-5"
+              className="rounded-2xl bg-white p-5 text-green-950"
             >
               <h2 className="text-2xl font-black">
                 {cancha.nombre}
@@ -37,7 +46,7 @@ export default function Canchas() {
 
               <a
                 href={`/canchas/${cancha.id}`}
-                className="block mt-5 bg-green-900 text-white rounded-xl p-3 text-center font-bold"
+                className="mt-5 block rounded-xl bg-green-900 p-3 text-center font-bold text-white"
               >
                 ✏️ Editar
               </a>
@@ -47,16 +56,9 @@ export default function Canchas() {
 
       <a
         href="/canchas/nueva"
-        className="block mt-8 w-full bg-white text-green-950 rounded-2xl p-4 text-center font-black"
+        className="mt-8 block w-full rounded-2xl bg-white p-4 text-center font-black text-green-950"
       >
         ➕ Agregar cancha
-      </a>
-
-      <a
-        href="/configuracion"
-        className="block mt-6 bg-white text-green-950 rounded-2xl p-4 text-center font-black"
-      >
-        ← Volver
       </a>
     </main>
   );

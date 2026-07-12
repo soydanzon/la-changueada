@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { jugadores, type Jugador } from "../datos/jugadores";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 export default function Jugadores() {
   const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
@@ -13,6 +15,7 @@ export default function Jugadores() {
       setListaJugadores(JSON.parse(guardados));
     } else {
       setListaJugadores(jugadores);
+
       localStorage.setItem(
         "laChangueadaJugadores",
         JSON.stringify(jugadores)
@@ -22,6 +25,7 @@ export default function Jugadores() {
 
   function guardarLista(nuevaLista: Jugador[]) {
     setListaJugadores(nuevaLista);
+
     localStorage.setItem(
       "laChangueadaJugadores",
       JSON.stringify(nuevaLista)
@@ -64,14 +68,21 @@ export default function Jugadores() {
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold">
-        Jugadores
-      </h1>
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">
+          Jugadores
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       <a
         href="/jugadores/nuevo"
-        className="inline-block mt-8 bg-white text-green-900 px-6 py-3 rounded-xl font-bold text-xl"
+        className="mt-8 inline-block rounded-xl bg-white px-6 py-3 text-xl font-bold text-green-900"
       >
         + Agregar jugador
       </a>
@@ -80,7 +91,7 @@ export default function Jugadores() {
         {listaJugadores.map((jugador) => (
           <div
             key={jugador.id}
-            className="bg-white text-green-900 rounded-lg p-4 flex items-center justify-between gap-4"
+            className="flex items-center justify-between gap-4 rounded-lg bg-white p-4 text-green-900"
           >
             <span className="text-xl font-bold">
               {jugador.frecuente ? "⭐ " : ""}
@@ -90,21 +101,21 @@ export default function Jugadores() {
             <div className="flex gap-2">
               <button
                 onClick={() => cambiarFrecuente(jugador)}
-                className="bg-yellow-500 text-white px-3 py-2 rounded-lg"
+                className="rounded-lg bg-yellow-500 px-3 py-2 text-white"
               >
                 ⭐
               </button>
 
               <button
                 onClick={() => editarJugador(jugador)}
-                className="bg-yellow-300 text-black px-3 py-2 rounded-lg"
+                className="rounded-lg bg-yellow-300 px-3 py-2 text-black"
               >
                 ✏️
               </button>
 
               <button
                 onClick={() => eliminarJugador(jugador)}
-                className="bg-red-600 text-white px-3 py-2 rounded-lg"
+                className="rounded-lg bg-red-600 px-3 py-2 text-white"
               >
                 🗑️
               </button>
@@ -112,13 +123,6 @@ export default function Jugadores() {
           </div>
         ))}
       </div>
-
-      <a
-        href="/"
-        className="inline-block mt-8 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
-      >
-        ← Menú principal
-      </a>
     </main>
   );
 }

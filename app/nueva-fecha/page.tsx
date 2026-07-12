@@ -8,6 +8,8 @@ import {
   obtenerCanchasGuardadas,
   type Cancha,
 } from "../datos/canchas";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 type FechaHistorial = {
   cancha?: {
@@ -57,6 +59,7 @@ export default function NuevaFecha() {
 
   useEffect(() => {
     localStorage.removeItem("laChangueadaScores");
+localStorage.removeItem("laChangueadaFechaYaGuardada");
 
     const canchasGuardadas = obtenerCanchasGuardadas().filter(
       (c) => c.activa
@@ -119,16 +122,16 @@ export default function NuevaFecha() {
 
   return (
     <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold mb-6">
-        Nueva Fecha
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-4xl font-bold">
+          Nueva Fecha
+        </h1>
 
-      <a
-        href="/"
-        className="inline-block mb-6 bg-white text-green-900 px-4 py-2 rounded-lg font-bold"
-      >
-        ← Menú principal
-      </a>
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       {cancha && (
         <div className="mb-6 bg-white text-green-900 rounded-2xl p-5">
@@ -163,7 +166,7 @@ export default function NuevaFecha() {
         placeholder="Buscar jugador..."
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
-        className="mb-6 w-full rounded-lg p-4 text-black text-xl"
+        className="mb-6 w-full rounded-lg bg-white p-4 text-black text-xl"
       />
 
       <div className="space-y-4">

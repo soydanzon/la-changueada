@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 type Resultado = {
   jugador: {
@@ -36,7 +38,9 @@ export default function Compartir() {
 
   useEffect(() => {
     const historial = localStorage.getItem("laChangueadaHistorial");
-    const fechaElegida = localStorage.getItem("laChangueadaFechaParaCompartir");
+    const fechaElegida = localStorage.getItem(
+      "laChangueadaFechaParaCompartir"
+    );
 
     if (!historial) return;
 
@@ -53,11 +57,19 @@ export default function Compartir() {
     setFecha(fechaSeleccionada.fecha);
   }, []);
 
-  function ListaPremios({ resultados }: { resultados: Resultado[] }) {
+  function ListaPremios({
+    resultados,
+  }: {
+    resultados: Resultado[];
+  }) {
     const premiados = resultados.filter((r) => r.premio > 0);
 
     if (premiados.length === 0) {
-      return <p className="text-sm text-gray-500">Sin premios</p>;
+      return (
+        <p className="text-sm text-gray-500">
+          Sin premios
+        </p>
+      );
     }
 
     return (
@@ -68,7 +80,7 @@ export default function Compartir() {
             className="flex items-center justify-between gap-4 rounded-xl bg-green-50 px-4 py-3"
           >
             <div>
-              <p className="font-black text-lg">
+              <p className="text-lg font-black">
                 {medalla(r.puesto)} {r.jugador.nombre}
               </p>
 
@@ -88,10 +100,15 @@ export default function Compartir() {
 
   return (
     <main className="min-h-screen bg-green-900 p-4 text-black">
+      <div className="mx-auto mb-4 flex max-w-xl justify-end gap-2">
+        <BotonVolver />
+        <BotonInicio />
+      </div>
+
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
         <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
           <p className="text-sm font-bold tracking-[0.3em]">
-            TORNEO AMATEUR
+            Footgolf
           </p>
 
           <h1 className="mt-2 text-4xl font-black">
@@ -123,13 +140,6 @@ export default function Compartir() {
           ⚽ Que viva La Changueada ⚽
         </p>
       </div>
-
-      <a
-        href="/historial"
-        className="inline-block mt-8 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
-      >
-        ← Volver
-      </a>
     </main>
   );
 }

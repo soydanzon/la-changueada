@@ -1,0 +1,129 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import {
+  calcularHandicap,
+  type FechaGuardada,
+  type HandicapJugador,
+} from "../utils/estadisticas";
+import { jugadores, type Jugador } from "../datos/jugadores";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
+
+function formatearNumero(valor: number) {
+  return Number.isInteger(valor)
+    ? String(valor)
+    : valor.toFixed(1);
+}
+
+function formatearHandicap(valor: number) {
+  if (valor === 0) return "E";
+
+  const numero = formatearNumero(valor);
+
+  return valor > 0 ? `+${numero}` : numero;
+}
+
+export default function Handicap() {
+  const [handicaps, setHandicaps] = useState<HandicapJugador[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+
+  useEffect(() => {
+    const datosHistorial = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
+
+    if (!datosHistorial) return;
+
+    const historial: FechaGuardada[] =
+      JSON.parse(datosHistorial);
+
+    const datosJugadores = localStorage.getItem(
+      "laChangueadaJugadores"
+    );
+
+    const listaJugadores: Jugador[] = datosJugadores
+      ? JSON.parse(datosJugadores)
+      : jugadores;
+
+    const jugadoresFrecuentes = new Set(
+      listaJugadores
+        .filter((jugador) => jugador.frecuente)
+        .map((jugador) => jugador.nombre)
+    );
+
+    const handicapsCalculados =
+      calcularHandicap(historial);
+
+    handicapsCalculados.sort((a, b) => {
+      const frecuenteA =
+        jugadoresFrecuentes.has(a.nombre);
+
+      const frecuenteB =
+        jugadoresFrecuentes.has(b.nombre);
+
+      if (frecuenteA && !frecuenteB) return -1;
+      if (!frecuenteA && frecuenteB) return 1;
+
+      return a.handicap - b.handicap;
+    });
+
+    setHandicaps(handicapsCalculados);
+  }, []);
+
+  const handicapsFiltrados = handicaps.filter(
+    (jugador) =>
+      jugador.nombre
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
+  );
+
+  return (
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-4xl font-bold">
+          🧢 Hándicap
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
+
+      <input
+        type="text"
+        placeholder="Buscar jugador..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="mb-6 w-full rounded-lg bg-white p-4 text-xl text-black"
+      />
+
+      {handicapsFiltrados.length === 0 ? (
+        <div className="rounded-xl bg-white p-5 text-green-900">
+          No hay hándicaps disponibles.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {handicapsFiltrados.map((jugador, index) => (
+            <a
+              key={jugador.nombre}
+              href={`/handicap/${encodeURIComponent(
+                jugador.nombre
+              )}`}
+              className="flex items-center justify-between rounded-xl bg-white p-5 text-green-900"
+            >
+              <span className="text-xl font-bold">
+                {index + 1}. {jugador.nombre}
+              </span>
+
+              <strong className="text-2xl">
+                {formatearHandicap(jugador.handicap)}
+              </strong>
+            </a>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

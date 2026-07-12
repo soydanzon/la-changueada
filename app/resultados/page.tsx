@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { jugadores, type Jugador } from "../datos/jugadores";
 import { obtenerCanchasGuardadas } from "../datos/canchas";
 import { tablaPremios } from "../premios/tablaPremios";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 type Resultado = {
   jugador: Jugador;
@@ -38,7 +40,10 @@ function calcularPremios(resultados: ResultadoBase[]): Resultado[] {
     const cantidad = empatados.length;
 
     const premiosInvolucrados = premios.slice(inicio, inicio + cantidad);
-    const totalPremios = premiosInvolucrados.reduce((suma, p) => suma + p, 0);
+    const totalPremios = premiosInvolucrados.reduce(
+      (suma, premio) => suma + premio,
+      0
+    );
 
     const premioBase = Math.floor(totalPremios / cantidad);
     const resto = totalPremios - premioBase * cantidad;
@@ -65,12 +70,21 @@ export default function Resultados() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
   const [canchaFecha, setCanchaFecha] = useState<CanchaFecha | null>(null);
-  const [mensaje, setMensaje] = useState("");
+  const [fechaGuardada, setFechaGuardada] = useState(false);
 
   useEffect(() => {
+    
+    const yaGuardada = localStorage.getItem("laChangueadaFechaYaGuardada");
+
+if (yaGuardada === "true") {
+  setFechaGuardada(true);
+}
+    
     const fecha = localStorage.getItem("laChangueadaFechaActual");
     const scoresGuardados = localStorage.getItem("laChangueadaScores");
-    const jugadoresGuardados = localStorage.getItem("laChangueadaJugadores");
+    const jugadoresGuardados = localStorage.getItem(
+      "laChangueadaJugadores"
+    );
 
     if (!fecha || !scoresGuardados) return;
 
@@ -78,7 +92,7 @@ export default function Resultados() {
     const scores = JSON.parse(scoresGuardados);
 
     const canchaEncontrada = obtenerCanchasGuardadas().find(
-      (c) => c.id === datos.cancha
+      (cancha) => cancha.id === datos.cancha
     );
 
     if (canchaEncontrada) {
@@ -94,18 +108,18 @@ export default function Resultados() {
       : jugadores;
 
     const generalOrdenado = lista
-      .filter((j) => datos.general.includes(j.id))
-      .map((j) => ({
-        jugador: j,
-        score: Number(scores[j.id] ?? 999),
+      .filter((jugador) => datos.general.includes(jugador.id))
+      .map((jugador) => ({
+        jugador,
+        score: Number(scores[jugador.id] ?? 999),
       }))
       .sort((a, b) => a.score - b.score);
 
     const viejitosOrdenado = lista
-      .filter((j) => datos.viejitos.includes(j.id))
-      .map((j) => ({
-        jugador: j,
-        score: Number(scores[j.id] ?? 999),
+      .filter((jugador) => datos.viejitos.includes(jugador.id))
+      .map((jugador) => ({
+        jugador,
+        score: Number(scores[jugador.id] ?? 999),
       }))
       .sort((a, b) => a.score - b.score);
 
@@ -114,8 +128,15 @@ export default function Resultados() {
   }, []);
 
   function guardarFecha() {
-    const historialGuardado = localStorage.getItem("laChangueadaHistorial");
-    const historial = historialGuardado ? JSON.parse(historialGuardado) : [];
+    if (fechaGuardada) return;
+
+    const historialGuardado = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
+
+    const historial = historialGuardado
+      ? JSON.parse(historialGuardado)
+      : [];
 
     const nuevaFecha = {
       id: Date.now(),
@@ -130,18 +151,26 @@ export default function Resultados() {
       JSON.stringify([nuevaFecha, ...historial])
     );
 
-    setMensaje("✅ Fecha guardada");
+    localStorage.setItem("laChangueadaFechaYaGuardada", "true");
+    setFechaGuardada(true);
   }
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <h1 className="text-4xl font-bold mb-8">
-        Resultados
-      </h1>
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-4xl font-bold">
+          Resultados
+        </h1>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+      </div>
 
       {canchaFecha && (
-        <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
-          <p className="font-bold text-xl">
+        <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
+          <p className="text-xl font-bold">
             🚩 {canchaFecha.nombre}
           </p>
 
@@ -151,65 +180,82 @@ export default function Resultados() {
         </div>
       )}
 
-      <div className="bg-white text-green-900 rounded-xl p-5 mb-8">
-        <h2 className="text-2xl font-bold mb-4">
+      <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
+        <h2 className="mb-4 text-2xl font-bold">
           General
         </h2>
 
-        {general.map((r) => (
+        {general.map((resultado) => (
           <div
-            key={r.jugador.id}
-            className="flex justify-between items-center border-b py-3 gap-4"
+            key={resultado.jugador.id}
+            className="flex items-center justify-between gap-4 border-b py-3"
           >
             <span>
-              {r.puesto}. {r.jugador.nombre} - {r.score}
+              {resultado.puesto}. {resultado.jugador.nombre} -{" "}
+              {resultado.score}
             </span>
 
             <strong>
-              {r.premio > 0 ? formatearPesos(r.premio) : "-"}
+              {resultado.premio > 0
+                ? formatearPesos(resultado.premio)
+                : "-"}
             </strong>
           </div>
         ))}
       </div>
 
-      <div className="bg-white text-green-900 rounded-xl p-5">
-        <h2 className="text-2xl font-bold mb-4">
+      <div className="rounded-xl bg-white p-5 text-green-900">
+        <h2 className="mb-4 text-2xl font-bold">
           Viejitos
         </h2>
 
-        {viejitos.map((r) => (
+        {viejitos.map((resultado) => (
           <div
-            key={r.jugador.id}
-            className="flex justify-between items-center border-b py-3 gap-4"
+            key={resultado.jugador.id}
+            className="flex items-center justify-between gap-4 border-b py-3"
           >
             <span>
-              {r.puesto}. {r.jugador.nombre} - {r.score}
+              {resultado.puesto}. {resultado.jugador.nombre} -{" "}
+              {resultado.score}
             </span>
 
             <strong>
-              {r.premio > 0 ? formatearPesos(r.premio) : "-"}
+              {resultado.premio > 0
+                ? formatearPesos(resultado.premio)
+                : "-"}
             </strong>
           </div>
         ))}
       </div>
 
-      <button
-        onClick={guardarFecha}
-        className="mt-8 w-full bg-white text-green-900 rounded-xl p-5 text-2xl font-bold"
-      >
-        Guardar fecha
-      </button>
+      {!fechaGuardada ? (
+        <button
+          onClick={guardarFecha}
+          className="mt-8 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
+        >
+          Guardar fecha
+        </button>
+      ) : (
+        <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
+          <p className="text-center text-xl font-bold">
+            ✅ Fecha guardada correctamente
+          </p>
 
-      <p className="mt-4 text-xl">
-        {mensaje}
-      </p>
+          <a
+            href="/historial"
+            className="mt-5 block w-full rounded-xl bg-green-700 p-4 text-center font-bold text-white"
+          >
+            📜 Ver historial
+          </a>
 
-      <a
-        href="/scores"
-        className="inline-block mt-8 bg-white text-green-900 px-5 py-3 rounded-xl font-bold"
-      >
-        ← Volver
-      </a>
+          <a
+            href="/nueva-fecha"
+            className="mt-3 block w-full rounded-xl bg-green-900 p-4 text-center font-bold text-white"
+          >
+            ➕ Nueva fecha
+          </a>
+        </div>
+      )}
     </main>
   );
 }

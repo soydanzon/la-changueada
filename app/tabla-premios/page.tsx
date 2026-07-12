@@ -1,4 +1,6 @@
 import { tablaPremios } from "../premios/tablaPremios";
+import BotonInicio from "../components/BotonInicio";
+import BotonVolver from "../components/BotonVolver";
 
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
@@ -6,29 +8,55 @@ function formatearPesos(valor: number) {
 
 export default function TablaPremios() {
   return (
-    <main className="min-h-screen bg-green-950 text-white p-6">
-      <div className="text-center mb-8">
-        <div className="text-6xl">🏆</div>
+    <main className="min-h-screen bg-green-950 p-6 text-white">
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <div className="text-5xl">
+            🏆
+          </div>
 
-        <h1 className="text-5xl font-black mt-3">
-          Tabla de Premios
-        </h1>
+          <h1 className="mt-2 text-4xl font-black">
+            Tabla de Premios
+          </h1>
 
-        <p className="mt-2 text-green-200 font-bold">
-          La Changueada
-        </p>
+          <p className="mt-2 font-bold text-green-200">
+            La Changueada
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
       </div>
 
-      <div className="bg-white text-green-900 rounded-3xl p-4 shadow-2xl overflow-x-auto">
+      <div className="overflow-x-auto rounded-3xl bg-white p-4 text-green-900 shadow-2xl">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-white">
             <tr className="border-b text-left">
-              <th className="py-3 px-2">Jug.</th>
-              <th className="px-2 text-yellow-600">🥇</th>
-              <th className="px-2 text-gray-500">🥈</th>
-              <th className="px-2 text-orange-700">🥉</th>
-              <th className="px-2">4°</th>
-              <th className="px-2">5°</th>
+              <th className="px-2 py-3">
+                Jug.
+              </th>
+
+              <th className="px-2 text-yellow-600">
+                🥇
+              </th>
+
+              <th className="px-2 text-gray-500">
+                🥈
+              </th>
+
+              <th className="px-2 text-orange-700">
+                🥉
+              </th>
+
+              <th className="px-2">
+                4°
+              </th>
+
+              <th className="px-2">
+                5°
+              </th>
             </tr>
           </thead>
 
@@ -40,14 +68,14 @@ export default function TablaPremios() {
                   index % 2 === 0 ? "bg-green-50" : "bg-white"
                 }`}
               >
-                <td className="py-3 px-2 font-black">
+                <td className="px-2 py-3 font-black">
                   {fila.jugadores}
                 </td>
 
                 {[0, 1, 2, 3, 4].map((i) => (
                   <td
                     key={i}
-                    className="px-2 font-bold whitespace-nowrap"
+                    className="whitespace-nowrap px-2 font-bold"
                   >
                     {fila.premios[i]
                       ? formatearPesos(fila.premios[i])
@@ -59,13 +87,6 @@ export default function TablaPremios() {
           </tbody>
         </table>
       </div>
-
-      <a
-        href="/configuracion"
-        className="block mt-8 bg-white text-green-900 px-5 py-4 rounded-2xl text-center font-black"
-      >
-        ← Volver
-      </a>
     </main>
   );
 }
