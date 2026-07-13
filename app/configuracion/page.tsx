@@ -85,6 +85,13 @@ export default function Configuracion() {
         🚩 Canchas
       </a>
 
+      <a
+  href="/respaldo"
+  className="mt-4 block rounded-xl bg-white px-5 py-4 text-center font-bold text-green-900"
+>
+  💾 Respaldo
+</a>
+
       <button
         onClick={borrarDatosPrueba}
         className="mt-10 w-full rounded-xl bg-red-600 px-6 py-4 text-xl font-bold"

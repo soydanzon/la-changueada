@@ -48,6 +48,9 @@ export default function NuevaFecha() {
 
   const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [canchaId, setCanchaId] = useState(0);
+  const [valorChangueada, setValorChangueada] = useState(
+    config.valorChangueada
+  );
 
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
@@ -59,18 +62,29 @@ export default function NuevaFecha() {
 
   useEffect(() => {
     localStorage.removeItem("laChangueadaScores");
-localStorage.removeItem("laChangueadaFechaYaGuardada");
+    localStorage.removeItem("laChangueadaFechaYaGuardada");
+
+    const valorGuardado = localStorage.getItem(
+      "laChangueadaValor"
+    );
+
+    if (valorGuardado) {
+      setValorChangueada(Number(valorGuardado));
+    }
 
     const canchasGuardadas = obtenerCanchasGuardadas().filter(
       (c) => c.activa
     );
 
-    const canchasOrdenadas = ordenarCanchasPorUso(canchasGuardadas);
+    const canchasOrdenadas =
+      ordenarCanchasPorUso(canchasGuardadas);
 
     setCanchas(canchasOrdenadas);
     setCanchaId(canchasOrdenadas[0]?.id ?? 0);
 
-    const guardados = localStorage.getItem("laChangueadaJugadores");
+    const guardados = localStorage.getItem(
+      "laChangueadaJugadores"
+    );
 
     if (guardados) {
       setListaJugadores(JSON.parse(guardados));
@@ -112,7 +126,9 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
 
   const jugadoresFiltrados = listaJugadores
     .filter((jugador) =>
-      jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      jugador.nombre
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
     )
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
@@ -121,31 +137,33 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
     });
 
   return (
-    <main className="min-h-screen bg-green-900 text-white p-6">
-      <div className="flex items-center justify-between mb-6">
+    <main className="min-h-screen bg-green-900 p-6 text-white">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-4xl font-bold">
           Nueva Fecha
         </h1>
 
-        <div className="flex gap-2">
+        <div className="flex gap-5">
           <BotonVolver />
           <BotonInicio />
         </div>
       </div>
 
       {cancha && (
-        <div className="mb-6 bg-white text-green-900 rounded-2xl p-5">
-          <p className="font-bold text-xl">
+        <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
+          <p className="text-xl font-bold">
             📅 {new Date().toLocaleDateString("es-AR")}
           </p>
 
-          <label className="block mt-4 font-bold">
+          <label className="mt-4 block font-bold">
             🚩 Cancha
           </label>
 
           <select
             value={canchaId}
-            onChange={(e) => setCanchaId(Number(e.target.value))}
+            onChange={(e) =>
+              setCanchaId(Number(e.target.value))
+            }
             className="mt-2 w-full rounded-lg border p-3 text-black"
           >
             {canchas.map((c) => (
@@ -166,27 +184,27 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
         placeholder="Buscar jugador..."
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
-        className="mb-6 w-full rounded-lg bg-white p-4 text-black text-xl"
+        className="mb-6 w-full rounded-lg bg-white p-4 text-xl text-black"
       />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {jugadoresFiltrados.map((jugador) => (
           <div
             key={jugador.id}
-            className="bg-white rounded-xl p-4 text-green-900"
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-white p-4 text-green-900"
           >
-            <div className="font-bold text-xl mb-3">
+            <div className="min-w-0 truncate text-lg font-bold">
               {jugador.frecuente ? "⭐ " : ""}
               {jugador.nombre}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex gap-5">
               <button
                 onClick={() => cambiarGeneral(jugador.id)}
-                className={`flex-1 h-12 rounded-lg font-bold ${
+                className={`h-12 rounded-full px-5 text-base font-bold ${
                   general.includes(jugador.id)
                     ? "bg-green-600 text-white"
-                    : "bg-gray-200"
+                    : "bg-gray-200 text-gray-700"
                 }`}
               >
                 General
@@ -194,10 +212,10 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
 
               <button
                 onClick={() => cambiarViejitos(jugador.id)}
-                className={`flex-1 h-12 rounded-lg font-bold ${
+                className={`h-12 rounded-full px-5 text-base font-bold ${
                   viejitos.includes(jugador.id)
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
+                    : "bg-gray-200 text-gray-700"
                 }`}
               >
                 Viejitos
@@ -208,8 +226,8 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
       </div>
 
       {cancha && (
-        <div className="mt-8 bg-white rounded-xl p-5 text-green-900 space-y-2">
-          <p className="font-bold text-lg">
+        <div className="mt-8 space-y-2 rounded-xl bg-white p-5 text-green-900">
+          <p className="text-lg font-bold">
             🚩 {cancha.nombre} &nbsp;&nbsp; E {cancha.par}
           </p>
 
@@ -220,7 +238,10 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
           </p>
 
           <p>
-            💰 ${(general.length * config.valorChangueada).toLocaleString("es-AR")}
+            💰 $
+            {(
+              general.length * valorChangueada
+            ).toLocaleString("es-AR")}
           </p>
 
           <hr />
@@ -230,14 +251,17 @@ localStorage.removeItem("laChangueadaFechaYaGuardada");
           </p>
 
           <p>
-            💰 ${(viejitos.length * config.valorChangueada).toLocaleString("es-AR")}
+            💰 $
+            {(
+              viejitos.length * valorChangueada
+            ).toLocaleString("es-AR")}
           </p>
         </div>
       )}
 
       <button
         onClick={continuar}
-        className="mt-8 w-full bg-white text-green-900 rounded-xl p-5 text-2xl font-bold"
+        className="mt-8 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
       >
         Continuar →
       </button>
