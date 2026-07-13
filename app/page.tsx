@@ -41,7 +41,7 @@ export default function Home() {
           href="/ranking"
           className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black"
         >
-          🏆 Ranking
+          🎖️ Ranking
         </a>
 
         <a

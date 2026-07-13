@@ -30,7 +30,7 @@ function RankingBloque({
 }) {
   return (
     <div className="rounded-xl bg-white p-5 text-green-900">
-      <h2 className="mb-4 text-2xl font-bold">
+      <h2 className="text-2xl font-bold">
         {titulo}
       </h2>
 
@@ -98,7 +98,7 @@ export default function Ranking() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
         <h1 className="text-4xl font-bold">
-          Ranking Histórico
+          🎖️ Ranking
         </h1>
 
         <div className="flex gap-2">
@@ -109,13 +109,13 @@ export default function Ranking() {
 
       <div className="space-y-4">
         <RankingBloque
-          titulo="🥇 Más victorias"
+          titulo="🏆 Más victorias"
           jugadores={porVictorias}
           tipo="victorias"
         />
 
         <RankingBloque
-          titulo="🏆 Más podios"
+          titulo="🥇🥈🥉 Más podios"
           jugadores={porPodios}
           tipo="podios"
         />

@@ -37,7 +37,7 @@ export default function Estadisticas() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
         <h1 className="text-4xl font-bold">
-          Estadísticas
+          📊 Estadísticas
         </h1>
 
         <div className="flex gap-2">

@@ -120,7 +120,7 @@ export default function Historial() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-bold">
-          Historial
+          📜 Historial
         </h1>
 
         <div className="flex gap-2">
