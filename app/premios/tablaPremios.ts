@@ -3,7 +3,7 @@ export type FilaPremios = {
   premios: number[];
 };
 
-export const tablaPremios: FilaPremios[] = [
+export const tablaPremiosOriginal: FilaPremios[] = [
   { jugadores: 6, premios: [40000, 20000] },
   { jugadores: 7, premios: [40000, 20000, 10000] },
   { jugadores: 8, premios: [40000, 25000, 15000] },
@@ -50,3 +50,34 @@ export const tablaPremios: FilaPremios[] = [
   { jugadores: 49, premios: [190000, 150000, 120000, 20000, 10000] },
   { jugadores: 50, premios: [200000, 150000, 120000, 20000, 10000] },
 ];
+
+export const tablaPremios = tablaPremiosOriginal;
+
+export function obtenerTablaPremios(): FilaPremios[] {
+  if (typeof window === "undefined") {
+    return tablaPremiosOriginal;
+  }
+
+  const guardada = localStorage.getItem(
+    "laChangueadaTablaPremios"
+  );
+
+  if (!guardada) {
+    return tablaPremiosOriginal;
+  }
+
+  try {
+    return JSON.parse(guardada);
+  } catch {
+    return tablaPremiosOriginal;
+  }
+}
+
+export function guardarTablaPremios(
+  tabla: FilaPremios[]
+) {
+  localStorage.setItem(
+    "laChangueadaTablaPremios",
+    JSON.stringify(tabla)
+  );
+}
