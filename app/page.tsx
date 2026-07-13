@@ -2,18 +2,18 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-green-950 text-white p-6 flex flex-col">
       <div className="text-center mt-8 mb-10">
-        <div className="text-6xl mb-4">
-          ⚽ 🚩
-        </div>
+  <div className="text-5xl mb-4">
+    ⚽ 🚩
+  </div>
 
-        <h1 className="text-5xl font-black">
-          La Changueada
-        </h1>
+  <h1 className="text-4xl font-black">
+    La Changueada
+  </h1>
 
-        <p className="mt-3 text-green-200 font-bold">
-          Footgolf
-        </p>
-      </div>
+  <p className="mt-2 text-green-200 font-bold">
+    Footgolf
+  </p>
+</div>
 
       <div className="space-y-4">
         <a
