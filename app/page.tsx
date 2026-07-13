@@ -55,7 +55,7 @@ export default function Home() {
   href="/handicap"
   className="block bg-white text-green-950 rounded-2xl p-5 text-2xl font-black"
 >
-  🧢 Hándicap
+  🧢 Handicap
 </a>
 
         <a
