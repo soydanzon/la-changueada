@@ -67,9 +67,9 @@ export default function Home() {
         </a>
       </div>
 
-      <div className="mt-auto pt-8 text-sm text-green-300">
-        v2.10
-      </div>
+      <div className="mt-auto pt-8 text-center text-sm tracking-widest text-green-300">
+  — v2.21 —
+</div>
     </main>
   );
 }
