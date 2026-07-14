@@ -20,42 +20,42 @@ export default function Home() {
           href="/nueva-fecha"
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
-          ➕ Nueva Fecha
+          ➕ Nueva Fecha ➕
         </a>
 
         <a
           href="/historial"
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
-          📜 Historial
+          📜 Historial 📜
         </a>
 
         <a
           href="/estadisticas"
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
-          📊 Estadísticas
+          📊 Estadísticas 📊
         </a>
 
         <a
           href="/ranking"
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
-          🎖️ Ranking
+          🎖️ Ranking 🎖️
         </a>
 
         <a
           href="/jugadores"
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
-          👤 Jugadores
+          👤 Jugadores 👤
         </a>
 
         <a
   href="/handicap"
   className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
 >
-  🧢 Handicap
+  🧢 Handicap 🧢
 </a>
 
         <a
@@ -63,7 +63,7 @@ export default function Home() {
           className="block bg-white text-green-950 rounded-2xl p-4 text-center text-xl font-black"
         >
 
-          ⚙️ Configuración
+          ⚙️ Configuración ⚙️
         </a>
       </div>
 
