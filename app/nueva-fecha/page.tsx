@@ -174,7 +174,7 @@ export default function NuevaFecha() {
             </p>
 
             <label className="mt-4 block font-bold">
-              🚩 Cancha
+             Cancha
             </label>
 
             <select
@@ -195,10 +195,6 @@ export default function NuevaFecha() {
                 </option>
               ))}
             </select>
-
-            <p className="mt-4 font-bold">
-              E {cancha.par}
-            </p>
           </div>
 
           <div className="mb-6 space-y-2 rounded-xl bg-white p-5 text-green-900">
@@ -213,36 +209,38 @@ export default function NuevaFecha() {
 
             <hr />
 
-            <p>
-              ⚽ General:{" "}
-              <strong>{general.length}</strong>
-            </p>
+            <div className="flex justify-between">
+  <span>
+    ⚽ General: <strong>{general.length}</strong>
+  </span>
 
-            <p>
-              💰 $
-              {(
-                general.length * valorChangueada
-              ).toLocaleString("es-AR")}
-            </p>
+  <span>
+    💰 $
+    {(
+      general.length * valorChangueada
+    ).toLocaleString("es-AR")}
+  </span>
+</div>
 
-            <hr />
+<hr />
 
-            <p>
-              ⚽ Viejitos:{" "}
-              <strong>{viejitos.length}</strong>
-            </p>
+<div className="flex justify-between">
+  <span>
+    ⚽ Viejitos: <strong>{viejitos.length}</strong>
+  </span>
 
-            <p>
-              💰 $
-              {(
-                viejitos.length * valorChangueada
-              ).toLocaleString("es-AR")}
-            </p>
+  <span>
+    💰 $
+    {(
+      viejitos.length * valorChangueada
+    ).toLocaleString("es-AR")}
+  </span>
+</div>
           </div>
 
           <button
             onClick={continuar}
-            className="mb-6 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
+            className="mb-6 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
           >
             Continuar →
           </button>
