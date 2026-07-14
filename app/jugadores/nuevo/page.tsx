@@ -53,8 +53,8 @@ export default function NuevoJugador() {
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-bold">
-          Nuevo jugador
+        <h1 className="text-3xl font-bold">
+         👤 Nuevo jugador
         </h1>
 
         <div className="flex gap-2">

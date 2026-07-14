@@ -90,37 +90,37 @@ export default function Jugadores() {
       <div className="mt-8 space-y-3">
         {listaJugadores.map((jugador) => (
           <div
-            key={jugador.id}
-            className="flex items-center justify-between gap-4 rounded-lg bg-white p-4 text-green-900"
-          >
-            <span className="text-xl font-bold">
-              {jugador.frecuente ? "⭐ " : ""}
-              {jugador.nombre}
-            </span>
+  key={jugador.id}
+  className="rounded-lg bg-white p-4 text-green-900"
+>
+  <div className="text-xl font-bold">
+    {jugador.frecuente ? "⭐ " : ""}
+    {jugador.nombre}
+  </div>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => cambiarFrecuente(jugador)}
-                className="rounded-lg bg-yellow-500 px-3 py-2 text-white"
-              >
-                ⭐
-              </button>
+  <div className="mt-3 flex justify-end gap-3">
+    <button
+      onClick={() => cambiarFrecuente(jugador)}
+      className="h-12 w-12 rounded-lg bg-yellow-500 text-xl text-white"
+    >
+      ⭐
+    </button>
 
-              <button
-                onClick={() => editarJugador(jugador)}
-                className="rounded-lg bg-yellow-300 px-3 py-2 text-black"
-              >
-                ✏️
-              </button>
+    <button
+      onClick={() => editarJugador(jugador)}
+      className="h-12 w-12 rounded-lg bg-yellow-300 text-xl text-black"
+    >
+      ✏️
+    </button>
 
-              <button
-                onClick={() => eliminarJugador(jugador)}
-                className="rounded-lg bg-red-600 px-3 py-2 text-white"
-              >
-                🗑️
-              </button>
-            </div>
-          </div>
+    <button
+      onClick={() => eliminarJugador(jugador)}
+      className="h-12 w-12 rounded-lg bg-red-600 text-xl text-white"
+    >
+      🗑️
+    </button>
+  </div>
+</div>
         ))}
       </div>
     </main>
