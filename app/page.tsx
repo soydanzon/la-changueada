@@ -55,7 +55,7 @@ export default function Home() {
   href="/handicap"
   className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
 >
-  🧢 Handicap
+  🧢 Proyecto HCP
 </a>
 
         <a
@@ -68,7 +68,7 @@ export default function Home() {
       </div>
 
       <div className="mt-auto pt-8 text-center text-sm tracking-widest text-green-300">
-   - v2.27 - 
+   - v2.28 - 
 </div>
     </main>
   );
