@@ -21,12 +21,12 @@ export default function TablaPremios() {
 
   return (
     <main className="min-h-screen bg-green-950 p-6 text-white">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
         <div>
           <div className="flex items-center gap-3">
-            <span className="text-4xl">🏆</span>
+            <span className="text-3xl">🏆</span>
 
-            <h1 className="text-4xl font-black">
+            <h1 className="text-3xl font-black">
               Tabla de Premios
             </h1>
           </div>
