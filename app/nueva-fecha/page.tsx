@@ -203,13 +203,11 @@ export default function NuevaFecha() {
               {cancha.par}
             </p>
 
-            <p className="font-bold">
-              👥 Jugadores: {totalJugadores}
-            </p>
+<p className="font-bold">
+  👥 Jugadores: {totalJugadores}
+</p>
 
-            <hr />
-
-            <div className="flex justify-between">
+<div className="mt-4 flex justify-between">
   <span>
     ⚽ General: <strong>{general.length}</strong>
   </span>
@@ -222,9 +220,7 @@ export default function NuevaFecha() {
   </span>
 </div>
 
-<hr />
-
-<div className="flex justify-between">
+<div className="mt-2 flex justify-between">
   <span>
     ⚽ Viejitos: <strong>{viejitos.length}</strong>
   </span>
