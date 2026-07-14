@@ -279,21 +279,21 @@ export default function Historial() {
                         <div className="mt-5 flex gap-3">
   <button
     onClick={() => verDetalle(fecha.id)}
-    className="flex-1 rounded-xl bg-green-700 py-3 text-xl text-white"
+    className="flex-1 rounded-xl bg-green-700 py-3 text-xl text-white font-bold"
   >
     👁 Ver
   </button>
 
   <button
     onClick={() => verPlaca(fecha.id)}
-    className="flex-1 rounded-xl bg-blue-600 py-3 text-xl text-white"
+    className="flex-1 rounded-xl bg-blue-600 py-3 text-xl text-white font-bold"
   >
     📤 Placa
   </button>
 
   <button
     onClick={() => eliminarFecha(fecha)}
-    className="flex-1 rounded-xl bg-red-600 py-3 text-xl text-white"
+    className="flex-1 rounded-xl bg-red-600 py-3 text-xl text-white font-bold"
   >
     🗑️ Eliminar
   </button>
