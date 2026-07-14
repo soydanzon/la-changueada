@@ -67,6 +67,10 @@ export default function Jugadores() {
     );
   }
 
+  const jugadoresOrdenados = [...listaJugadores].sort((a, b) =>
+  a.nombre.localeCompare(b.nombre)
+);
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
@@ -88,7 +92,7 @@ export default function Jugadores() {
       </a>
 
       <div className="mt-8 space-y-3">
-        {listaJugadores.map((jugador) => (
+        {jugadoresOrdenados.map((jugador) => (
           <div
   key={jugador.id}
   className="rounded-lg bg-white p-4 text-green-900"

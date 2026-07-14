@@ -140,7 +140,7 @@ export default function NuevaFecha() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
         <h1 className="text-3xl font-bold">
-          ➕ Nueva Fecha
+          📝 Nueva Fecha
         </h1>
 
         <div className="flex gap-2">

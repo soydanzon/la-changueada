@@ -10,8 +10,8 @@ export default function Home() {
     La Changueada
   </h1>
 
-  <p className="mt-2 text-green-200 font-bold">
-    Footgolf
+  <p className="mt-3 text-lg text-green-200 tracking-wider font-bold">
+    FOOTGOLF
   </p>
 </div>
 
@@ -68,7 +68,7 @@ export default function Home() {
       </div>
 
       <div className="mt-auto pt-8 text-center text-sm tracking-widest text-green-300">
-   - v2.29 - 
+   - v2.30 - 
 </div>
     </main>
   );
