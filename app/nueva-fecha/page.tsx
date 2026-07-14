@@ -188,42 +188,42 @@ export default function NuevaFecha() {
       />
 
       <div className="space-y-3">
-        {jugadoresFiltrados.map((jugador) => (
-          <div
-            key={jugador.id}
-            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl bg-white p-4 text-green-900"
-          >
-            <div className="min-w-0 truncate text-lg font-bold">
-              {jugador.frecuente ? "⭐ " : ""}
-              {jugador.nombre}
-            </div>
-
-            <div className="flex gap-5">
-              <button
-                onClick={() => cambiarGeneral(jugador.id)}
-                className={`h-12 rounded-full px-5 text-base font-bold ${
-                  general.includes(jugador.id)
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                General
-              </button>
-
-              <button
-                onClick={() => cambiarViejitos(jugador.id)}
-                className={`h-12 rounded-full px-5 text-base font-bold ${
-                  viejitos.includes(jugador.id)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                Viejitos
-              </button>
-            </div>
-          </div>
-        ))}
+  {jugadoresFiltrados.map((jugador) => (
+    <div
+      key={jugador.id}
+      className="rounded-xl bg-white p-4 text-green-900"
+    >
+      <div className="text-lg font-bold">
+        {jugador.frecuente ? "⭐ " : ""}
+        {jugador.nombre}
       </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-4">
+        <button
+          onClick={() => cambiarGeneral(jugador.id)}
+          className={`h-12 rounded-full px-4 text-base font-bold ${
+            general.includes(jugador.id)
+              ? "bg-green-600 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          General
+        </button>
+
+        <button
+          onClick={() => cambiarViejitos(jugador.id)}
+          className={`h-12 rounded-full px-4 text-base font-bold ${
+            viejitos.includes(jugador.id)
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Viejitos
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
 
       {cancha && (
         <div className="mt-8 space-y-2 rounded-xl bg-white p-5 text-green-900">
