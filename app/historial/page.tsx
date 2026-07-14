@@ -114,6 +114,25 @@ export default function Historial() {
     );
   }
 
+  function eliminarFecha(fecha: FechaGuardada) {
+  const confirmar = window.confirm(
+    `¿Eliminar la fecha del ${fecha.fecha}?`
+  );
+
+  if (!confirmar) return;
+
+  const nuevoHistorial = historial.filter(
+    (item) => item.id !== fecha.id
+  );
+
+  localStorage.setItem(
+    "laChangueadaHistorial",
+    JSON.stringify(nuevoHistorial)
+  );
+
+  setHistorial(nuevoHistorial);
+}
+
   const grupos = agruparPorMes(historial);
 
   return (
@@ -257,19 +276,28 @@ export default function Historial() {
                           )}
                         </p>
 
-                        <button
-                          onClick={() => verDetalle(fecha.id)}
-                          className="mt-5 w-full rounded-xl bg-green-700 px-5 py-3 font-bold text-white"
-                        >
-                          👁 Ver resultados completos
-                        </button>
+                        <div className="mt-5 flex gap-3">
+  <button
+    onClick={() => verDetalle(fecha.id)}
+    className="flex-1 rounded-xl bg-green-700 py-3 text-xl text-white"
+  >
+    👁 Ver
+  </button>
 
-                        <button
-                          onClick={() => verPlaca(fecha.id)}
-                          className="mt-3 w-full rounded-xl bg-blue-600 px-5 py-3 font-bold text-white"
-                        >
-                          📤 Ver placa
-                        </button>
+  <button
+    onClick={() => verPlaca(fecha.id)}
+    className="flex-1 rounded-xl bg-blue-600 py-3 text-xl text-white"
+  >
+    📤 Placa
+  </button>
+
+  <button
+    onClick={() => eliminarFecha(fecha)}
+    className="flex-1 rounded-xl bg-red-600 py-3 text-xl text-white"
+  >
+    🗑️ Eliminar
+  </button>
+</div>
                       </div>
                     ))}
                   </div>
