@@ -18,49 +18,49 @@ export default function Home() {
       <div className="space-y-4">
         <a
           href="/nueva-fecha"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
           ➕ Nueva Fecha
         </a>
 
         <a
           href="/historial"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
           📜 Historial
         </a>
 
         <a
           href="/estadisticas"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
           📊 Estadísticas 
         </a>
 
         <a
           href="/ranking"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
           🎖️ Ranking 
         </a>
 
         <a
           href="/jugadores"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
           👤 Jugadores
         </a>
 
         <a
   href="/handicap"
-  className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+  className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
 >
   🧢 Handicap
 </a>
 
         <a
           href="/configuracion"
-          className="block bg-white text-green-950 rounded-2xl p-4 text-xl font-black"
+          className="block bg-white text-green-950 rounded-2xl py-4 pl-8 text-xl font-black"
         >
 
           ⚙️ Configuración
