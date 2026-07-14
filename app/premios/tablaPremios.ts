@@ -4,6 +4,9 @@ export type FilaPremios = {
 };
 
 export const tablaPremiosOriginal: FilaPremios[] = [
+  { jugadores: 3, premios: [30000] },
+  { jugadores: 4, premios: [40000] },
+  { jugadores: 5, premios: [40000, 10000] },
   { jugadores: 6, premios: [40000, 20000] },
   { jugadores: 7, premios: [40000, 20000, 10000] },
   { jugadores: 8, premios: [40000, 25000, 15000] },

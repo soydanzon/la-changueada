@@ -19,7 +19,9 @@ type FechaHistorial = {
 };
 
 function ordenarCanchasPorUso(canchas: Cancha[]) {
-  const datos = localStorage.getItem("laChangueadaHistorial");
+  const datos = localStorage.getItem(
+    "laChangueadaHistorial"
+  );
 
   if (!datos) return canchas;
 
@@ -48,21 +50,24 @@ export default function NuevaFecha() {
 
   const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [canchaId, setCanchaId] = useState(0);
-  const [valorChangueada, setValorChangueada] = useState(
-    config.valorChangueada
-  );
+  const [valorChangueada, setValorChangueada] =
+    useState(config.valorChangueada);
 
-  const cancha =
-    canchas.find((c) => c.id === canchaId) ?? canchas[0];
-
-  const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
+  const [listaJugadores, setListaJugadores] = useState<
+    Jugador[]
+  >([]);
   const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
 
+  const cancha =
+    canchas.find((c) => c.id === canchaId) ?? canchas[0];
+
   useEffect(() => {
     localStorage.removeItem("laChangueadaScores");
-    localStorage.removeItem("laChangueadaFechaYaGuardada");
+    localStorage.removeItem(
+      "laChangueadaFechaYaGuardada"
+    );
 
     const valorGuardado = localStorage.getItem(
       "laChangueadaValor"
@@ -72,9 +77,10 @@ export default function NuevaFecha() {
       setValorChangueada(Number(valorGuardado));
     }
 
-    const canchasGuardadas = obtenerCanchasGuardadas().filter(
-      (c) => c.activa
-    );
+    const canchasGuardadas =
+      obtenerCanchasGuardadas().filter(
+        (canchaGuardada) => canchaGuardada.activa
+      );
 
     const canchasOrdenadas =
       ordenarCanchasPorUso(canchasGuardadas);
@@ -96,7 +102,9 @@ export default function NuevaFecha() {
   function cambiarGeneral(id: number) {
     setGeneral((actual) =>
       actual.includes(id)
-        ? actual.filter((j) => j !== id)
+        ? actual.filter(
+            (jugadorId) => jugadorId !== id
+          )
         : [...actual, id]
     );
   }
@@ -104,7 +112,9 @@ export default function NuevaFecha() {
   function cambiarViejitos(id: number) {
     setViejitos((actual) =>
       actual.includes(id)
-        ? actual.filter((j) => j !== id)
+        ? actual.filter(
+            (jugadorId) => jugadorId !== id
+          )
         : [...actual, id]
     );
   }
@@ -133,8 +143,14 @@ export default function NuevaFecha() {
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
       if (!a.frecuente && b.frecuente) return 1;
+
       return a.nombre.localeCompare(b.nombre);
     });
+
+  const totalJugadores = new Set([
+    ...general,
+    ...viejitos,
+  ]).size;
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -150,121 +166,140 @@ export default function NuevaFecha() {
       </div>
 
       {cancha && (
-        <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
-          <p className="text-xl font-bold">
-            📅 {new Date().toLocaleDateString("es-AR")}
-          </p>
+        <>
+          <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
+            <p className="text-xl font-bold">
+              📅{" "}
+              {new Date().toLocaleDateString("es-AR")}
+            </p>
 
-          <label className="mt-4 block font-bold">
-            🚩 Cancha
-          </label>
+            <label className="mt-4 block font-bold">
+              🚩 Cancha
+            </label>
 
-          <select
-            value={canchaId}
-            onChange={(e) =>
-              setCanchaId(Number(e.target.value))
-            }
-            className="mt-2 w-full rounded-lg border p-3 text-black"
+            <select
+              value={canchaId}
+              onChange={(evento) =>
+                setCanchaId(
+                  Number(evento.target.value)
+                )
+              }
+              className="mt-2 w-full rounded-lg border p-3 text-black"
+            >
+              {canchas.map((canchaDisponible) => (
+                <option
+                  key={canchaDisponible.id}
+                  value={canchaDisponible.id}
+                >
+                  {canchaDisponible.nombre}
+                </option>
+              ))}
+            </select>
+
+            <p className="mt-4 font-bold">
+              E {cancha.par}
+            </p>
+          </div>
+
+          <div className="mb-6 space-y-2 rounded-xl bg-white p-5 text-green-900">
+            <p className="text-lg font-bold">
+              🚩 {cancha.nombre} &nbsp;&nbsp; E{" "}
+              {cancha.par}
+            </p>
+
+            <p className="font-bold">
+              👥 Jugadores: {totalJugadores}
+            </p>
+
+            <hr />
+
+            <p>
+              ⚽ General:{" "}
+              <strong>{general.length}</strong>
+            </p>
+
+            <p>
+              💰 $
+              {(
+                general.length * valorChangueada
+              ).toLocaleString("es-AR")}
+            </p>
+
+            <hr />
+
+            <p>
+              ⚽ Viejitos:{" "}
+              <strong>{viejitos.length}</strong>
+            </p>
+
+            <p>
+              💰 $
+              {(
+                viejitos.length * valorChangueada
+              ).toLocaleString("es-AR")}
+            </p>
+          </div>
+
+          <button
+            onClick={continuar}
+            className="mb-6 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
           >
-            {canchas.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombre}
-              </option>
-            ))}
-          </select>
-
-          <p className="mt-4 font-bold">
-            E {cancha.par}
-          </p>
-        </div>
+            Continuar →
+          </button>
+        </>
       )}
 
       <input
         type="text"
         placeholder="Buscar jugador..."
         value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
+        onChange={(evento) =>
+          setBusqueda(evento.target.value)
+        }
         className="mb-6 w-full rounded-lg bg-white p-4 text-xl text-black"
       />
 
       <div className="space-y-3">
-  {jugadoresFiltrados.map((jugador) => (
-    <div
-      key={jugador.id}
-      className="rounded-xl bg-white p-4 text-green-900"
-    >
-      <div className="text-lg font-bold">
-        {jugador.frecuente ? "⭐ " : ""}
-        {jugador.nombre}
+        {jugadoresFiltrados.map((jugador) => (
+          <div
+            key={jugador.id}
+            className="rounded-xl bg-white p-4 text-green-900"
+          >
+            <div className="text-lg font-bold">
+              {jugador.frecuente ? "⭐ " : ""}
+              {jugador.nombre}
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-4">
+              <button
+                onClick={() =>
+                  cambiarGeneral(jugador.id)
+                }
+                className={`h-12 rounded-full px-4 text-base font-bold ${
+                  general.includes(jugador.id)
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                General
+              </button>
+
+              <button
+                onClick={() =>
+                  cambiarViejitos(jugador.id)
+                }
+                className={`h-12 rounded-full px-4 text-base font-bold ${
+                  viejitos.includes(jugador.id)
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                Viejitos
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-4">
-        <button
-          onClick={() => cambiarGeneral(jugador.id)}
-          className={`h-12 rounded-full px-4 text-base font-bold ${
-            general.includes(jugador.id)
-              ? "bg-green-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          General
-        </button>
-
-        <button
-          onClick={() => cambiarViejitos(jugador.id)}
-          className={`h-12 rounded-full px-4 text-base font-bold ${
-            viejitos.includes(jugador.id)
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Viejitos
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
-
-      {cancha && (
-        <div className="mt-8 space-y-2 rounded-xl bg-white p-5 text-green-900">
-          <p className="text-lg font-bold">
-            🚩 {cancha.nombre} &nbsp;&nbsp; E {cancha.par}
-          </p>
-
-          <hr />
-
-          <p>
-            ⚽ General: <strong>{general.length}</strong>
-          </p>
-
-          <p>
-            💰 $
-            {(
-              general.length * valorChangueada
-            ).toLocaleString("es-AR")}
-          </p>
-
-          <hr />
-
-          <p>
-            ⚽ Viejitos: <strong>{viejitos.length}</strong>
-          </p>
-
-          <p>
-            💰 $
-            {(
-              viejitos.length * valorChangueada
-            ).toLocaleString("es-AR")}
-          </p>
-        </div>
-      )}
-
-      <button
-        onClick={continuar}
-        className="mt-8 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
-      >
-        Continuar →
-      </button>
     </main>
   );
 }
