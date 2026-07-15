@@ -144,14 +144,14 @@ export default function Compartir() {
 
   return (
     <main className="min-h-screen bg-green-900 p-4 text-black">
-      <div 
-      ref={placaRef}
-      className="mx-auto mb-4 flex max-w-xl justify-end gap-2">
+      <div className="mx-auto mb-4 flex max-w-xl justify-end gap-2">
         <BotonVolver />
         <BotonInicio />
       </div>
 
-      <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
+      <div 
+      ref={placaRef}
+      className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
         <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
   <h1 className="text-4xl font-black">
     LA CHANGUEADA
