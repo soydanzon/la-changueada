@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import * as htmlToImage from "html-to-image";
 
 type Resultado = {
   jugador: {
@@ -35,6 +36,7 @@ export default function Compartir() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
   const [fecha, setFecha] = useState("");
+  const placaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const historial = localStorage.getItem("laChangueadaHistorial");
@@ -56,6 +58,48 @@ export default function Compartir() {
     setViejitos(fechaSeleccionada.viejitos);
     setFecha(fechaSeleccionada.fecha);
   }, []);
+
+  async function compartirImagen() {
+  if (!placaRef.current) return;
+
+  try {
+    const dataUrl = await htmlToImage.toPng(placaRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+    });
+
+    const respuesta = await fetch(dataUrl);
+    const blob = await respuesta.blob();
+
+    const archivo = new File(
+      [blob],
+      `la-changueada-${fecha || "resultados"}.png`,
+      { type: "image/png" }
+    );
+
+    if (
+      navigator.share &&
+      navigator.canShare?.({ files: [archivo] })
+    ) {
+      await navigator.share({
+        title: "La Changueada",
+        text: `Resultados ${fecha}`,
+        files: [archivo],
+      });
+
+      return;
+    }
+
+    const enlace = document.createElement("a");
+    enlace.href = dataUrl;
+    enlace.download = archivo.name;
+    enlace.click();
+  } catch (error) {
+    console.error(error);
+    alert("No se pudo generar la imagen.");
+  }
+}
 
   function ListaPremios({
     resultados,
@@ -100,7 +144,9 @@ export default function Compartir() {
 
   return (
     <main className="min-h-screen bg-green-900 p-4 text-black">
-      <div className="mx-auto mb-4 flex max-w-xl justify-end gap-2">
+      <div 
+      ref={placaRef}
+      className="mx-auto mb-4 flex max-w-xl justify-end gap-2">
         <BotonVolver />
         <BotonInicio />
       </div>
@@ -140,6 +186,14 @@ export default function Compartir() {
           ⚽ Que viva La Changueada ⚽
         </p>
       </div>
+
+      <button
+  onClick={compartirImagen}
+  className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+>
+  📤 Compartir imagen
+</button>
+
     </main>
   );
 }
