@@ -97,6 +97,22 @@ export default function NuevaFecha() {
     } else {
       setListaJugadores(jugadores);
     }
+    const borradorGuardado = localStorage.getItem(
+  "laChangueadaNuevaFechaBorrador"
+);
+
+if (borradorGuardado) {
+  const borrador = JSON.parse(borradorGuardado);
+
+  setCanchaId(borrador.canchaId ?? 0);
+  setGeneral(borrador.general ?? []);
+  setViejitos(borrador.viejitos ?? []);
+  setBusqueda(borrador.busqueda ?? "");
+
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaBorrador"
+  );
+}
   }, []);
 
   function cambiarGeneral(id: number) {
@@ -118,8 +134,27 @@ export default function NuevaFecha() {
         : [...actual, id]
     );
   }
+  
+  function agregarJugadorDesdeFecha() {
+  localStorage.setItem(
+    "laChangueadaNuevaFechaBorrador",
+    JSON.stringify({
+      canchaId,
+      general,
+      viejitos,
+      busqueda,
+    })
+  );
 
-  function continuar() {
+  localStorage.setItem(
+    "laChangueadaOrigenNuevoJugador",
+    "nueva-fecha"
+  );
+
+  router.push("/jugadores/nuevo");
+}
+
+   function continuar() {
     if (!cancha) return;
 
     localStorage.setItem(
@@ -294,6 +329,14 @@ export default function NuevaFecha() {
           </div>
         ))}
       </div>
+
+      <button
+  onClick={agregarJugadorDesdeFecha}
+  className="mt-6 mb-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
+>
+  ➕ Agregar jugador
+</button>
+
     </main>
   );
 }

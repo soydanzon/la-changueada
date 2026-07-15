@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { jugadores, type Jugador } from "../../datos/jugadores";
+import {
+  jugadores,
+  type Jugador,
+} from "../../datos/jugadores";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
 
@@ -19,14 +22,18 @@ export default function NuevoJugador() {
       return;
     }
 
-    const guardados = localStorage.getItem("laChangueadaJugadores");
+    const guardados = localStorage.getItem(
+      "laChangueadaJugadores"
+    );
 
     const listaActual: Jugador[] = guardados
       ? JSON.parse(guardados)
       : jugadores;
 
     const existe = listaActual.some(
-      (j) => j.nombre.toLowerCase() === nombreLimpio.toLowerCase()
+      (jugador) =>
+        jugador.nombre.toLowerCase() ===
+        nombreLimpio.toLowerCase()
     );
 
     if (existe) {
@@ -35,10 +42,10 @@ export default function NuevoJugador() {
     }
 
     const nuevoJugador: Jugador = {
-  id: Date.now(),
-  nombre: nombreLimpio,
-  frecuente: false,
-};
+      id: Date.now(),
+      nombre: nombreLimpio,
+      frecuente: false,
+    };
 
     const nuevaLista = [...listaActual, nuevoJugador];
 
@@ -47,6 +54,19 @@ export default function NuevoJugador() {
       JSON.stringify(nuevaLista)
     );
 
+    const origen = localStorage.getItem(
+      "laChangueadaOrigenNuevoJugador"
+    );
+
+    if (origen === "nueva-fecha") {
+      localStorage.removeItem(
+        "laChangueadaOrigenNuevoJugador"
+      );
+
+      router.push("/nueva-fecha");
+      return;
+    }
+
     router.push("/jugadores");
   }
 
@@ -54,7 +74,7 @@ export default function NuevoJugador() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">
-         👤 Nuevo jugador
+          👤 Nuevo jugador
         </h1>
 
         <div className="flex gap-2">
@@ -67,7 +87,9 @@ export default function NuevoJugador() {
         type="text"
         placeholder="Nombre del jugador"
         value={nombre}
-        onChange={(e) => setNombre(e.target.value)}
+        onChange={(evento) =>
+          setNombre(evento.target.value)
+        }
         className="mt-8 w-full rounded-lg bg-white p-4 text-xl text-black"
       />
 
