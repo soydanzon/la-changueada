@@ -206,28 +206,25 @@ export default function Historial() {
                           Jugadores: {fecha.general.length}
                         </p>
 
-                        <div className="mt-2 space-y-2">
+                        <div className="mt-2 space-y-1">
                           {premiados(fecha.general).map(
                             (resultado) => (
                               <div
-  key={`${fecha.id}-general-${resultado.jugador.nombre}-${resultado.puesto}`}
-  className="rounded-lg bg-gray-100 p-3"
->
-  <p className="font-bold">
-    {resultado.puesto}. {resultado.jugador.nombre}
-  </p>
+                                key={`${fecha.id}-general-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                className="flex justify-between gap-4"
+                              >
+                                <span>
+                                  {resultado.puesto}.{" "}
+                                  {resultado.jugador.nombre} -{" "}
+                                  {resultado.score}
+                                </span>
 
-  <div className="mt-1 flex justify-between gap-4 text-sm">
-    <span>
-      Score: {resultado.score}
-    </span>
-
-    <strong>
-      Premio:{" "}
-      {formatearPesos(resultado.premio)}
-    </strong>
-  </div>
-</div>
+                                <strong>
+                                  {formatearPesos(
+                                    resultado.premio
+                                  )}
+                                </strong>
+                              </div>
                             )
                           )}
                         </div>
@@ -249,28 +246,25 @@ export default function Historial() {
                           Jugadores: {fecha.viejitos.length}
                         </p>
 
-                        <div className="mt-2 space-y-2">
+                        <div className="mt-2 space-y-1">
                           {premiados(fecha.viejitos).map(
                             (resultado) => (
                               <div
-  key={`${fecha.id}-viejitos-${resultado.jugador.nombre}-${resultado.puesto}`}
-  className="rounded-lg bg-gray-100 p-3"
->
-  <p className="font-bold">
-    {resultado.puesto}. {resultado.jugador.nombre}
-  </p>
+                                key={`${fecha.id}-viejitos-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                className="flex justify-between gap-4"
+                              >
+                                <span>
+                                  {resultado.puesto}.{" "}
+                                  {resultado.jugador.nombre} -{" "}
+                                  {resultado.score}
+                                </span>
 
-  <div className="mt-1 flex justify-between gap-4 text-sm">
-    <span>
-      Score: {resultado.score}
-    </span>
-
-    <strong>
-      Premio:{" "}
-      {formatearPesos(resultado.premio)}
-    </strong>
-  </div>
-</div>
+                                <strong>
+                                  {formatearPesos(
+                                    resultado.premio
+                                  )}
+                                </strong>
+                              </div>
                             )
                           )}
                         </div>
