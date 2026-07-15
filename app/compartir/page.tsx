@@ -107,13 +107,13 @@ export default function Compartir() {
 
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
         <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
-          <p className="text-sm font-bold tracking-[0.3em]">
-            Footgolf
-          </p>
+  <h1 className="text-4xl font-black">
+    LA CHANGUEADA
+  </h1>
 
-          <h1 className="mt-2 text-4xl font-black">
-            LA CHANGUEADA
-          </h1>
+  <p className="mt-2 text-sm font-bold tracking-[0.3em]">
+    FOOTGOLF
+  </p>
 
           <p className="mt-2 font-bold">
             Resultados {fecha && `- ${fecha}`}

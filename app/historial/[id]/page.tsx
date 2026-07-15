@@ -45,22 +45,26 @@ function TablaResultados({ resultados }: { resultados: Resultado[] }) {
       {resultados.map((r) => (
         <div
           key={`${r.jugador.nombre}-${r.puesto}`}
-          className="flex items-center gap-3 rounded-lg border p-3"
+          className="rounded-lg border p-3"
         >
-          <div className="w-8 text-center font-bold">
-            {medalla(r.puesto)}
+          <div className="flex items-start gap-3">
+            <div className="w-8 shrink-0 text-center font-bold">
+              {medalla(r.puesto)}
+            </div>
+
+            <div className="min-w-0 flex-1 font-semibold">
+              {r.jugador.nombre}
+            </div>
           </div>
 
-          <div className="flex-1 truncate font-semibold">
-            {r.jugador.nombre}
-          </div>
+          <div className="mt-2 flex items-center justify-between pl-11">
+            <span className="font-bold">
+              Score: {r.score}
+            </span>
 
-          <div className="w-12 text-center font-bold">
-            {r.score}
-          </div>
-
-          <div className="w-24 text-right font-bold text-green-700">
-            {formatearPesos(r.premio)}
+            <span className="font-bold text-green-700">
+              {formatearPesos(r.premio)}
+            </span>
           </div>
         </div>
       ))}
@@ -124,7 +128,7 @@ export default function DetalleFecha() {
 
       <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
         <h2 className="mb-4 text-2xl font-bold">
-          🏆 General
+          General
         </h2>
 
         <TablaResultados resultados={fecha.general} />
@@ -132,7 +136,7 @@ export default function DetalleFecha() {
 
       <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
         <h2 className="mb-4 text-2xl font-bold">
-          👴 Viejitos
+          Viejitos
         </h2>
 
         <TablaResultados resultados={fecha.viejitos} />
