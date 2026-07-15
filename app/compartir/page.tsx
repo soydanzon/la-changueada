@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import * as htmlToImage from "html-to-image";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
-import * as htmlToImage from "html-to-image";
 
 type Resultado = {
   jugador: {
@@ -29,6 +29,7 @@ function medalla(puesto: number) {
   if (puesto === 1) return "🥇";
   if (puesto === 2) return "🥈";
   if (puesto === 3) return "🥉";
+
   return `${puesto}.`;
 }
 
@@ -36,10 +37,15 @@ export default function Compartir() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
   const [fecha, setFecha] = useState("");
-  const placaRef = useRef<HTMLDivElement>(null);
+
+  const placaGeneralRef = useRef<HTMLDivElement>(null);
+  const placaViejitosRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const historial = localStorage.getItem("laChangueadaHistorial");
+    const historial = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
+
     const fechaElegida = localStorage.getItem(
       "laChangueadaFechaParaCompartir"
     );
@@ -49,7 +55,10 @@ export default function Compartir() {
     const fechas: FechaGuardada[] = JSON.parse(historial);
 
     const fechaSeleccionada = fechaElegida
-      ? fechas.find((f) => f.id === Number(fechaElegida))
+      ? fechas.find(
+          (fechaGuardada) =>
+            fechaGuardada.id === Number(fechaElegida)
+        )
       : fechas[0];
 
     if (!fechaSeleccionada) return;
@@ -59,85 +68,138 @@ export default function Compartir() {
     setFecha(fechaSeleccionada.fecha);
   }, []);
 
-  async function compartirImagen() {
-  if (!placaRef.current) return;
+  async function compartirImagen(
+    placa: HTMLDivElement | null,
+    categoria: string
+  ) {
+    if (!placa) return;
 
-  try {
-    const dataUrl = await htmlToImage.toPng(placaRef.current, {
-      cacheBust: true,
-      pixelRatio: 2,
-      backgroundColor: "#ffffff",
-    });
-
-    const respuesta = await fetch(dataUrl);
-    const blob = await respuesta.blob();
-
-    const archivo = new File(
-      [blob],
-      `la-changueada-${fecha || "resultados"}.png`,
-      { type: "image/png" }
-    );
-
-    if (
-      navigator.share &&
-      navigator.canShare?.({ files: [archivo] })
-    ) {
-      await navigator.share({
-        title: "La Changueada",
-        text: `Resultados ${fecha}`,
-        files: [archivo],
+    try {
+      const dataUrl = await htmlToImage.toPng(placa, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#ffffff",
       });
 
-      return;
-    }
+      const respuesta = await fetch(dataUrl);
+      const blob = await respuesta.blob();
 
-    const enlace = document.createElement("a");
-    enlace.href = dataUrl;
-    enlace.download = archivo.name;
-    enlace.click();
-  } catch (error) {
-    console.error(error);
-    alert("No se pudo generar la imagen.");
+      const nombreCategoria = categoria.toLowerCase();
+
+      const archivo = new File(
+        [blob],
+        `la-changueada-${nombreCategoria}-${
+          fecha || "resultados"
+        }.png`,
+        {
+          type: "image/png",
+        }
+      );
+
+      if (
+        navigator.share &&
+        navigator.canShare?.({
+          files: [archivo],
+        })
+      ) {
+        await navigator.share({
+          title: `La Changueada - ${categoria}`,
+          text: `Resultados ${categoria} - ${fecha}`,
+          files: [archivo],
+        });
+
+        return;
+      }
+
+      const enlace = document.createElement("a");
+      enlace.href = dataUrl;
+      enlace.download = archivo.name;
+      enlace.click();
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo generar la imagen.");
+    }
   }
-}
 
   function ListaPremios({
     resultados,
   }: {
     resultados: Resultado[];
   }) {
-    const premiados = resultados.filter((r) => r.premio > 0);
+    const premiados = resultados.filter(
+      (resultado) => resultado.premio > 0
+    );
 
     if (premiados.length === 0) {
       return (
-        <p className="text-sm text-gray-500">
+        <p className="mt-4 text-center font-bold text-gray-500">
           Sin premios
         </p>
       );
     }
 
     return (
-      <div className="mt-3 space-y-3">
-        {premiados.map((r) => (
+      <div className="mt-4 space-y-2">
+        {premiados.map((resultado) => (
           <div
-            key={`${r.puesto}-${r.jugador.nombre}`}
-            className="flex items-center justify-between gap-4 rounded-xl bg-green-50 px-4 py-3"
+            key={`${resultado.puesto}-${resultado.jugador.nombre}`}
+            className="flex items-center justify-between gap-3 rounded-xl bg-green-50 px-4 py-3"
           >
-            <div>
-              <p className="text-lg font-black">
-                {medalla(r.puesto)} {r.jugador.nombre}
+            <div className="min-w-0">
+              <p className="font-black">
+                {medalla(resultado.puesto)}{" "}
+                {resultado.jugador.nombre}
               </p>
 
-              <p className="text-sm text-gray-600">
-                Score: {r.score}
+              <p className="mt-1 text-sm text-gray-600">
+                Score: {resultado.score}
               </p>
             </div>
 
-            <p className="font-black text-green-900">
-              {formatearPesos(r.premio)}
+            <p className="shrink-0 font-black text-green-900">
+              {formatearPesos(resultado.premio)}
             </p>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  function Placa({
+    referencia,
+    categoria,
+    resultados,
+  }: {
+    referencia: React.RefObject<HTMLDivElement | null>;
+    categoria: string;
+    resultados: Resultado[];
+  }) {
+    return (
+      <div
+        ref={referencia}
+        className="mx-auto w-full max-w-xl rounded-3xl bg-white p-5 shadow-2xl"
+      >
+        <div className="rounded-2xl bg-green-900 px-5 py-5 text-center text-white">
+          <h1 className="text-3xl font-black">
+            LA CHANGUEADA
+          </h1>
+
+          <p className="mt-1 text-sm font-bold tracking-[0.3em]">
+            FOOTGOLF
+          </p>
+
+          <p className="mt-3 font-bold">
+            {fecha}
+          </p>
+        </div>
+
+        <section className="mt-5">
+          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-center text-2xl font-black text-white">
+            {categoria}
+          </h2>
+
+          <ListaPremios resultados={resultados} />
+        </section>
       </div>
     );
   }
@@ -149,51 +211,41 @@ export default function Compartir() {
         <BotonInicio />
       </div>
 
-      <div 
-      ref={placaRef}
-      className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-        <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
-  <h1 className="text-4xl font-black">
-    LA CHANGUEADA
-  </h1>
-
-  <p className="mt-2 text-sm font-bold tracking-[0.3em]">
-    FOOTGOLF
-  </p>
-
-          <p className="mt-2 font-bold">
-            Resultados {fecha && `- ${fecha}`}
-          </p>
-        </div>
-
-        <section className="mt-6">
-          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-2xl font-black text-white">
-            GENERAL
-          </h2>
-
-          <ListaPremios resultados={general} />
-        </section>
-
-        <section className="mt-6">
-          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-2xl font-black text-white">
-            VIEJITOS
-          </h2>
-
-          <ListaPremios resultados={viejitos} />
-        </section>
-
-        <p className="mt-8 text-center text-lg font-black text-green-900">
-          ⚽ Que viva La Changueada ⚽
-        </p>
-      </div>
+      <Placa
+        referencia={placaGeneralRef}
+        categoria="GENERAL"
+        resultados={general}
+      />
 
       <button
-  onClick={compartirImagen}
-  className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
->
-  📤 Compartir imagen
-</button>
+        onClick={() =>
+          compartirImagen(
+            placaGeneralRef.current,
+            "General"
+          )
+        }
+        className="mx-auto mb-10 mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+      >
+        📤 Compartir General
+      </button>
 
+      <Placa
+        referencia={placaViejitosRef}
+        categoria="VIEJITOS"
+        resultados={viejitos}
+      />
+
+      <button
+        onClick={() =>
+          compartirImagen(
+            placaViejitosRef.current,
+            "Viejitos"
+          )
+        }
+        className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+      >
+        📤 Compartir Viejitos
+      </button>
     </main>
   );
 }
