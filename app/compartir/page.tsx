@@ -143,7 +143,7 @@ export default function Compartir() {
         {premiados.map((resultado) => (
           <div
             key={`${resultado.puesto}-${resultado.jugador.nombre}`}
-            className="flex items-center justify-between gap-3 rounded-xl bg-green-50 px-3 py-2"
+            className="flex items-start justify-between gap-3 rounded-xl bg-green-50 px-3 py-2"
           >
             <div className="min-w-0">
               <p className="font-black">
@@ -156,9 +156,9 @@ export default function Compartir() {
               </p>
             </div>
 
-            <p className="shrink-0 font-black text-green-900">
-              {formatearPesos(resultado.premio)}
-            </p>
+            <p className="shrink-0 text-base font-medium text-green-700">
+  {formatearPesos(resultado.premio)}
+</p>
           </div>
         ))}
       </div>
