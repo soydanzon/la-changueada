@@ -10,6 +10,10 @@ import {
 } from "../datos/canchas";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import {
+  obtenerTablaPremios,
+  type FilaPremios,
+} from "../premios/tablaPremios";
 
 type FechaHistorial = {
   cancha?: {
@@ -59,7 +63,10 @@ export default function NuevaFecha() {
   const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
-
+  const [tablaPremios, setTablaPremios] =
+  useState<FilaPremios[]>([]);
+const [tablaPremiosCargada, setTablaPremiosCargada] =
+  useState(false);
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
@@ -123,6 +130,9 @@ if (borradorGuardado) {
           )
         : [...actual, id]
     );
+
+    setTablaPremios(obtenerTablaPremios());
+setTablaPremiosCargada(true);
   }
 
   function cambiarViejitos(id: number) {
@@ -186,6 +196,16 @@ if (borradorGuardado) {
     ...general,
     ...viejitos,
   ]).size;
+
+  const premiosGeneral =
+  tablaPremios.find(
+    (fila) => fila.jugadores === general.length
+  )?.premios ?? [];
+
+const premiosViejitos =
+  tablaPremios.find(
+    (fila) => fila.jugadores === viejitos.length
+  )?.premios ?? [];
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -336,6 +356,62 @@ if (borradorGuardado) {
 >
   ➕ Agregar jugador
 </button>
+
+<div className="mb-6 mt-6 rounded-xl bg-white p-5 text-green-900">
+  <h2 className="text-xl font-black">
+    🏆 Reparto de premios
+  </h2>
+
+  <div className="mt-4">
+    <p className="font-bold">
+      General — {general.length} jugadores
+    </p>
+
+    {premiosGeneral.length > 0 ? (
+      <div className="mt-2 space-y-1">
+        {premiosGeneral.map((premio, indice) => (
+          <p key={`general-${indice}`}>
+            {indice + 1}.º —{" "}
+            <strong>
+              ${premio.toLocaleString("es-AR")}
+            </strong>
+          </p>
+        ))}
+      </div>
+    ) : (
+      <p className="mt-2 text-gray-500">
+        {tablaPremiosCargada
+  ? "Sin reparto configurado"
+  : "Cargando premios..."}
+      </p>
+    )}
+  </div>
+
+  <div className="mt-5">
+    <p className="font-bold">
+      Viejitos — {viejitos.length} jugadores
+    </p>
+
+    {premiosViejitos.length > 0 ? (
+      <div className="mt-2 space-y-1">
+        {premiosViejitos.map((premio, indice) => (
+          <p key={`viejitos-${indice}`}>
+            {indice + 1}.º —{" "}
+            <strong>
+              ${premio.toLocaleString("es-AR")}
+            </strong>
+          </p>
+        ))}
+      </div>
+    ) : (
+      <p className="mt-2 text-gray-500">
+        {tablaPremiosCargada
+  ? "Sin reparto configurado"
+  : "Cargando premios..."}
+      </p>
+    )}
+  </div>
+</div>
 
     </main>
   );
