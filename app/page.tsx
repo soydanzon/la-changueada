@@ -15,7 +15,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <a
           href="/nueva-fecha"
           className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
@@ -67,7 +67,7 @@ export default function Home() {
       </div>
 
       <div className="mt-auto pt-4 text-center text-sm tracking-widest text-green-300">
-        - v2.48 -
+        - v2.49 -
       </div>
     </main>
   );
