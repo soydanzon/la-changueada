@@ -1,7 +1,7 @@
 export default function Home() {
   return (
-    <main className="min-h-screen md:h-screen bg-green-950 text-white p-6 flex flex-col overflow-y-auto md:overflow-hidden">
-      <div className="mb-6 mt-4 text-center">
+    <main className="min-h-screen bg-green-950 text-white p-6 flex flex-col overflow-y-auto">
+      <div className="mb-10 mt-4 text-center">
         <div className="mb-3 text-5xl">
           ⚽ 🚩
         </div>
