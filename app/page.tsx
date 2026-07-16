@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="flex h-[100dvh] flex-col overflow-hidden bg-green-950 p-6 text-white">
+    <main className="min-h-screen md:h-screen bg-green-950 text-white p-6 flex flex-col overflow-y-auto md:overflow-hidden">
       <div className="mb-6 mt-4 text-center">
         <div className="mb-3 text-5xl">
           ⚽ 🚩
@@ -18,49 +18,49 @@ export default function Home() {
       <div className="space-y-4">
         <a
           href="/nueva-fecha"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           ➕ Nueva Fecha
         </a>
 
         <a
           href="/historial"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           📜 Historial
         </a>
 
         <a
           href="/estadisticas"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           📊 Estadísticas
         </a>
 
         <a
           href="/ranking"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           🎖️ Ranking
         </a>
 
         <a
           href="/jugadores"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           👤 Jugadores
         </a>
 
         <a
           href="/handicap"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           🧢 Proyecto HCP
         </a>
 
         <a
           href="/configuracion"
-          className="block rounded-2xl bg-white py-4 pl-8 text-xl font-black text-green-950"
+          className="block rounded-2xl bg-white py-4 pl-6 text-xl font-black text-green-950"
         >
           ⚙️ Configuración
         </a>
