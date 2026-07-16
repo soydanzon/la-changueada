@@ -132,18 +132,18 @@ export default function Compartir() {
 
     if (premiados.length === 0) {
       return (
-        <p className="mt-4 text-center font-bold text-gray-500">
+        <p className="mt-3 text-center text-sm font-bold text-gray-500">
           Sin premios
         </p>
       );
     }
 
     return (
-      <div className="mt-4 space-y-2">
+      <div className="mt-3 space-y-2">
         {premiados.map((resultado) => (
           <div
             key={`${resultado.puesto}-${resultado.jugador.nombre}`}
-            className="flex items-center justify-between gap-3 rounded-xl bg-green-50 px-4 py-3"
+            className="flex items-center justify-between gap-3 rounded-xl bg-green-50 px-3 py-2"
           >
             <div className="min-w-0">
               <p className="font-black">
@@ -151,7 +151,7 @@ export default function Compartir() {
                 {resultado.jugador.nombre}
               </p>
 
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="text-sm text-gray-600">
                 Score: {resultado.score}
               </p>
             </div>
@@ -177,24 +177,24 @@ export default function Compartir() {
     return (
       <div
         ref={referencia}
-        className="mx-auto w-full max-w-xl rounded-3xl bg-white p-5 shadow-2xl"
+        className="mx-auto w-full max-w-xl rounded-3xl bg-white p-4 shadow-2xl"
       >
-        <div className="rounded-2xl bg-green-900 px-5 py-5 text-center text-white">
-          <h1 className="text-3xl font-black">
+        <div className="rounded-2xl bg-green-900 px-4 py-4 text-center text-white">
+          <h1 className="text-2xl font-black">
             LA CHANGUEADA
           </h1>
 
-          <p className="mt-1 text-sm font-bold tracking-[0.3em]">
+          <p className="mt-1 text-xs font-bold tracking-[0.3em]">
             FOOTGOLF
           </p>
 
-          <p className="mt-3 font-bold">
+          <p className="mt-2 text-sm font-bold">
             {fecha}
           </p>
         </div>
 
-        <section className="mt-5">
-          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-center text-2xl font-black text-white">
+        <section className="mt-4">
+          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-center text-xl font-black text-white">
             {categoria}
           </h2>
 
