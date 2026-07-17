@@ -247,26 +247,28 @@ export default function NuevaFecha() {
             {new Date().toLocaleDateString("es-AR")}
           </p>
 
-          <label className="mt-4 block font-bold">
-            Cancha
-          </label>
+          <div className="mt-4 flex items-center gap-3">
+  <label className="font-bold whitespace-nowrap">
+    Cancha
+  </label>
 
-          <select
-            value={canchaId}
-            onChange={(evento) =>
-              setCanchaId(Number(evento.target.value))
-            }
-            className="mt-2 w-full rounded-lg border p-3 text-black"
-          >
-            {canchas.map((canchaDisponible) => (
-              <option
-                key={canchaDisponible.id}
-                value={canchaDisponible.id}
-              >
-                {canchaDisponible.nombre}
-              </option>
-            ))}
-          </select>
+  <select
+    value={canchaId}
+    onChange={(evento) =>
+      setCanchaId(Number(evento.target.value))
+    }
+    className="flex-1 rounded-lg border p-3 text-black"
+  >
+    {canchas.map((canchaDisponible) => (
+      <option
+        key={canchaDisponible.id}
+        value={canchaDisponible.id}
+      >
+        {canchaDisponible.nombre}
+      </option>
+    ))}
+  </select>
+</div>
 
           <div className="mt-5 border-t border-gray-200 pt-5">
             <p className="text-lg font-bold">
@@ -308,7 +310,7 @@ export default function NuevaFecha() {
 
           <div className="mt-5 border-t border-gray-200 pt-5">
             <h2 className="text-xl font-black">
-              💰 Reparto de premios
+              🏆 Reparto de premios
             </h2>
 
             <div className="mt-4">
