@@ -241,53 +241,49 @@ export default function NuevaFecha() {
       </div>
 
       {cancha && (
-        <>
-          <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
-            <p className="text-xl font-bold">
-              📅{" "}
-              {new Date().toLocaleDateString("es-AR")}
-            </p>
+        <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
+          <p className="text-xl font-bold">
+            📅{" "}
+            {new Date().toLocaleDateString("es-AR")}
+          </p>
 
-            <label className="mt-4 block font-bold">
-              Cancha
-            </label>
+          <label className="mt-4 block font-bold">
+            Cancha
+          </label>
 
-            <select
-              value={canchaId}
-              onChange={(evento) =>
-                setCanchaId(
-                  Number(evento.target.value)
-                )
-              }
-              className="mt-2 w-full rounded-lg border p-3 text-black"
-            >
-              {canchas.map((canchaDisponible) => (
-                <option
-                  key={canchaDisponible.id}
-                  value={canchaDisponible.id}
-                >
-                  {canchaDisponible.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={canchaId}
+            onChange={(evento) =>
+              setCanchaId(Number(evento.target.value))
+            }
+            className="mt-2 w-full rounded-lg border p-3 text-black"
+          >
+            {canchas.map((canchaDisponible) => (
+              <option
+                key={canchaDisponible.id}
+                value={canchaDisponible.id}
+              >
+                {canchaDisponible.nombre}
+              </option>
+            ))}
+          </select>
 
-          <div className="mb-6 space-y-2 rounded-xl bg-white p-5 text-green-900">
+          <div className="mt-5 border-t border-gray-200 pt-5">
             <p className="text-lg font-bold">
               🚩 {cancha.nombre} &nbsp;&nbsp; E{" "}
               {cancha.par}
             </p>
 
-            <p className="font-bold">
+            <p className="mt-2 font-bold">
               👥 Jugadores: {totalJugadores}
             </p>
 
-            <div className="mt-4 flex justify-between">
+            <div className="mt-4 flex justify-between gap-4">
               <span>
                 General: <strong>{general.length}</strong>
               </span>
 
-              <span>
+              <span className="text-right">
                 💰 $
                 {(
                   general.length * valorChangueada
@@ -295,13 +291,13 @@ export default function NuevaFecha() {
               </span>
             </div>
 
-            <div className="mt-2 flex justify-between">
+            <div className="mt-2 flex justify-between gap-4">
               <span>
                 Viejitos:{" "}
                 <strong>{viejitos.length}</strong>
               </span>
 
-              <span>
+              <span className="text-right">
                 💰 $
                 {(
                   viejitos.length * valorChangueada
@@ -310,13 +306,79 @@ export default function NuevaFecha() {
             </div>
           </div>
 
+          <div className="mt-5 border-t border-gray-200 pt-5">
+            <h2 className="text-xl font-black">
+              🏆 Reparto de premios
+            </h2>
+
+            <div className="mt-4">
+              <p className="font-bold">
+                General — {general.length} jugadores
+              </p>
+
+              {premiosGeneral.length > 0 ? (
+                <div className="mt-2 space-y-1">
+                  {premiosGeneral.map(
+                    (premio, indice) => (
+                      <p key={`general-${indice}`}>
+                        {indice + 1}.º —{" "}
+                        <strong>
+                          $
+                          {premio.toLocaleString(
+                            "es-AR"
+                          )}
+                        </strong>
+                      </p>
+                    )
+                  )}
+                </div>
+              ) : (
+                <p className="mt-2 text-gray-500">
+                  {tablaPremiosCargada
+                    ? "Sin reparto configurado"
+                    : "Cargando premios..."}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5">
+              <p className="font-bold">
+                Viejitos — {viejitos.length} jugadores
+              </p>
+
+              {premiosViejitos.length > 0 ? (
+                <div className="mt-2 space-y-1">
+                  {premiosViejitos.map(
+                    (premio, indice) => (
+                      <p key={`viejitos-${indice}`}>
+                        {indice + 1}.º —{" "}
+                        <strong>
+                          $
+                          {premio.toLocaleString(
+                            "es-AR"
+                          )}
+                        </strong>
+                      </p>
+                    )
+                  )}
+                </div>
+              ) : (
+                <p className="mt-2 text-gray-500">
+                  {tablaPremiosCargada
+                    ? "Sin reparto configurado"
+                    : "Cargando premios..."}
+                </p>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={continuar}
-            className="mb-6 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
+            className="mt-6 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
           >
             Continuar →
           </button>
-        </>
+        </div>
       )}
 
       <input
@@ -326,8 +388,15 @@ export default function NuevaFecha() {
         onChange={(evento) =>
           setBusqueda(evento.target.value)
         }
-        className="mb-6 w-full rounded-lg bg-white p-4 text-xl text-black"
+        className="w-full rounded-lg bg-white p-4 text-xl text-black"
       />
+
+      <button
+        onClick={agregarJugadorDesdeFecha}
+        className="mb-6 mt-4 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
+      >
+        ➕ Agregar jugador
+      </button>
 
       <div className="space-y-3">
         {jugadoresFiltrados.map((jugador) => (
@@ -369,79 +438,6 @@ export default function NuevaFecha() {
             </div>
           </div>
         ))}
-      </div>
-
-      <button
-        onClick={agregarJugadorDesdeFecha}
-        className="mb-6 mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
-      >
-        ➕ Agregar jugador
-      </button>
-
-      <div className="mb-6 mt-6 rounded-xl bg-white p-5 text-green-900">
-        <h2 className="text-xl font-black">
-          🏆 Reparto de premios
-        </h2>
-
-        <div className="mt-4">
-          <p className="font-bold">
-            General — {general.length} jugadores
-          </p>
-
-          {premiosGeneral.length > 0 ? (
-            <div className="mt-2 space-y-1">
-              {premiosGeneral.map(
-                (premio, indice) => (
-                  <p key={`general-${indice}`}>
-                    {indice + 1}.º —{" "}
-                    <strong>
-                      $
-                      {premio.toLocaleString(
-                        "es-AR"
-                      )}
-                    </strong>
-                  </p>
-                )
-              )}
-            </div>
-          ) : (
-            <p className="mt-2 text-gray-500">
-              {tablaPremiosCargada
-                ? "Sin reparto configurado"
-                : "Cargando premios..."}
-            </p>
-          )}
-        </div>
-
-        <div className="mt-5">
-          <p className="font-bold">
-            Viejitos — {viejitos.length} jugadores
-          </p>
-
-          {premiosViejitos.length > 0 ? (
-            <div className="mt-2 space-y-1">
-              {premiosViejitos.map(
-                (premio, indice) => (
-                  <p key={`viejitos-${indice}`}>
-                    {indice + 1}.º —{" "}
-                    <strong>
-                      $
-                      {premio.toLocaleString(
-                        "es-AR"
-                      )}
-                    </strong>
-                  </p>
-                )
-              )}
-            </div>
-          ) : (
-            <p className="mt-2 text-gray-500">
-              {tablaPremiosCargada
-                ? "Sin reparto configurado"
-                : "Cargando premios..."}
-            </p>
-          )}
-        </div>
       </div>
     </main>
   );
