@@ -257,7 +257,7 @@ export default function NuevaFecha() {
     onChange={(evento) =>
       setCanchaId(Number(evento.target.value))
     }
-    className="flex-1 rounded-lg border p-3 py-2 text-black"
+    className="flex-1 rounded-lg border px-3 py-2 text-black"
   >
     {canchas.map((canchaDisponible) => (
       <option
