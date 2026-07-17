@@ -17,11 +17,7 @@ function formatearNumero(valor: number) {
 }
 
 function formatearHandicap(valor: number) {
-  if (valor === 0) return "E";
-
-  const numero = formatearNumero(valor);
-
-  return valor > 0 ? `+${numero}` : numero;
+  return formatearNumero(valor);
 }
 
 export default function Handicap() {
