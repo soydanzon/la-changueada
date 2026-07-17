@@ -6,7 +6,6 @@ import {
   type FechaGuardada,
   type HandicapJugador,
 } from "../utils/estadisticas";
-import { jugadores, type Jugador } from "../datos/jugadores";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
@@ -34,35 +33,12 @@ export default function Handicap() {
     const historial: FechaGuardada[] =
       JSON.parse(datosHistorial);
 
-    const datosJugadores = localStorage.getItem(
-      "laChangueadaJugadores"
-    );
-
-    const listaJugadores: Jugador[] = datosJugadores
-      ? JSON.parse(datosJugadores)
-      : jugadores;
-
-    const jugadoresFrecuentes = new Set(
-      listaJugadores
-        .filter((jugador) => jugador.frecuente)
-        .map((jugador) => jugador.nombre)
-    );
-
     const handicapsCalculados =
       calcularHandicap(historial);
 
-    handicapsCalculados.sort((a, b) => {
-      const frecuenteA =
-        jugadoresFrecuentes.has(a.nombre);
-
-      const frecuenteB =
-        jugadoresFrecuentes.has(b.nombre);
-
-      if (frecuenteA && !frecuenteB) return -1;
-      if (!frecuenteA && frecuenteB) return 1;
-
-      return a.handicap - b.handicap;
-    });
+    handicapsCalculados.sort(
+      (a, b) => a.handicap - b.handicap
+    );
 
     setHandicaps(handicapsCalculados);
   }, []);
