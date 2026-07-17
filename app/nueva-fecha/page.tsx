@@ -22,6 +22,13 @@ type FechaHistorial = {
   } | null;
 };
 
+type BorradorNuevaFecha = {
+  canchaId?: number;
+  general?: number[];
+  viejitos?: number[];
+  busqueda?: string;
+};
+
 function ordenarCanchasPorUso(canchas: Cancha[]) {
   const datos = localStorage.getItem(
     "laChangueadaHistorial"
@@ -54,19 +61,24 @@ export default function NuevaFecha() {
 
   const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [canchaId, setCanchaId] = useState(0);
+
   const [valorChangueada, setValorChangueada] =
     useState(config.valorChangueada);
 
   const [listaJugadores, setListaJugadores] = useState<
     Jugador[]
   >([]);
+
   const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
+
   const [tablaPremios, setTablaPremios] =
-  useState<FilaPremios[]>([]);
-const [tablaPremiosCargada, setTablaPremiosCargada] =
-  useState(false);
+    useState<FilaPremios[]>([]);
+
+  const [tablaPremiosCargada, setTablaPremiosCargada] =
+    useState(false);
+
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
@@ -104,23 +116,30 @@ const [tablaPremiosCargada, setTablaPremiosCargada] =
     } else {
       setListaJugadores(jugadores);
     }
+
     const borradorGuardado = localStorage.getItem(
-  "laChangueadaNuevaFechaBorrador"
-);
+      "laChangueadaNuevaFechaBorrador"
+    );
 
-if (borradorGuardado) {
-  const borrador = JSON.parse(borradorGuardado);
+    if (borradorGuardado) {
+      const borrador: BorradorNuevaFecha =
+        JSON.parse(borradorGuardado);
 
-  setCanchaId(borrador.canchaId ?? 0);
-  setGeneral(borrador.general ?? []);
-  setViejitos(borrador.viejitos ?? []);
-  setBusqueda(borrador.busqueda ?? "");
+      setCanchaId(borrador.canchaId ?? 0);
+      setGeneral(borrador.general ?? []);
+      setViejitos(borrador.viejitos ?? []);
+      setBusqueda(borrador.busqueda ?? "");
 
-  localStorage.removeItem(
-    "laChangueadaNuevaFechaBorrador"
-  );
-}
+      localStorage.removeItem(
+        "laChangueadaNuevaFechaBorrador"
+      );
+    }
   }, []);
+
+  function cargarTablaPremios() {
+    setTablaPremios(obtenerTablaPremios());
+    setTablaPremiosCargada(true);
+  }
 
   function cambiarGeneral(id: number) {
     setGeneral((actual) =>
@@ -131,8 +150,7 @@ if (borradorGuardado) {
         : [...actual, id]
     );
 
-    setTablaPremios(obtenerTablaPremios());
-setTablaPremiosCargada(true);
+    cargarTablaPremios();
   }
 
   function cambiarViejitos(id: number) {
@@ -143,28 +161,30 @@ setTablaPremiosCargada(true);
           )
         : [...actual, id]
     );
+
+    cargarTablaPremios();
   }
-  
+
   function agregarJugadorDesdeFecha() {
-  localStorage.setItem(
-    "laChangueadaNuevaFechaBorrador",
-    JSON.stringify({
-      canchaId,
-      general,
-      viejitos,
-      busqueda,
-    })
-  );
+    localStorage.setItem(
+      "laChangueadaNuevaFechaBorrador",
+      JSON.stringify({
+        canchaId,
+        general,
+        viejitos,
+        busqueda,
+      })
+    );
 
-  localStorage.setItem(
-    "laChangueadaOrigenNuevoJugador",
-    "nueva-fecha"
-  );
+    localStorage.setItem(
+      "laChangueadaOrigenNuevoJugador",
+      "nueva-fecha"
+    );
 
-  router.push("/jugadores/nuevo");
-}
+    router.push("/jugadores/nuevo");
+  }
 
-   function continuar() {
+  function continuar() {
     if (!cancha) return;
 
     localStorage.setItem(
@@ -198,14 +218,14 @@ setTablaPremiosCargada(true);
   ]).size;
 
   const premiosGeneral =
-  tablaPremios.find(
-    (fila) => fila.jugadores === general.length
-  )?.premios ?? [];
+    tablaPremios.find(
+      (fila) => fila.jugadores === general.length
+    )?.premios ?? [];
 
-const premiosViejitos =
-  tablaPremios.find(
-    (fila) => fila.jugadores === viejitos.length
-  )?.premios ?? [];
+  const premiosViejitos =
+    tablaPremios.find(
+      (fila) => fila.jugadores === viejitos.length
+    )?.premios ?? [];
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -229,7 +249,7 @@ const premiosViejitos =
             </p>
 
             <label className="mt-4 block font-bold">
-             Cancha
+              Cancha
             </label>
 
             <select
@@ -258,35 +278,36 @@ const premiosViejitos =
               {cancha.par}
             </p>
 
-<p className="font-bold">
-  👥 Jugadores: {totalJugadores}
-</p>
+            <p className="font-bold">
+              👥 Jugadores: {totalJugadores}
+            </p>
 
-<div className="mt-4 flex justify-between">
-  <span>
-    ⚽ General: <strong>{general.length}</strong>
-  </span>
+            <div className="mt-4 flex justify-between">
+              <span>
+                General: <strong>{general.length}</strong>
+              </span>
 
-  <span>
-    💰 $
-    {(
-      general.length * valorChangueada
-    ).toLocaleString("es-AR")}
-  </span>
-</div>
+              <span>
+                💰 $
+                {(
+                  general.length * valorChangueada
+                ).toLocaleString("es-AR")}
+              </span>
+            </div>
 
-<div className="mt-2 flex justify-between">
-  <span>
-    ⚽ Viejitos: <strong>{viejitos.length}</strong>
-  </span>
+            <div className="mt-2 flex justify-between">
+              <span>
+                Viejitos:{" "}
+                <strong>{viejitos.length}</strong>
+              </span>
 
-  <span>
-    💰 $
-    {(
-      viejitos.length * valorChangueada
-    ).toLocaleString("es-AR")}
-  </span>
-</div>
+              <span>
+                💰 $
+                {(
+                  viejitos.length * valorChangueada
+                ).toLocaleString("es-AR")}
+              </span>
+            </div>
           </div>
 
           <button
@@ -351,68 +372,77 @@ const premiosViejitos =
       </div>
 
       <button
-  onClick={agregarJugadorDesdeFecha}
-  className="mt-6 mb-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
->
-  ➕ Agregar jugador
-</button>
+        onClick={agregarJugadorDesdeFecha}
+        className="mb-6 mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
+      >
+        ➕ Agregar jugador
+      </button>
 
-<div className="mb-6 mt-6 rounded-xl bg-white p-5 text-green-900">
-  <h2 className="text-xl font-black">
-    🏆 Reparto de premios
-  </h2>
+      <div className="mb-6 mt-6 rounded-xl bg-white p-5 text-green-900">
+        <h2 className="text-xl font-black">
+          🏆 Reparto de premios
+        </h2>
 
-  <div className="mt-4">
-    <p className="font-bold">
-      General — {general.length} jugadores
-    </p>
-
-    {premiosGeneral.length > 0 ? (
-      <div className="mt-2 space-y-1">
-        {premiosGeneral.map((premio, indice) => (
-          <p key={`general-${indice}`}>
-            {indice + 1}.º —{" "}
-            <strong>
-              ${premio.toLocaleString("es-AR")}
-            </strong>
+        <div className="mt-4">
+          <p className="font-bold">
+            General — {general.length} jugadores
           </p>
-        ))}
-      </div>
-    ) : (
-      <p className="mt-2 text-gray-500">
-        {tablaPremiosCargada
-  ? "Sin reparto configurado"
-  : "Cargando premios..."}
-      </p>
-    )}
-  </div>
 
-  <div className="mt-5">
-    <p className="font-bold">
-      Viejitos — {viejitos.length} jugadores
-    </p>
+          {premiosGeneral.length > 0 ? (
+            <div className="mt-2 space-y-1">
+              {premiosGeneral.map(
+                (premio, indice) => (
+                  <p key={`general-${indice}`}>
+                    {indice + 1}.º —{" "}
+                    <strong>
+                      $
+                      {premio.toLocaleString(
+                        "es-AR"
+                      )}
+                    </strong>
+                  </p>
+                )
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 text-gray-500">
+              {tablaPremiosCargada
+                ? "Sin reparto configurado"
+                : "Cargando premios..."}
+            </p>
+          )}
+        </div>
 
-    {premiosViejitos.length > 0 ? (
-      <div className="mt-2 space-y-1">
-        {premiosViejitos.map((premio, indice) => (
-          <p key={`viejitos-${indice}`}>
-            {indice + 1}.º —{" "}
-            <strong>
-              ${premio.toLocaleString("es-AR")}
-            </strong>
+        <div className="mt-5">
+          <p className="font-bold">
+            Viejitos — {viejitos.length} jugadores
           </p>
-        ))}
-      </div>
-    ) : (
-      <p className="mt-2 text-gray-500">
-        {tablaPremiosCargada
-  ? "Sin reparto configurado"
-  : "Cargando premios..."}
-      </p>
-    )}
-  </div>
-</div>
 
+          {premiosViejitos.length > 0 ? (
+            <div className="mt-2 space-y-1">
+              {premiosViejitos.map(
+                (premio, indice) => (
+                  <p key={`viejitos-${indice}`}>
+                    {indice + 1}.º —{" "}
+                    <strong>
+                      $
+                      {premio.toLocaleString(
+                        "es-AR"
+                      )}
+                    </strong>
+                  </p>
+                )
+              )}
+            </div>
+          ) : (
+            <p className="mt-2 text-gray-500">
+              {tablaPremiosCargada
+                ? "Sin reparto configurado"
+                : "Cargando premios..."}
+            </p>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
