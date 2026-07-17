@@ -284,7 +284,7 @@ export default function NuevaFecha() {
               </span>
 
               <span className="text-right">
-                💰 $
+                $
                 {(
                   general.length * valorChangueada
                 ).toLocaleString("es-AR")}
@@ -298,7 +298,7 @@ export default function NuevaFecha() {
               </span>
 
               <span className="text-right">
-                💰 $
+                $
                 {(
                   viejitos.length * valorChangueada
                 ).toLocaleString("es-AR")}
@@ -308,7 +308,7 @@ export default function NuevaFecha() {
 
           <div className="mt-5 border-t border-gray-200 pt-5">
             <h2 className="text-xl font-black">
-              🏆 Reparto de premios
+              💰 Reparto de premios
             </h2>
 
             <div className="mt-4">
@@ -374,7 +374,7 @@ export default function NuevaFecha() {
 
           <button
             onClick={continuar}
-            className="mt-6 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
+            className="mt-6 w-full rounded-xl bg-green-600 p-4 text-2xl font-bold text-white"
           >
             Continuar →
           </button>
