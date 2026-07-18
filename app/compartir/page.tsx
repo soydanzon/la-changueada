@@ -121,49 +121,68 @@ export default function Compartir() {
     }
   }
 
-  function ListaPremios({
-    resultados,
-  }: {
-    resultados: Resultado[];
-  }) {
-    const premiados = resultados.filter(
-      (resultado) => resultado.premio > 0
-    );
-
-    if (premiados.length === 0) {
-      return (
-        <p className="mt-3 text-center text-sm font-bold text-gray-500">
-          Sin premios
-        </p>
-      );
-    }
-
+  function ListaResultados({
+  resultados,
+}: {
+  resultados: Resultado[];
+}) {
+  if (resultados.length === 0) {
     return (
-      <div className="mt-3 space-y-2">
-        {premiados.map((resultado) => (
-          <div
-            key={`${resultado.puesto}-${resultado.jugador.nombre}`}
-            className="flex items-start justify-between gap-3 rounded-xl bg-green-50 px-3 py-2"
-          >
-            <div className="min-w-0">
-              <p className="font-black">
-                {medalla(resultado.puesto)}{" "}
-                {resultado.jugador.nombre}
-              </p>
-
-              <p className="text-sm text-gray-600">
-                Score: {resultado.score}
-              </p>
-            </div>
-
-            <p className="shrink-0 text-base font-medium text-green-700">
-  {formatearPesos(resultado.premio)}
-</p>
-          </div>
-        ))}
-      </div>
+      <p className="mt-3 text-center text-sm font-bold text-gray-500">
+        Sin resultados
+      </p>
     );
   }
+
+  return (
+    <div className="mt-3 space-y-1">
+      {resultados.map((resultado, indice) => {
+        const anterior = resultados[indice - 1];
+
+        const empatado =
+          anterior &&
+          anterior.score === resultado.score;
+
+        let puesto = `${resultado.puesto}.`;
+
+        if (empatado) {
+          puesto = `T${resultado.puesto}`;
+        }
+
+        let posicion = puesto;
+
+        if (resultado.puesto === 1) {
+          posicion = empatado ? "T🥇" : "🥇";
+        } else if (resultado.puesto === 2) {
+          posicion = empatado ? "T🥈" : "🥈";
+        } else if (resultado.puesto === 3) {
+          posicion = empatado ? "T🥉" : "🥉";
+        }
+
+        return (
+          <div
+            key={`${resultado.puesto}-${resultado.jugador.nombre}`}
+            className="flex items-center justify-between px-2 py-1"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="w-8 shrink-0 font-black">
+                {posicion}
+              </span>
+
+              <span className="truncate font-semibold">
+                {resultado.jugador.nombre}
+              </span>
+            </div>
+
+            <span className="shrink-0 font-black">
+              {resultado.score}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
   function Placa({
     referencia,
@@ -195,10 +214,10 @@ export default function Compartir() {
 
         <section className="mt-4">
           <h2 className="rounded-xl bg-green-900 px-4 py-2 text-center text-xl font-black text-white">
-            {categoria}
+            {categoria} · {resultados.length} jugadores
           </h2>
 
-          <ListaPremios resultados={resultados} />
+          <ListaResultados resultados={resultados} />
         </section>
       </div>
     );
