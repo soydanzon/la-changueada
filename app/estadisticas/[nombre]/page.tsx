@@ -126,61 +126,59 @@ export default function PerfilJugador() {
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-bold">
-          {nombre}
-        </h1>
+      <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
+  <h1 className="text-3xl font-bold">
+    {nombre}
+  </h1>
 
-        <div className="flex gap-2">
-          <BotonVolver />
-          <BotonInicio />
-        </div>
-      </div>
+  <div className="flex gap-2">
+    <BotonVolver />
+    <BotonInicio />
+  </div>
+</div>
 
-      <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
-        <h2 className="mb-4 text-2xl font-bold">
-          Resumen general
-        </h2>
-
-        <p>
+      <div className="rounded-xl bg-white p-5 text-green-900">
+         <p>
           📅 Fechas jugadas: {resumen.jugadas}
         </p>
 
-        <div className="mt-4 rounded-xl border p-4">
-          <p className="font-bold">
-            🥇 Victorias
-          </p>
+        <div className="mt-4 grid grid-cols-2 gap-3">
+  <div className="rounded-xl border p-4">
+    <p className="text-sm">
+      🏆 Victorias
+    </p>
 
-          <p className="mt-2">
-            • General: {resumen.victoriasGeneral}
-          </p>
+    <p className="mt-1 text-3xl font-bold">
+      {resumen.victorias}
+    </p>
 
-          <p>
-            • Viejitos: {resumen.victoriasViejitos}
-          </p>
+    <p className="mt-2 text-sm">
+      General: {resumen.victoriasGeneral}
+    </p>
 
-          <p className="mt-2 font-bold">
-            • Total: {resumen.victorias}
-          </p>
-        </div>
+    <p className="text-sm">
+      Viejitos: {resumen.victoriasViejitos}
+    </p>
+  </div>
 
-        <div className="mt-4 rounded-xl border p-4">
-          <p className="font-bold">
-            🏆 Podios
-          </p>
+  <div className="rounded-xl border p-4">
+    <p className="text-sm">
+      🥇🥈🥉 Podios
+    </p>
 
-          <p className="mt-2">
-            • General: {resumen.podiosGeneral}
-          </p>
+    <p className="mt-1 text-3xl font-bold">
+      {resumen.podios}
+    </p>
 
-          <p>
-            • Viejitos: {resumen.podiosViejitos}
-          </p>
+    <p className="mt-2 text-sm">
+      General: {resumen.podiosGeneral}
+    </p>
 
-          <p className="mt-2 font-bold">
-            • Total: {resumen.podios}
-          </p>
-        </div>
+    <p className="text-sm">
+      Viejitos: {resumen.podiosViejitos}
+    </p>
+  </div>
+</div>
 
         <div className="mt-6 space-y-2">
           <p>
