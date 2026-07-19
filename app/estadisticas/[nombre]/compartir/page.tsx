@@ -79,13 +79,14 @@ export default function CompartirPerfil() {
       .map(
         (cancha) =>
           `🚩 ${cancha.cancha}
-Fechas jugadas: ${cancha.jugadas}
-Victorias: ${cancha.victorias}
-Podios: ${cancha.podios}
-Promedio: ${formatearRespectoPar(
+
+📅 Fechas jugadas: ${cancha.jugadas}
+🏆 Victorias: ${cancha.victorias}
+🥇🥈🥉 Podios: ${cancha.podios}
+📊 Promedio: ${formatearRespectoPar(
             cancha.promedioRespectoPar
           )} (${formatearNumero(cancha.promedioGolpes)} golpes)
-Mejor vuelta: ${formatearRespectoPar(
+⭐ Mejor vuelta: ${formatearRespectoPar(
             cancha.mejorVuelta
           )} (${cancha.mejorVueltaGolpes} golpes)`
       )
@@ -98,15 +99,13 @@ ${nombre}
 
 📅 Fechas jugadas: ${resumen.jugadas}
 
-🥇 Victorias
-• General: ${resumen.victoriasGeneral}
-• Viejitos: ${resumen.victoriasViejitos}
-• Total: ${resumen.victorias}
+🏆 Victorias: ${resumen.victorias}
+General: ${resumen.victoriasGeneral}
+Viejitos: ${resumen.victoriasViejitos}
 
-🏆 Podios
-• General: ${resumen.podiosGeneral}
-• Viejitos: ${resumen.podiosViejitos}
-• Total: ${resumen.podios}
+🥇🥈🥉 Podios: ${resumen.podios}
+General: ${resumen.podiosGeneral}
+Viejitos: ${resumen.podiosViejitos}
 
 📊 Promedio: ${formatearRespectoPar(
       resumen.promedio
@@ -116,8 +115,11 @@ ${nombre}
       resumen.mejorScore
     )} (${resumen.mejorScoreGolpes} golpes)
 
+💸 Aportado: ${formatearPesos(resumen.aportado)}
 💰 Ganado: ${formatearPesos(resumen.ganado)}
 📈 Balance: ${formatearPesos(resumen.balance)}
+
+📍 ESTADÍSTICAS POR CANCHA
 
 ${canchas}`;
   }
@@ -174,118 +176,161 @@ ${canchas}`;
         </div>
 
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
-          <p>
+          <p className="text-lg font-bold">
             📅 Fechas jugadas: {resumen.jugadas}
           </p>
 
-          <div className="mt-4 rounded-xl border p-4">
-            <p className="font-bold">
-              🥇 Victorias
-            </p>
+          <div className="mt-5">
+            <div className="flex items-center justify-between text-lg font-bold">
+              <span>🏆 Victorias</span>
+              <span>{resumen.victorias}</span>
+            </div>
 
-            <p className="mt-2">
-              • General: {resumen.victoriasGeneral}
-            </p>
+            <div className="mt-2 space-y-1 font-normal">
+              <div className="flex items-center justify-between">
+                <span>General</span>
+                <span>{resumen.victoriasGeneral}</span>
+              </div>
 
-            <p>
-              • Viejitos: {resumen.victoriasViejitos}
-            </p>
-
-            <p className="mt-2 font-bold">
-              • Total: {resumen.victorias}
-            </p>
+              <div className="flex items-center justify-between">
+                <span>Viejitos</span>
+                <span>{resumen.victoriasViejitos}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-4 rounded-xl border p-4">
-            <p className="font-bold">
-              🏆 Podios
-            </p>
+          <div className="mt-5">
+            <div className="flex items-center justify-between text-lg font-bold">
+              <span>🥇🥈🥉 Podios</span>
+              <span>{resumen.podios}</span>
+            </div>
 
-            <p className="mt-2">
-              • General: {resumen.podiosGeneral}
-            </p>
+            <div className="mt-2 space-y-1 font-normal">
+              <div className="flex items-center justify-between">
+                <span>General</span>
+                <span>{resumen.podiosGeneral}</span>
+              </div>
 
-            <p>
-              • Viejitos: {resumen.podiosViejitos}
-            </p>
-
-            <p className="mt-2 font-bold">
-              • Total: {resumen.podios}
-            </p>
+              <div className="flex items-center justify-between">
+                <span>Viejitos</span>
+                <span>{resumen.podiosViejitos}</span>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 space-y-2">
-            <p>
+          <div className="mt-6 space-y-3">
+            <p className="text-lg font-bold">
               📊 Promedio:{" "}
-              <strong>
-                {formatearRespectoPar(resumen.promedio)}
-              </strong>{" "}
-              ({formatearNumero(resumen.promedioGolpes)} golpes)
+              {formatearRespectoPar(resumen.promedio)}{" "}
+              <span className="text-base font-normal">
+                ({formatearNumero(resumen.promedioGolpes)} golpes)
+              </span>
             </p>
 
-            <p>
+            <p className="text-lg font-bold">
               ⭐ Mejor vuelta:{" "}
-              <strong>
-                {formatearRespectoPar(resumen.mejorScore)}
-              </strong>{" "}
-              ({resumen.mejorScoreGolpes} golpes)
+              {formatearRespectoPar(resumen.mejorScore)}{" "}
+              <span className="text-base font-normal">
+                ({resumen.mejorScoreGolpes} golpes)
+              </span>
             </p>
 
-            <p>
+            <p className="text-lg font-bold">
+              💸 Aportado: {formatearPesos(resumen.aportado)}
+            </p>
+
+            <p className="text-lg font-bold">
               💰 Ganado: {formatearPesos(resumen.ganado)}
             </p>
 
-            <p className="font-bold">
+            <p className="text-lg font-bold">
               📈 Balance: {formatearPesos(resumen.balance)}
             </p>
           </div>
         </div>
 
         {estadisticasCancha.length > 0 && (
-          <section className="mt-6">
-            <h2 className="rounded-xl bg-green-900 px-4 py-3 text-xl font-black text-white">
-              RENDIMIENTO POR CANCHA
+          <section className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
+            <h2 className="mb-5 text-2xl font-bold">
+              📍 Estadísticas por cancha
             </h2>
 
-            <div className="mt-3 space-y-3">
-              {estadisticasCancha.map((cancha) => (
-                <div
-                  key={cancha.canchaId}
-                  className="rounded-xl border p-4 text-green-950"
-                >
-                  <h3 className="text-lg font-black">
+            <div className="space-y-6">
+              {estadisticasCancha.map((cancha, index) => (
+                <div key={cancha.canchaId}>
+                  <h3 className="text-xl font-bold">
                     🚩 {cancha.cancha}
                   </h3>
 
-                  <p className="mt-2">
-                    Fechas jugadas: {cancha.jugadas}
-                  </p>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        📅 Fechas jugadas
+                      </span>
 
-                  <p>
-                    Victorias: {cancha.victorias}
-                  </p>
+                      <span className="font-bold">
+                        {cancha.jugadas}
+                      </span>
+                    </div>
 
-                  <p>
-                    Podios: {cancha.podios}
-                  </p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        🏆 Victorias
+                      </span>
 
-                  <p>
-                    Promedio:{" "}
-                    <strong>
-                      {formatearRespectoPar(
-                        cancha.promedioRespectoPar
-                      )}
-                    </strong>{" "}
-                    ({formatearNumero(cancha.promedioGolpes)} golpes)
-                  </p>
+                      <span className="font-bold">
+                        {cancha.victorias}
+                      </span>
+                    </div>
 
-                  <p>
-                    Mejor vuelta:{" "}
-                    <strong>
-                      {formatearRespectoPar(cancha.mejorVuelta)}
-                    </strong>{" "}
-                    ({cancha.mejorVueltaGolpes} golpes)
-                  </p>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">
+                        🥇🥈🥉 Podios
+                      </span>
+
+                      <span className="font-bold">
+                        {cancha.podios}
+                      </span>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="font-bold">
+                        📊 Promedio
+                      </span>
+
+                      <span className="text-right font-bold">
+                        {formatearRespectoPar(
+                          cancha.promedioRespectoPar
+                        )}{" "}
+                        <span className="font-normal">
+                          (
+                          {formatearNumero(
+                            cancha.promedioGolpes
+                          )}{" "}
+                          golpes)
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-4">
+                      <span className="font-bold">
+                        ⭐ Mejor vuelta
+                      </span>
+
+                      <span className="text-right font-bold">
+                        {formatearRespectoPar(
+                          cancha.mejorVuelta
+                        )}{" "}
+                        <span className="font-normal">
+                          ({cancha.mejorVueltaGolpes} golpes)
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {index < estadisticasCancha.length - 1 && (
+                    <div className="mt-6 border-b border-green-900/20" />
+                  )}
                 </div>
               ))}
             </div>

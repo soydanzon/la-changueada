@@ -12,14 +12,6 @@ import {
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
 
-type HistorialJugador = {
-  fecha: string;
-  categoria: string;
-  score: number;
-  puesto: number;
-  premio: number;
-};
-
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
@@ -42,12 +34,6 @@ function formatearRespectoPar(valor: number) {
   return valor > 0 ? `+${numero}` : numero;
 }
 
-function medalla(puesto: number) {
-  if (puesto === 1) return "🥇";
-  if (puesto === 2) return "🥈";
-  if (puesto === 3) return "🥉";
-  return `${puesto}°`;
-}
 
 export default function PerfilJugador() {
   const params = useParams();
@@ -60,9 +46,6 @@ export default function PerfilJugador() {
     EstadisticaCancha[]
   >([]);
 
-  const [historialJugador, setHistorialJugador] = useState<
-    HistorialJugador[]
-  >([]);
 
   useEffect(() => {
     const datos = localStorage.getItem("laChangueadaHistorial");
@@ -84,36 +67,6 @@ export default function PerfilJugador() {
     setEstadisticasCancha(
       calcularEstadisticasPorCancha(fechas, nombre)
     );
-
-    const historial: HistorialJugador[] = [];
-
-    fechas.forEach((fecha) => {
-      fecha.general.forEach((resultado) => {
-        if (resultado.jugador.nombre !== nombre) return;
-
-        historial.push({
-          fecha: fecha.fecha,
-          categoria: "General",
-          score: resultado.score,
-          puesto: resultado.puesto,
-          premio: resultado.premio,
-        });
-      });
-
-      fecha.viejitos.forEach((resultado) => {
-        if (resultado.jugador.nombre !== nombre) return;
-
-        historial.push({
-          fecha: fecha.fecha,
-          categoria: "Viejitos",
-          score: resultado.score,
-          puesto: resultado.puesto,
-          premio: resultado.premio,
-        });
-      });
-    });
-
-    setHistorialJugador(historial);
   }, [nombre]);
 
   if (!resumen) {
@@ -138,171 +91,160 @@ export default function PerfilJugador() {
 </div>
 
       <div className="rounded-xl bg-white p-5 text-green-900">
-         <p>
-          📅 Fechas jugadas: {resumen.jugadas}
-        </p>
+  <p className="text-lg font-bold">
+    📅 Fechas jugadas: {resumen.jugadas}
+  </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-  <div className="rounded-xl border p-4">
-    <p className="text-sm">
-      🏆 Victorias
-    </p>
+  <div className="mt-5">
+    <div className="flex items-center justify-between text-lg font-bold">
+      <span>🏆 Victorias</span>
+      <span>{resumen.victorias}</span>
+    </div>
 
-    <p className="mt-1 text-3xl font-bold">
-      {resumen.victorias}
-    </p>
-
-    <p className="mt-2 text-sm">
-      General: {resumen.victoriasGeneral}
-    </p>
-
-    <p className="text-sm">
-      Viejitos: {resumen.victoriasViejitos}
-    </p>
-  </div>
-
-  <div className="rounded-xl border p-4">
-    <p className="text-sm">
-      🥇🥈🥉 Podios
-    </p>
-
-    <p className="mt-1 text-3xl font-bold">
-      {resumen.podios}
-    </p>
-
-    <p className="mt-2 text-sm">
-      General: {resumen.podiosGeneral}
-    </p>
-
-    <p className="text-sm">
-      Viejitos: {resumen.podiosViejitos}
-    </p>
-  </div>
-</div>
-
-        <div className="mt-6 space-y-2">
-          <p>
-            📊 Promedio:{" "}
-            <strong>
-              {formatearRespectoPar(resumen.promedio)}
-            </strong>{" "}
-            ({formatearNumero(resumen.promedioGolpes)} golpes)
-          </p>
-
-          <p>
-            ⭐ Mejor vuelta:{" "}
-            <strong>
-              {formatearRespectoPar(resumen.mejorScore)}
-            </strong>{" "}
-            ({resumen.mejorScoreGolpes} golpes)
-          </p>
-
-          <p>
-            💸 Aportado: {formatearPesos(resumen.aportado)}
-          </p>
-
-          <p>
-            💰 Ganado: {formatearPesos(resumen.ganado)}
-          </p>
-
-          <p className="text-lg font-bold">
-            📈 Balance: {formatearPesos(resumen.balance)}
-          </p>
-        </div>
-
-        <a
-          href={`/estadisticas/${encodeURIComponent(nombre)}/compartir`}
-          className="mt-8 block w-full rounded-xl bg-green-900 p-4 text-center font-bold text-white"
-        >
-          📤 Compartir perfil
-        </a>
+    <div className="mt-2 space-y-1 font-normal">
+      <div className="flex items-center justify-between">
+        <span>General</span>
+        <span>{resumen.victoriasGeneral}</span>
       </div>
 
+      <div className="flex items-center justify-between">
+        <span>Viejitos</span>
+        <span>{resumen.victoriasViejitos}</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="mt-5">
+    <div className="flex items-center justify-between text-lg font-bold">
+      <span>🥇🥈🥉 Podios</span>
+      <span>{resumen.podios}</span>
+    </div>
+
+    <div className="mt-2 space-y-1 font-normal">
+      <div className="flex items-center justify-between">
+        <span>General</span>
+        <span>{resumen.podiosGeneral}</span>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span>Viejitos</span>
+        <span>{resumen.podiosViejitos}</span>
+      </div>
+    </div>
+  </div>
+
+  <div className="mt-6 space-y-3">
+    <p className="text-lg font-bold">
+      📊 Promedio: {formatearRespectoPar(resumen.promedio)}{" "}
+      <span className="text-base font-normal">
+        ({formatearNumero(resumen.promedioGolpes)} golpes)
+      </span>
+    </p>
+
+    <p className="text-lg font-bold">
+      ⭐ Mejor vuelta: {formatearRespectoPar(resumen.mejorScore)}{" "}
+      <span className="text-base font-normal">
+        ({resumen.mejorScoreGolpes} golpes)
+      </span>
+    </p>
+
+    <p className="text-lg font-bold">
+      💸 Aportado: {formatearPesos(resumen.aportado)}
+    </p>
+
+    <p className="text-lg font-bold">
+      💰 Ganado: {formatearPesos(resumen.ganado)}
+    </p>
+
+    <p className="text-lg font-bold">
+      📈 Balance: {formatearPesos(resumen.balance)}
+    </p>
+  </div>
+
+  <a
+    href={`/estadisticas/${encodeURIComponent(nombre)}/compartir`}
+    className="mt-7 block w-full rounded-xl bg-green-900 p-4 text-center font-bold text-white"
+  >
+    📤 Compartir perfil
+  </a>
+</div>
+
       {estadisticasCancha.length > 0 && (
-        <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
-          <h2 className="mb-4 text-2xl font-bold">
-            🚩 Rendimiento por cancha
-          </h2>
+  <div className="mt-6 rounded-xl bg-white p-5 text-green-900">
+    <h2 className="mb-5 text-2xl font-bold">
+      📍 Estadísticas por cancha
+    </h2>
 
-          <div className="space-y-4">
-            {estadisticasCancha.map((cancha) => (
-              <div
-                key={cancha.canchaId}
-                className="rounded-xl border p-4"
-              >
-                <h3 className="text-xl font-bold">
-                  🚩 {cancha.cancha}
-                </h3>
+    <div className="space-y-6">
+      {estadisticasCancha.map((cancha) => (
+        <div key={cancha.canchaId}>
+          <h3 className="text-xl font-bold">
+            🚩 {cancha.cancha}
+          </h3>
 
-                <p className="mt-2">
-                  📅 Fechas jugadas: {cancha.jugadas}
-                </p>
-
-                <p>
-                  🥇 Victorias: {cancha.victorias}
-                </p>
-
-                <p>
-                  🏆 Podios: {cancha.podios}
-                </p>
-
-                <p>
-                  📊 Promedio:{" "}
-                  <strong>
-                    {formatearRespectoPar(
-                      cancha.promedioRespectoPar
-                    )}
-                  </strong>{" "}
-                  ({formatearNumero(cancha.promedioGolpes)} golpes)
-                </p>
-
-                <p>
-                  ⭐ Mejor vuelta:{" "}
-                  <strong>
-                    {formatearRespectoPar(cancha.mejorVuelta)}
-                  </strong>{" "}
-                  ({cancha.mejorVueltaGolpes} golpes)
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
-        <h2 className="mb-4 text-2xl font-bold">
-          Historial
-        </h2>
-
-        {historialJugador.map((h, index) => (
-          <div
-            key={index}
-            className="mb-4 rounded-xl border p-4"
-          >
-            <p className="font-bold">
-              📅 {h.fecha}
-            </p>
-
-            <p>
-              🏆 {h.categoria}
-            </p>
-
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xl font-bold">
-                {medalla(h.puesto)}
-              </span>
-
-              <span>
-                ⚽ {h.score}
-              </span>
-
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
               <span className="font-bold">
-                💰 {formatearPesos(h.premio)}
+                📅 Fechas jugadas
+              </span>
+              <span className="font-bold">
+                {cancha.jugadas}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="font-bold">
+                🏆 Victorias
+              </span>
+              <span className="font-bold">
+                {cancha.victorias}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="font-bold">
+                🥇🥈🥉 Podios
+              </span>
+              <span className="font-bold">
+                {cancha.podios}
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <span className="font-bold">
+                📊 Promedio
+              </span>
+
+              <span className="text-right font-bold">
+                {formatearRespectoPar(
+                  cancha.promedioRespectoPar
+                )}{" "}
+                <span className="font-normal">
+                  ({formatearNumero(cancha.promedioGolpes)} golpes)
+                </span>
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-4">
+              <span className="font-bold">
+                ⭐ Mejor vuelta
+              </span>
+
+              <span className="text-right font-bold">
+                {formatearRespectoPar(cancha.mejorVuelta)}{" "}
+                <span className="font-normal">
+                  ({cancha.mejorVueltaGolpes} golpes)
+                </span>
               </span>
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className="mt-6 border-b border-green-900/20" />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
     </main>
   );
 }
