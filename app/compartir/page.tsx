@@ -142,14 +142,8 @@ setCancha(fechaSeleccionada.cancha ?? null);
         await navigator.share({
           title: `La Changueada - ${categoria}`,
           text: `LA CHANGUEADA ⚽🚩
-
-${fecha}
-
-Resultados ${categoria}${
-  nombreDeVuelta ? `
-
-${nombreDeVuelta}` : ""
-}`,
+${fecha}${nombreDeVuelta ? ` · ${nombreDeVuelta}` : ""}
+Resultados ${categoria}`,
           files: [archivo],
         });
 
