@@ -40,6 +40,38 @@ function premiados(resultados: ResultadoGuardado[]) {
   return resultados.filter((resultado) => resultado.premio > 0);
 }
 
+function nombreVuelta(
+  fechaActual: FechaGuardada,
+  historial: FechaGuardada[]
+) {
+  const diaActual = new Date(
+    fechaActual.id
+  ).toLocaleDateString("es-AR");
+
+  const fechasDelMismoDia = historial
+    .filter(
+      (fecha) =>
+        new Date(fecha.id).toLocaleDateString("es-AR") ===
+        diaActual
+    )
+    .sort((a, b) => a.id - b.id);
+
+  if (fechasDelMismoDia.length === 1) {
+    return "";
+  }
+
+  const posicion =
+    fechasDelMismoDia.findIndex(
+      (fecha) => fecha.id === fechaActual.id
+    ) + 1;
+
+  if (posicion === 1) return "Primera vuelta";
+  if (posicion === 2) return "Segunda vuelta";
+  if (posicion === 3) return "Tercera vuelta";
+
+  return `${posicion}ª vuelta`;
+}
+
 function verPlaca(id: number) {
   localStorage.setItem(
     "laChangueadaFechaParaCompartir",
@@ -184,8 +216,14 @@ export default function Historial() {
                         className="mb-6 rounded-xl bg-white p-5 text-green-900"
                       >
                         <h2 className="text-2xl font-bold">
-                          {fecha.fecha}
-                        </h2>
+  {fecha.fecha}
+  {nombreVuelta(fecha, historial) && (
+    <>
+      {" · "}
+      {nombreVuelta(fecha, historial)}
+    </>
+  )}
+</h2>
 
                         <p className="text-sm text-gray-600">
                           {new Date(

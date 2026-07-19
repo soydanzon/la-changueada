@@ -116,13 +116,17 @@ export default function DetalleFecha() {
 
       {fecha.cancha && (
         <div className="mt-6 rounded-xl bg-white p-5 text-green-900">
-          <p className="text-xl font-bold">
-            🚩 {fecha.cancha.nombre}
-          </p>
+          <p className="text-xl">
+  <span className="font-bold">
+    🚩 {fecha.cancha.nombre}
+  </span>
 
-          <p className="mt-1 font-bold">
-            E {fecha.cancha.par}
-          </p>
+  &nbsp;&nbsp;&nbsp;
+
+  <span className="font-normal">
+    Par {fecha.cancha.par}
+  </span>
+</p>
         </div>
       )}
 

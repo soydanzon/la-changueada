@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "../config/config";
-import { jugadores, type Jugador } from "../datos/jugadores";
+import {
+  jugadores,
+  type Jugador,
+} from "../datos/jugadores";
 import {
   obtenerCanchasGuardadas,
   type Cancha,
@@ -26,6 +29,7 @@ type BorradorNuevaFecha = {
   canchaId?: number;
   general?: number[];
   viejitos?: number[];
+  pagosPendientes?: number[];
   busqueda?: string;
 };
 
@@ -72,6 +76,10 @@ export default function NuevaFecha() {
   const [busqueda, setBusqueda] = useState("");
   const [general, setGeneral] = useState<number[]>([]);
   const [viejitos, setViejitos] = useState<number[]>([]);
+
+  const [pagosPendientes, setPagosPendientes] = useState<
+    number[]
+  >([]);
 
   const [tablaPremios, setTablaPremios] =
     useState<FilaPremios[]>([]);
@@ -128,6 +136,9 @@ export default function NuevaFecha() {
       setCanchaId(borrador.canchaId ?? 0);
       setGeneral(borrador.general ?? []);
       setViejitos(borrador.viejitos ?? []);
+      setPagosPendientes(
+        borrador.pagosPendientes ?? []
+      );
       setBusqueda(borrador.busqueda ?? "");
 
       localStorage.removeItem(
@@ -165,6 +176,21 @@ export default function NuevaFecha() {
     cargarTablaPremios();
   }
 
+  function cambiarPagoPendiente(id: number) {
+    const jugadorAnotado =
+      general.includes(id) || viejitos.includes(id);
+
+    if (!jugadorAnotado) return;
+
+    setPagosPendientes((actual) =>
+      actual.includes(id)
+        ? actual.filter(
+            (jugadorId) => jugadorId !== id
+          )
+        : [...actual, id]
+    );
+  }
+
   function agregarJugadorDesdeFecha() {
     localStorage.setItem(
       "laChangueadaNuevaFechaBorrador",
@@ -172,6 +198,7 @@ export default function NuevaFecha() {
         canchaId,
         general,
         viejitos,
+        pagosPendientes,
         busqueda,
       })
     );
@@ -187,11 +214,22 @@ export default function NuevaFecha() {
   function continuar() {
     if (!cancha) return;
 
+    const jugadoresAnotados = new Set([
+      ...general,
+      ...viejitos,
+    ]);
+
+    const pendientesAnotados =
+      pagosPendientes.filter((jugadorId) =>
+        jugadoresAnotados.has(jugadorId)
+      );
+
     localStorage.setItem(
       "laChangueadaFechaActual",
       JSON.stringify({
         general,
         viejitos,
+        pagosPendientes: pendientesAnotados,
         cancha: cancha.id,
       })
     );
@@ -216,6 +254,16 @@ export default function NuevaFecha() {
     ...general,
     ...viejitos,
   ]).size;
+
+  const jugadoresAnotados = new Set([
+    ...general,
+    ...viejitos,
+  ]);
+
+  const cantidadPagosPendientes =
+    pagosPendientes.filter((jugadorId) =>
+      jugadoresAnotados.has(jugadorId)
+    ).length;
 
   const premiosGeneral =
     tablaPremios.find(
@@ -248,33 +296,42 @@ export default function NuevaFecha() {
           </p>
 
           <div className="mt-4 flex items-center gap-3">
-  <label className="font-bold whitespace-nowrap">
-    Cancha
-  </label>
+            <label className="whitespace-nowrap font-bold">
+              Cancha
+            </label>
 
-  <select
-    value={canchaId}
-    onChange={(evento) =>
-      setCanchaId(Number(evento.target.value))
-    }
-    className="flex-1 rounded-lg border px-3 py-2 text-black"
-  >
-    {canchas.map((canchaDisponible) => (
-      <option
-        key={canchaDisponible.id}
-        value={canchaDisponible.id}
-      >
-        {canchaDisponible.nombre}
-      </option>
-    ))}
-  </select>
-</div>
+            <select
+              value={canchaId}
+              onChange={(evento) =>
+                setCanchaId(
+                  Number(evento.target.value)
+                )
+              }
+              className="flex-1 rounded-lg border px-3 py-2 text-black"
+            >
+              {canchas.map((canchaDisponible) => (
+                <option
+                  key={canchaDisponible.id}
+                  value={canchaDisponible.id}
+                >
+                  {canchaDisponible.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="mt-5 border-t border-gray-200 pt-5">
-            <p className="text-lg font-bold">
-              🚩 {cancha.nombre} &nbsp;&nbsp; E{" "}
-              {cancha.par}
-            </p>
+            <p className="text-xl">
+  <span className="font-bold">
+    🚩 {cancha.nombre}
+  </span>
+
+  &nbsp;&nbsp;&nbsp;
+
+  <span className="font-normal">
+    Par {cancha.par}
+  </span>
+</p>
 
             <p className="mt-2 font-bold">
               👥 Jugadores: {totalJugadores}
@@ -400,46 +457,91 @@ export default function NuevaFecha() {
         ➕ Agregar jugador
       </button>
 
+      {cantidadPagosPendientes > 0 && (
+        <div className="mb-4 rounded-xl bg-white px-4 py-3 font-bold text-red-700">
+          📌 {cantidadPagosPendientes}{" "}
+          {cantidadPagosPendientes === 1
+            ? "pago pendiente"
+            : "pagos pendientes"}
+        </div>
+      )}
+
       <div className="space-y-3">
-        {jugadoresFiltrados.map((jugador) => (
-          <div
-            key={jugador.id}
-            className="rounded-xl bg-white p-4 text-green-900"
-          >
-            <div className="text-lg font-bold">
-              {jugador.frecuente ? "⭐ " : ""}
-              {jugador.nombre}
-            </div>
+        {jugadoresFiltrados.map((jugador) => {
+          const jugadorAnotado =
+            general.includes(jugador.id) ||
+            viejitos.includes(jugador.id);
 
-            <div className="mt-3 grid grid-cols-2 gap-4">
-              <button
-                onClick={() =>
-                  cambiarGeneral(jugador.id)
-                }
-                className={`h-12 rounded-full px-4 text-base font-bold ${
-                  general.includes(jugador.id)
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                General
-              </button>
+          const pagoPendiente =
+            pagosPendientes.includes(jugador.id);
 
-              <button
-                onClick={() =>
-                  cambiarViejitos(jugador.id)
-                }
-                className={`h-12 rounded-full px-4 text-base font-bold ${
-                  viejitos.includes(jugador.id)
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                Viejitos
-              </button>
+          return (
+            <div
+              key={jugador.id}
+              className="rounded-xl bg-white p-4 text-green-900"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 text-lg font-bold">
+                  {jugador.frecuente ? "⭐ " : ""}
+                  {jugador.nombre}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    cambiarPagoPendiente(jugador.id)
+                  }
+                  disabled={!jugadorAnotado}
+                  aria-label={
+                    pagoPendiente
+                      ? `Quitar pago pendiente de ${jugador.nombre}`
+                      : `Marcar pago pendiente de ${jugador.nombre}`
+                  }
+                  title={
+                    jugadorAnotado
+                      ? "Pago pendiente"
+                      : "Primero anotá al jugador"
+                  }
+                  className={`h-4 w-4 shrink-0 rounded-full border-2 ${
+                    pagoPendiente
+                      ? "border-red-600 bg-red-600"
+                      : jugadorAnotado
+                        ? "border-gray-400 bg-transparent"
+                        : "cursor-not-allowed border-gray-200 bg-gray-100"
+                  }`}
+                />
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-4">
+                <button
+                  onClick={() =>
+                    cambiarGeneral(jugador.id)
+                  }
+                  className={`h-12 rounded-full px-4 text-base font-bold ${
+                    general.includes(jugador.id)
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  General
+                </button>
+
+                <button
+                  onClick={() =>
+                    cambiarViejitos(jugador.id)
+                  }
+                  className={`h-12 rounded-full px-4 text-base font-bold ${
+                    viejitos.includes(jugador.id)
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  Viejitos
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </main>
   );

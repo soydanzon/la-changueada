@@ -104,14 +104,15 @@ export default function Scores() {
       JSON.parse(fechaGuardada);
 
     localStorage.setItem(
-      "laChangueadaNuevaFechaBorrador",
-      JSON.stringify({
-        canchaId: fechaActual.cancha,
-        general: fechaActual.general,
-        viejitos: fechaActual.viejitos,
-        busqueda: "",
-      })
-    );
+  "laChangueadaNuevaFechaBorrador",
+  JSON.stringify({
+    canchaId: fechaActual.cancha,
+    general: fechaActual.general,
+    viejitos: fechaActual.viejitos,
+    pagosPendientes: (fechaActual as any).pagosPendientes ?? [],
+    busqueda: "",
+  })
+);
 
     localStorage.removeItem("laChangueadaScores");
 
@@ -158,11 +159,17 @@ export default function Scores() {
       </div>
 
       <div className="mb-6 rounded-xl bg-white p-5 text-green-900">
-        <p className="font-bold">
-          🚩 {nombreCancha}
-        </p>
+        <p>
+  <span className="font-bold">
+    🚩 {nombreCancha}
+  </span>
 
-        <p>E {parCancha}</p>
+  &nbsp;&nbsp;&nbsp;
+
+  <span className="font-normal">
+    Par {parCancha}
+  </span>
+</p>
       </div>
 
       <div className="mb-8 rounded-xl bg-white p-5 text-green-900">

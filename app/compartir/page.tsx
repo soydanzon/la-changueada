@@ -14,29 +14,60 @@ type Resultado = {
   premio: number;
 };
 
+type CanchaFecha = {
+  id: number;
+  nombre: string;
+  par: number;
+};
+
 type FechaGuardada = {
   id: number;
   fecha: string;
+  cancha?: CanchaFecha | null;
   general: Resultado[];
   viejitos: Resultado[];
 };
 
-function formatearPesos(valor: number) {
-  return `$${valor.toLocaleString("es-AR")}`;
-}
+function nombreVuelta(
+  fechaActual: FechaGuardada,
+  historial: FechaGuardada[]
+) {
+  const diaActual = new Date(
+    fechaActual.id
+  ).toLocaleDateString("es-AR");
 
-function medalla(puesto: number) {
-  if (puesto === 1) return "🥇";
-  if (puesto === 2) return "🥈";
-  if (puesto === 3) return "🥉";
+  const fechasDelMismoDia = historial
+    .filter(
+      (fecha) =>
+        new Date(fecha.id).toLocaleDateString("es-AR") ===
+        diaActual
+    )
+    .sort((a, b) => a.id - b.id);
 
-  return `${puesto}.`;
+  if (fechasDelMismoDia.length === 1) {
+    return "";
+  }
+
+  const posicion =
+    fechasDelMismoDia.findIndex(
+      (fecha) => fecha.id === fechaActual.id
+    ) + 1;
+
+  if (posicion === 1) return "Primera vuelta";
+  if (posicion === 2) return "Segunda vuelta";
+  if (posicion === 3) return "Tercera vuelta";
+
+  return `${posicion}ª vuelta`;
 }
 
 export default function Compartir() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
   const [fecha, setFecha] = useState("");
+const [nombreDeVuelta, setNombreDeVuelta] =
+  useState("");
+const [cancha, setCancha] =
+  useState<CanchaFecha | null>(null);
 
   const placaGeneralRef = useRef<HTMLDivElement>(null);
   const placaViejitosRef = useRef<HTMLDivElement>(null);
@@ -66,6 +97,12 @@ export default function Compartir() {
     setGeneral(fechaSeleccionada.general);
     setViejitos(fechaSeleccionada.viejitos);
     setFecha(fechaSeleccionada.fecha);
+
+setNombreDeVuelta(
+  nombreVuelta(fechaSeleccionada, fechas)
+);
+
+setCancha(fechaSeleccionada.cancha ?? null);
   }, []);
 
   async function compartirImagen(
@@ -122,67 +159,66 @@ export default function Compartir() {
   }
 
   function ListaResultados({
-  resultados,
-}: {
-  resultados: Resultado[];
-}) {
-  if (resultados.length === 0) {
+    resultados,
+  }: {
+    resultados: Resultado[];
+  }) {
+    if (resultados.length === 0) {
+      return (
+        <p className="mt-4 text-center text-sm text-gray-500">
+          Sin resultados
+        </p>
+      );
+    }
+
+    const resultadosVisibles = resultados.slice(0, 15);
+
     return (
-      <p className="mt-3 text-center text-sm font-bold text-gray-500">
-        Sin resultados
-      </p>
-    );
-  }
+      <div className="mt-3">
+        {resultadosVisibles.map((resultado, indice) => {
+          const anterior = resultados[indice - 1];
+          const siguiente = resultados[indice + 1];
 
-  return (
-    <div className="mt-3 space-y-1">
-      {resultados.map((resultado, indice) => {
-        const anterior = resultados[indice - 1];
+          const empatado =
+            anterior?.score === resultado.score ||
+            siguiente?.score === resultado.score;
 
-        const empatado =
-          anterior &&
-          anterior.score === resultado.score;
+          let posicion = empatado
+            ? `T${resultado.puesto}.`
+            : `${resultado.puesto}.`;
 
-        let puesto = `${resultado.puesto}.`;
+          if (resultado.puesto === 1) {
+            posicion = empatado ? "T🥇" : "🥇";
+          } else if (resultado.puesto === 2) {
+            posicion = empatado ? "T🥈" : "🥈";
+          } else if (resultado.puesto === 3) {
+            posicion = empatado ? "T🥉" : "🥉";
+          }
 
-        if (empatado) {
-          puesto = `T${resultado.puesto}`;
-        }
+          return (
+            <div
+              key={`${resultado.puesto}-${resultado.jugador.nombre}`}
+              className="flex items-center justify-between gap-4 px-2 py-1.5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="w-9 shrink-0 font-black">
+                  {posicion}
+                </span>
 
-        let posicion = puesto;
+                <span className="truncate font-semibold">
+                  {resultado.jugador.nombre}
+                </span>
+              </div>
 
-        if (resultado.puesto === 1) {
-          posicion = empatado ? "T🥇" : "🥇";
-        } else if (resultado.puesto === 2) {
-          posicion = empatado ? "T🥈" : "🥈";
-        } else if (resultado.puesto === 3) {
-          posicion = empatado ? "T🥉" : "🥉";
-        }
-
-        return (
-          <div
-            key={`${resultado.puesto}-${resultado.jugador.nombre}`}
-            className="flex items-center justify-between px-2 py-1"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="w-8 shrink-0 font-black">
-                {posicion}
-              </span>
-
-              <span className="truncate font-semibold">
-                {resultado.jugador.nombre}
+              <span className="shrink-0 font-black">
+                {resultado.score}
               </span>
             </div>
-
-            <span className="shrink-0 font-black">
-              {resultado.score}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+          );
+        })}
+      </div>
+    );
+  }
 
   function Placa({
     referencia,
@@ -193,27 +229,46 @@ export default function Compartir() {
     categoria: string;
     resultados: Resultado[];
   }) {
+    const esTop15 = resultados.length > 15;
+
     return (
       <div
         ref={referencia}
-        className="mx-auto w-full max-w-xl rounded-3xl bg-white p-4 shadow-2xl"
+        className="mx-auto w-full max-w-xl rounded-3xl bg-white px-5 py-5 shadow-2xl"
       >
-        <div className="rounded-2xl bg-green-900 px-4 py-4 text-center text-white">
-          <h1 className="text-2xl font-black">
+        <header className="border-b border-gray-200 pb-4 text-center">
+          <h1 className="text-2xl font-black text-green-900">
             LA CHANGUEADA
           </h1>
 
-          <p className="mt-1 text-xs font-bold tracking-[0.3em]">
-            FOOTGOLF
-          </p>
+          <p className="mt-1 text-sm font-semibold text-gray-700">
+  {fecha}
+  {nombreDeVuelta && (
+    <>
+      {" · "}
+      {nombreDeVuelta}
+    </>
+  )}
+</p>
 
-          <p className="mt-2 text-sm font-bold">
-            {fecha}
-          </p>
-        </div>
+          {cancha && (
+  <p className="mt-1 text-base text-green-900">
+    <span className="font-bold">
+      🚩 {cancha.nombre}
+    </span>
 
-        <section className="mt-4">
-          <h2 className="rounded-xl bg-green-900 px-4 py-2 text-center text-xl font-black text-white">
+    &nbsp;&nbsp;&nbsp;
+
+    <span className="font-normal">
+      Par {cancha.par}
+    </span>
+  </p>
+)}
+        </header>
+
+        <section className="pt-4">
+          <h2 className="text-center text-lg font-black text-green-900">
+            {esTop15 && "Top 15 · "}
             {categoria} · {resultados.length} jugadores
           </h2>
 
@@ -232,7 +287,7 @@ export default function Compartir() {
 
       <Placa
         referencia={placaGeneralRef}
-        categoria="GENERAL"
+        categoria="General"
         resultados={general}
       />
 
@@ -250,7 +305,7 @@ export default function Compartir() {
 
       <Placa
         referencia={placaViejitosRef}
-        categoria="VIEJITOS"
+        categoria="Viejitos"
         resultados={viejitos}
       />
 

@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { jugadores, type Jugador } from "../datos/jugadores";
+import {
+  jugadores,
+  type Jugador,
+} from "../datos/jugadores";
 import { obtenerCanchasGuardadas } from "../datos/canchas";
 import { obtenerTablaPremios } from "../premios/tablaPremios";
 import BotonInicio from "../components/BotonInicio";
@@ -23,6 +26,14 @@ type CanchaFecha = {
   id: number;
   nombre: string;
   par: number;
+};
+
+type FechaActual = {
+  general: number[];
+  viejitos: number[];
+  pagosPendientes?: number[];
+  pagosCompletados?: number[];
+  cancha: number;
 };
 
 function calcularPremios(
@@ -91,8 +102,20 @@ function formatearPesos(valor: number) {
 export default function Resultados() {
   const [general, setGeneral] = useState<Resultado[]>([]);
   const [viejitos, setViejitos] = useState<Resultado[]>([]);
+
+  const [listaJugadores, setListaJugadores] = useState<
+    Jugador[]
+  >([]);
+
+  const [pagosPendientesOriginales, setPagosPendientesOriginales] =
+    useState<number[]>([]);
+
+  const [pagosCompletados, setPagosCompletados] =
+    useState<number[]>([]);
+
   const [canchaFecha, setCanchaFecha] =
     useState<CanchaFecha | null>(null);
+
   const [fechaGuardada, setFechaGuardada] =
     useState(false);
 
@@ -119,7 +142,7 @@ export default function Resultados() {
 
     if (!fecha || !scoresGuardados) return;
 
-    const datos = JSON.parse(fecha);
+    const datos: FechaActual = JSON.parse(fecha);
     const scores = JSON.parse(scoresGuardados);
 
     const canchaEncontrada =
@@ -138,6 +161,16 @@ export default function Resultados() {
     const lista: Jugador[] = jugadoresGuardados
       ? JSON.parse(jugadoresGuardados)
       : jugadores;
+
+    setListaJugadores(lista);
+
+    setPagosPendientesOriginales(
+      datos.pagosPendientes ?? []
+    );
+
+    setPagosCompletados(
+      datos.pagosCompletados ?? []
+    );
 
     const generalOrdenado = lista
       .filter((jugador) =>
@@ -172,6 +205,35 @@ export default function Resultados() {
     );
   }, []);
 
+  function cambiarEstadoPago(jugadorId: number) {
+    const nuevosPagosCompletados =
+      pagosCompletados.includes(jugadorId)
+        ? pagosCompletados.filter(
+            (id) => id !== jugadorId
+          )
+        : [...pagosCompletados, jugadorId];
+
+    setPagosCompletados(nuevosPagosCompletados);
+
+    const fechaGuardadaActual = localStorage.getItem(
+      "laChangueadaFechaActual"
+    );
+
+    if (!fechaGuardadaActual) return;
+
+    const datosFecha: FechaActual = JSON.parse(
+      fechaGuardadaActual
+    );
+
+    localStorage.setItem(
+      "laChangueadaFechaActual",
+      JSON.stringify({
+        ...datosFecha,
+        pagosCompletados: nuevosPagosCompletados,
+      })
+    );
+  }
+
   function guardarFecha() {
     if (fechaGuardada) return;
 
@@ -192,6 +254,9 @@ export default function Resultados() {
       cancha: canchaFecha,
       general,
       viejitos,
+      pagosPendientes:
+        pagosPendientesOriginales,
+      pagosCompletados,
     };
 
     localStorage.setItem(
@@ -210,6 +275,29 @@ export default function Resultados() {
     setFechaGuardada(true);
   }
 
+  const jugadoresConPagoMarcado =
+    pagosPendientesOriginales
+      .map((jugadorId) =>
+        listaJugadores.find(
+          (jugador) => jugador.id === jugadorId
+        )
+      )
+      .filter(
+        (jugador): jugador is Jugador =>
+          jugador !== undefined
+      )
+      .sort((a, b) =>
+        a.nombre.localeCompare(b.nombre, "es", {
+          sensitivity: "base",
+        })
+      );
+
+  const cantidadPagosPendientes =
+    pagosPendientesOriginales.filter(
+      (jugadorId) =>
+        !pagosCompletados.includes(jugadorId)
+    ).length;
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
@@ -225,13 +313,17 @@ export default function Resultados() {
 
       {canchaFecha && (
         <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
-          <p className="text-xl font-bold">
-            🚩 {canchaFecha.nombre}
-          </p>
+          <p className="text-xl">
+  <span className="font-bold">
+    🚩 {canchaFecha.nombre}
+  </span>
 
-          <p>
-            E {canchaFecha.par}
-          </p>
+  &nbsp;&nbsp;&nbsp;
+
+  <span className="font-normal">
+    Par {canchaFecha.par}
+  </span>
+</p>
         </div>
       )}
 
@@ -243,7 +335,7 @@ export default function Resultados() {
         {general.map((resultado) => (
           <div
             key={resultado.jugador.id}
-            className="flex items-center justify-between gap-4 border-b py-3"
+            className="flex items-center justify-between border-b gap-4 py-3"
           >
             <span>
               {resultado.puesto}.{" "}
@@ -270,7 +362,7 @@ export default function Resultados() {
         {viejitos.map((resultado) => (
           <div
             key={resultado.jugador.id}
-            className="flex items-center justify-between gap-4 border-b py-3"
+            className="flex items-center justify-between border-b gap-4 py-3"
           >
             <span>
               {resultado.puesto}.{" "}
@@ -288,6 +380,52 @@ export default function Resultados() {
           </div>
         ))}
       </div>
+
+      {jugadoresConPagoMarcado.length > 0 && (
+        <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
+          <h2 className="mb-3 text-3xl font-bold">
+            📌 Pagos pendientes (
+            {cantidadPagosPendientes})
+          </h2>
+
+          {jugadoresConPagoMarcado.map(
+            (jugador) => {
+              const pagoCompletado =
+                pagosCompletados.includes(
+                  jugador.id
+                );
+
+              return (
+                <div
+                  key={jugador.id}
+                  className="flex items-center justify-between gap-4 py-2 last:border-b-0"
+                >
+                  <span>
+                    {jugador.nombre}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      cambiarEstadoPago(jugador.id)
+                    }
+                    aria-label={
+                      pagoCompletado
+                        ? `Marcar nuevamente como pendiente a ${jugador.nombre}`
+                        : `Marcar como pagado a ${jugador.nombre}`
+                    }
+                    className={`h-4 w-4 shrink-0 rounded-full ${
+                      pagoCompletado
+                        ? "bg-green-600"
+                        : "bg-red-600"
+                    }`}
+                  />
+                </div>
+              );
+            }
+          )}
+        </div>
+      )}
 
       {!fechaGuardada ? (
         <button
