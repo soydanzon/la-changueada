@@ -92,13 +92,13 @@ export default function Estadisticas() {
           <a
   key={jugador.nombre}
   href={`/estadisticas/${encodeURIComponent(jugador.nombre)}`}
-  className="block rounded-xl bg-white p-5 text-green-900"
+  className="block rounded-xl bg-white px-5 py-3 text-green-900"
 >
   <h2 className="text-2xl font-bold">
     {jugador.nombre}
   </h2>
 
-  <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 text-lg font-normal">
+  <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-3 text-lg font-normal">
     <div className="flex items-center gap-2">
       <span>🏆</span>
       <span>{jugador.victorias}</span>
