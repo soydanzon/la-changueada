@@ -13,56 +13,153 @@ type EstadisticaConPresencias = EstadisticaJugador & {
   presencias: number;
 };
 
+type TipoRanking =
+  | "presencias"
+  | "victorias"
+  | "podios"
+  | "ganado"
+  | "balance"
+  | "promedio"
+  | "mejorScore";
+
+type RankingSeleccionado = {
+  titulo: string;
+  jugadores: EstadisticaConPresencias[];
+  tipo: TipoRanking;
+};
+
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
+}
+
+function mostrarValor(
+  jugador: EstadisticaConPresencias,
+  tipo: TipoRanking
+) {
+  if (tipo === "presencias") {
+    return jugador.presencias;
+  }
+
+  if (tipo === "victorias") {
+    return jugador.victorias;
+  }
+
+  if (tipo === "podios") {
+    return jugador.podios;
+  }
+
+  if (tipo === "ganado") {
+    return formatearPesos(jugador.ganado);
+  }
+
+  if (tipo === "balance") {
+    return formatearPesos(jugador.balance);
+  }
+
+  if (tipo === "promedio") {
+    return jugador.promedio.toFixed(1);
+  }
+
+  return jugador.mejorScore;
 }
 
 function RankingBloque({
   titulo,
   jugadores,
   tipo,
+  alAbrir,
 }: {
   titulo: string;
   jugadores: EstadisticaConPresencias[];
-  tipo:
-    | "presencias"
-    | "victorias"
-    | "podios"
-    | "ganado"
-    | "balance"
-    | "promedio"
-    | "mejorScore";
+  tipo: TipoRanking;
+  alAbrir: () => void;
 }) {
   return (
     <div className="rounded-xl bg-white p-5 text-green-900">
-      <h2 className="text-2xl font-bold">
-        {titulo}
-      </h2>
+      <button
+        type="button"
+        onClick={alAbrir}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <h2 className="text-2xl font-bold">
+          {titulo}
+        </h2>
+
+        <span className="shrink-0 text-lg font-bold">
+          Ver todos ›
+        </span>
+      </button>
 
       {jugadores.slice(0, 5).map((jugador, index) => (
         <div
           key={jugador.nombre}
-          className="flex justify-between border-b py-2"
+          className="flex justify-between gap-4 border-b py-2"
         >
-          <span>
+          <span className="min-w-0 truncate">
             {index + 1}. {jugador.nombre}
           </span>
 
-          <strong>
-            {tipo === "presencias" && jugador.presencias}
-            {tipo === "victorias" && jugador.victorias}
-            {tipo === "podios" && jugador.podios}
-            {tipo === "ganado" &&
-              formatearPesos(jugador.ganado)}
-            {tipo === "balance" &&
-              formatearPesos(jugador.balance)}
-            {tipo === "promedio" &&
-              jugador.promedio.toFixed(1)}
-            {tipo === "mejorScore" &&
-              jugador.mejorScore}
+          <strong className="shrink-0">
+            {mostrarValor(jugador, tipo)}
           </strong>
         </div>
       ))}
+    </div>
+  );
+}
+
+function ModalRanking({
+  ranking,
+  alCerrar,
+}: {
+  ranking: RankingSeleccionado;
+  alCerrar: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={alCerrar}
+    >
+      <div
+        className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white text-green-900 shadow-2xl"
+        onClick={(evento) => evento.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-4 border-b p-5">
+          <h2 className="text-2xl font-bold">
+            {ranking.titulo}
+          </h2>
+
+          <button
+            type="button"
+            onClick={alCerrar}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-2xl font-bold text-gray-700"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 pb-5">
+          {ranking.jugadores.map((jugador, index) => (
+            <div
+              key={jugador.nombre}
+              className="flex items-center justify-between gap-4 border-b py-3"
+            >
+              <span className="min-w-0">
+                <strong className="mr-2">
+                  {index + 1}.
+                </strong>
+
+                {jugador.nombre}
+              </span>
+
+              <strong className="shrink-0">
+                {mostrarValor(jugador, ranking.tipo)}
+              </strong>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -71,6 +168,9 @@ export default function Ranking() {
   const [estadisticas, setEstadisticas] = useState<
     EstadisticaConPresencias[]
   >([]);
+
+  const [rankingSeleccionado, setRankingSeleccionado] =
+    useState<RankingSeleccionado | null>(null);
 
   useEffect(() => {
     const datos = localStorage.getItem(
@@ -112,6 +212,16 @@ export default function Ranking() {
     setEstadisticas(estadisticasCalculadas);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = rankingSeleccionado
+      ? "hidden"
+      : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [rankingSeleccionado]);
+
   const porPresencias = [...estadisticas].sort(
     (a, b) =>
       b.presencias - a.presencias ||
@@ -119,28 +229,52 @@ export default function Ranking() {
   );
 
   const porVictorias = [...estadisticas].sort(
-    (a, b) => b.victorias - a.victorias
+    (a, b) =>
+      b.victorias - a.victorias ||
+      a.nombre.localeCompare(b.nombre)
   );
 
   const porPodios = [...estadisticas].sort(
-    (a, b) => b.podios - a.podios
+    (a, b) =>
+      b.podios - a.podios ||
+      a.nombre.localeCompare(b.nombre)
   );
 
   const porPromedio = [...estadisticas].sort(
-    (a, b) => a.promedio - b.promedio
+    (a, b) =>
+      a.promedio - b.promedio ||
+      a.nombre.localeCompare(b.nombre)
   );
 
   const porMejorScore = [...estadisticas].sort(
-    (a, b) => a.mejorScore - b.mejorScore
+    (a, b) =>
+      a.mejorScore - b.mejorScore ||
+      a.nombre.localeCompare(b.nombre)
   );
 
   const porGanado = [...estadisticas].sort(
-    (a, b) => b.ganado - a.ganado
+    (a, b) =>
+      b.ganado - a.ganado ||
+      a.nombre.localeCompare(b.nombre)
   );
 
   const porBalance = [...estadisticas].sort(
-    (a, b) => b.balance - a.balance
+    (a, b) =>
+      b.balance - a.balance ||
+      a.nombre.localeCompare(b.nombre)
   );
+
+  function abrirRanking(
+    titulo: string,
+    jugadores: EstadisticaConPresencias[],
+    tipo: TipoRanking
+  ) {
+    setRankingSeleccionado({
+      titulo,
+      jugadores,
+      tipo,
+    });
+  }
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -160,44 +294,100 @@ export default function Ranking() {
           titulo="🙋🏻‍♂️ Más presencias"
           jugadores={porPresencias}
           tipo="presencias"
+          alAbrir={() =>
+            abrirRanking(
+              "🙋🏻‍♂️ Más presencias",
+              porPresencias,
+              "presencias"
+            )
+          }
         />
 
         <RankingBloque
           titulo="🏆 Más victorias"
           jugadores={porVictorias}
           tipo="victorias"
+          alAbrir={() =>
+            abrirRanking(
+              "🏆 Más victorias",
+              porVictorias,
+              "victorias"
+            )
+          }
         />
 
         <RankingBloque
           titulo="🥇🥈🥉 Más podios"
           jugadores={porPodios}
           tipo="podios"
+          alAbrir={() =>
+            abrirRanking(
+              "🥇🥈🥉 Más podios",
+              porPodios,
+              "podios"
+            )
+          }
         />
 
         <RankingBloque
           titulo="🎯 Mejor promedio"
           jugadores={porPromedio}
           tipo="promedio"
+          alAbrir={() =>
+            abrirRanking(
+              "🎯 Mejor promedio",
+              porPromedio,
+              "promedio"
+            )
+          }
         />
 
         <RankingBloque
           titulo="⭐ Mejor score"
           jugadores={porMejorScore}
           tipo="mejorScore"
+          alAbrir={() =>
+            abrirRanking(
+              "⭐ Mejor score",
+              porMejorScore,
+              "mejorScore"
+            )
+          }
         />
 
         <RankingBloque
           titulo="💰 Más dinero ganado"
           jugadores={porGanado}
           tipo="ganado"
+          alAbrir={() =>
+            abrirRanking(
+              "💰 Más dinero ganado",
+              porGanado,
+              "ganado"
+            )
+          }
         />
 
         <RankingBloque
           titulo="📈 Mejor balance"
           jugadores={porBalance}
           tipo="balance"
+          alAbrir={() =>
+            abrirRanking(
+              "📈 Mejor balance",
+              porBalance,
+              "balance"
+            )
+          }
         />
       </div>
+
+      {rankingSeleccionado && (
+        <ModalRanking
+          ranking={rankingSeleccionado}
+          alCerrar={() => setRankingSeleccionado(null)}
+        />
+      )}
     </main>
   );
 }

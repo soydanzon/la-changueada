@@ -39,7 +39,13 @@ function medalla(puesto: number) {
   return `${puesto}.`;
 }
 
-function TablaResultados({ resultados }: { resultados: Resultado[] }) {
+function TablaResultados({
+  resultados,
+  par,
+}: {
+  resultados: Resultado[];
+  par?: number;
+}) {
   return (
     <div className="space-y-2">
       {resultados.map((r) => (
@@ -58,9 +64,23 @@ function TablaResultados({ resultados }: { resultados: Resultado[] }) {
           </div>
 
           <div className="mt-2 flex items-center justify-between pl-11">
-            <span className="font-bold">
-              Score: {r.score}
-            </span>
+            <div className="flex items-baseline gap-1">
+  <span className="font-bold">
+    Score: {r.score}
+  </span>
+
+  {typeof par === "number" && (
+    <span className="font-normal">
+      (
+      {r.score - par === 0
+        ? "P"
+        : r.score - par > 0
+          ? `+${r.score - par}`
+          : r.score - par}
+      )
+    </span>
+  )}
+</div>
 
             <span className="font-bold text-green-700">
               {formatearPesos(r.premio)}
@@ -135,7 +155,9 @@ export default function DetalleFecha() {
           General
         </h2>
 
-        <TablaResultados resultados={fecha.general} />
+        <TablaResultados
+  resultados={fecha.general}
+  par={fecha.cancha?.par} />
       </div>
 
       <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
@@ -143,7 +165,10 @@ export default function DetalleFecha() {
           Viejitos
         </h2>
 
-        <TablaResultados resultados={fecha.viejitos} />
+        <TablaResultados
+  resultados={fecha.viejitos}
+  par={fecha.cancha?.par}
+/>
       </div>
     </main>
   );

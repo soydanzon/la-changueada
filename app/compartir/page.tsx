@@ -141,7 +141,7 @@ setCancha(fechaSeleccionada.cancha ?? null);
       ) {
         await navigator.share({
           title: `La Changueada - ${categoria}`,
-          text: `⚽🚩LA CHANGUEADA
+          text: `⚽ LA CHANGUEADA 🚩
 ${fecha}${nombreDeVuelta ? ` · ${nombreDeVuelta}` : ""}
 Resultados ${categoria}`,
           files: [archivo],
@@ -212,9 +212,23 @@ Resultados ${categoria}`,
                 </span>
               </div>
 
-              <span className="shrink-0 font-black">
-                {resultado.score}
-              </span>
+              <div className="flex shrink-0 items-baseline gap-1">
+  <span className="font-black">
+    {resultado.score}
+  </span>
+
+  {cancha && (
+    <span className="font-normal">
+      (
+      {resultado.score - cancha.par === 0
+        ? "P"
+        : resultado.score - cancha.par > 0
+          ? `+${resultado.score - cancha.par}`
+          : resultado.score - cancha.par}
+      )
+    </span>
+  )}
+</div>
             </div>
           );
         })}

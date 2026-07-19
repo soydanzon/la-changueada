@@ -9,25 +9,58 @@ import {
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
+type EstadisticaConPresencias = EstadisticaJugador & {
+  presencias: number;
+};
+
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
 
 export default function Estadisticas() {
-  const [estadisticas, setEstadisticas] = useState<EstadisticaJugador[]>([]);
+  const [estadisticas, setEstadisticas] = useState<
+  EstadisticaConPresencias[]
+>([]);
   const [busqueda, setBusqueda] = useState("");
 
   useEffect(() => {
-    const datos = localStorage.getItem("laChangueadaHistorial");
+  const datos = localStorage.getItem("laChangueadaHistorial");
 
-    if (!datos) return;
+  if (!datos) return;
 
-    const historial: FechaGuardada[] = JSON.parse(datos);
+  const historial: FechaGuardada[] = JSON.parse(datos);
 
-    setEstadisticas(
-      calcularEstadisticas(historial).sort((a, b) => b.balance - a.balance)
+  const presenciasPorJugador = new Map<string, number>();
+
+  historial.forEach((fecha) => {
+    const jugadores = new Set<string>();
+
+    fecha.general.forEach((r) =>
+      jugadores.add(r.jugador.nombre)
     );
-  }, []);
+
+    fecha.viejitos.forEach((r) =>
+      jugadores.add(r.jugador.nombre)
+    );
+
+    jugadores.forEach((nombre) => {
+      presenciasPorJugador.set(
+        nombre,
+        (presenciasPorJugador.get(nombre) ?? 0) + 1
+      );
+    });
+  });
+
+  const datosFinales = calcularEstadisticas(historial)
+    .map((jugador) => ({
+      ...jugador,
+      presencias:
+        presenciasPorJugador.get(jugador.nombre) ?? 0,
+    }))
+    .sort((a, b) => b.balance - a.balance);
+
+  setEstadisticas(datosFinales);
+}, []);
 
   const estadisticasFiltradas = estadisticas.filter((jugador) =>
     jugador.nombre.toLowerCase().includes(busqueda.toLowerCase())
@@ -56,41 +89,37 @@ export default function Estadisticas() {
 
       <div className="space-y-4">
         {estadisticasFiltradas.map((jugador) => (
-          <div
-            key={jugador.nombre}
-            className="rounded-xl bg-white p-5 text-green-900"
-          >
-            <a
-              href={`/estadisticas/${encodeURIComponent(jugador.nombre)}`}
-              className="text-2xl font-bold underline"
-            >
-              {jugador.nombre}
-            </a>
+          <a
+  key={jugador.nombre}
+  href={`/estadisticas/${encodeURIComponent(jugador.nombre)}`}
+  className="block rounded-xl bg-white p-5 text-green-900"
+>
+  <h2 className="text-2xl font-bold">
+    {jugador.nombre}
+  </h2>
 
-            <p className="mt-2">
-              Jugadas: {jugador.jugadas}
-            </p>
+  <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-3 text-lg font-normal">
+    <div className="flex items-center gap-2">
+      <span>🏆</span>
+      <span>{jugador.victorias}</span>
+    </div>
 
-            <p>
-              Aportado: {formatearPesos(jugador.aportado)}
-            </p>
+    <div className="flex items-center gap-2">
+      <span>🙋🏻‍♂️</span>
+      <span>{jugador.presencias}</span>
+    </div>
 
-            <p>
-              Ganado: {formatearPesos(jugador.ganado)}
-            </p>
+    <div className="flex items-center gap-2">
+      <span>🥇🥈🥉</span>
+      <span>{jugador.podios}</span>
+    </div>
 
-            <p className="font-bold">
-              Balance: {formatearPesos(jugador.balance)}
-            </p>
-
-            <p>
-              Victorias: {jugador.victorias}
-            </p>
-
-            <p>
-              Podios: {jugador.podios}
-            </p>
-          </div>
+    <div className="flex items-center gap-2">
+      <span>📈</span>
+      <span>{formatearPesos(jugador.balance)}</span>
+    </div>
+  </div>
+</a>
         ))}
       </div>
     </main>

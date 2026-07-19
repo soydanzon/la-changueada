@@ -13,9 +13,16 @@ type ResultadoGuardado = {
   premio: number;
 };
 
+type CanchaFecha = {
+  id: number;
+  nombre: string;
+  par: number;
+};
+
 type FechaGuardada = {
   id: number;
   fecha: string;
+  cancha?: CanchaFecha | null;
   general: ResultadoGuardado[];
   viejitos: ResultadoGuardado[];
 };
@@ -252,10 +259,28 @@ export default function Historial() {
                                 className="flex justify-between gap-4"
                               >
                                 <span>
-                                  {resultado.puesto}.{" "}
-                                  {resultado.jugador.nombre} -{" "}
-                                  {resultado.score}
-                                </span>
+  {resultado.puesto}.{" "}
+  {resultado.jugador.nombre} -{" "}
+
+  <strong>
+    {resultado.score}
+  </strong>
+
+  {fecha.cancha && (
+    <>
+      {" "}
+      <span className="font-normal">
+        (
+        {resultado.score - fecha.cancha.par === 0
+          ? "P"
+          : resultado.score - fecha.cancha.par > 0
+            ? `+${resultado.score - fecha.cancha.par}`
+            : resultado.score - fecha.cancha.par}
+        )
+      </span>
+    </>
+  )}
+</span>
 
                                 <strong>
                                   {formatearPesos(
@@ -292,10 +317,28 @@ export default function Historial() {
                                 className="flex justify-between gap-4"
                               >
                                 <span>
-                                  {resultado.puesto}.{" "}
-                                  {resultado.jugador.nombre} -{" "}
-                                  {resultado.score}
-                                </span>
+  {resultado.puesto}.{" "}
+  {resultado.jugador.nombre} -{" "}
+
+  <strong>
+    {resultado.score}
+  </strong>
+
+  {fecha.cancha && (
+    <>
+      {" "}
+      <span className="font-normal">
+        (
+        {resultado.score - fecha.cancha.par === 0
+          ? "P"
+          : resultado.score - fecha.cancha.par > 0
+            ? `+${resultado.score - fecha.cancha.par}`
+            : resultado.score - fecha.cancha.par}
+        )
+      </span>
+    </>
+  )}
+</span>
 
                                 <strong>
                                   {formatearPesos(
