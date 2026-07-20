@@ -84,6 +84,27 @@ export type HandicapJugador = {
 
 const VALOR_CHANGUEADA = 10000;
 
+type CanchaActual = {
+  id: number;
+  nombre: string;
+};
+function obtenerNombreCanchaActual(cancha: CanchaFecha) {
+  if (typeof window === "undefined") {
+    return cancha.nombre;
+  }
+  try {
+    const datos = localStorage.getItem("laChangueadaCanchas");
+    if (!datos) return cancha.nombre;
+    const canchas: CanchaActual[] = JSON.parse(datos);
+    return (
+      canchas.find((c) => c.id === cancha.id)?.nombre ??
+      cancha.nombre
+    );
+  } catch {
+    return cancha.nombre;
+  }
+}
+
 export function calcularEstadisticas(
   historial: FechaGuardada[]
 ): EstadisticaJugador[] {
@@ -251,7 +272,7 @@ export function calcularEstadisticasPorCancha(
 
     const actual = mapa.get(fecha.cancha.id) || {
       canchaId: fecha.cancha.id,
-      cancha: fecha.cancha.nombre,
+      cancha: obtenerNombreCanchaActual(fecha.cancha),
       par: fecha.cancha.par,
 
       jugadas: 0,
@@ -293,6 +314,9 @@ export function calcularEstadisticasPorCancha(
       actual.mejorVueltaGolpes = score;
     }
 
+    actual.cancha = obtenerNombreCanchaActual(
+  fecha.cancha
+);
     mapa.set(fecha.cancha.id, actual);
   });
 
@@ -355,7 +379,7 @@ export function calcularHandicap(
 
       fechasJugador.push({
         fecha: fecha.fecha,
-        cancha: cancha.nombre,
+        cancha: obtenerNombreCanchaActual(cancha),
         score: resultado.score - cancha.par,
         golpes: resultado.score,
       });

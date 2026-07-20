@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import {
+  obtenerCanchasGuardadas,
+  type Cancha,
+} from "../datos/canchas";
 
 type Resultado = {
   jugador: {
@@ -102,7 +106,21 @@ setNombreDeVuelta(
   nombreVuelta(fechaSeleccionada, fechas)
 );
 
-setCancha(fechaSeleccionada.cancha ?? null);
+if (fechaSeleccionada.cancha) {
+  const canchaActual = obtenerCanchasGuardadas().find(
+    (c: Cancha) =>
+      c.id === fechaSeleccionada.cancha!.id
+  );
+
+  setCancha({
+    ...fechaSeleccionada.cancha,
+    nombre:
+      canchaActual?.nombre ??
+      fechaSeleccionada.cancha.nombre,
+  });
+} else {
+  setCancha(null);
+}
   }, []);
 
   async function compartirImagen(

@@ -76,14 +76,14 @@ export default function Handicap() {
           No hay hándicaps disponibles.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {handicapsFiltrados.map((jugador, index) => (
             <a
               key={jugador.nombre}
               href={`/handicap/${encodeURIComponent(
                 jugador.nombre
               )}`}
-              className="flex items-center justify-between rounded-xl bg-white p-5 text-green-900"
+              className="flex items-center justify-between rounded-xl bg-white p-3 text-green-900"
             >
               <span className="text-xl font-bold">
                 {index + 1}. {jugador.nombre}

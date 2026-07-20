@@ -58,13 +58,13 @@ export default function DetalleHandicap() {
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-6">
-          <h1 className="text-4xl font-bold">
+        <div className="flex items-center gap-4">
+          <h1 className="text-3xl font-bold">
             {nombre}
           </h1>
 
-          <p className="text-2xl font-bold">
-            🧢 HCP: {formatearHandicap(jugador.handicap)}
+          <p className="text-3xl font-black">
+            {formatearHandicap(jugador.handicap)}
           </p>
         </div>
 
@@ -74,37 +74,35 @@ export default function DetalleHandicap() {
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {[...jugador.fechas].reverse().map((fecha, index) => (
           <div
             key={`${fecha.fecha}-${fecha.cancha}-${index}`}
-            className={`flex items-center justify-between rounded-xl border p-4 ${
+            className={`rounded-xl border px-4 py-2 ${
               fecha.cuenta
                 ? "bg-green-100 text-green-950"
                 : "bg-white text-green-900"
             }`}
           >
-            <div>
-              <p className="font-bold">
-                📅 {fecha.fecha}
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <span className="font-medium">
+                  {fecha.fecha}
+                </span>
 
-              <p>
-                🚩 {fecha.cancha}
-              </p>
+                <span>
+                  🚩 {fecha.cancha}
+                </span>
 
-              <p className="mt-2">
-                Score:{" "}
-                <strong>
-                  {formatearHandicap(fecha.score)}
-                </strong>{" "}
-                ({fecha.golpes} golpes)
-              </p>
+                <span className="font-bold">
+                  {fecha.golpes} ({formatearHandicap(fecha.score)})
+                </span>
+              </div>
+
+              <span className="text-2xl">
+                {fecha.cuenta ? "✅" : "❌"}
+              </span>
             </div>
-
-            <span className="text-3xl">
-              {fecha.cuenta ? "✅" : "❌"}
-            </span>
           </div>
         ))}
       </div>

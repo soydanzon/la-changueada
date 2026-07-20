@@ -161,19 +161,19 @@ ${canchas}`;
       </div>
 
       <div className="mx-auto max-w-xl rounded-3xl bg-white p-6 shadow-2xl">
-        <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
-          <p className="text-sm font-bold tracking-[0.3em]">
-            FOOTGOLF
-          </p>
+        <div className="rounded-2xl bg-green-900 px-6 py-4 text-center text-white">
+  <h1 className="text-2xl font-black">
+    ⚽ LA CHANGUEADA 🚩
+  </h1>
 
-          <h1 className="mt-2 text-4xl font-black">
-            LA CHANGUEADA
-          </h1>
+  <p className="mt-1 text-xs font-bold tracking-[0.25em] uppercase text-green-200">
+    FOOTGOLF
+  </p>
 
-          <p className="mt-4 text-2xl font-bold">
-            {nombre}
-          </p>
-        </div>
+  <p className="mt-4 text-3xl font-black">
+    {nombre}
+  </p>
+</div>
 
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="text-lg font-bold">
@@ -336,10 +336,6 @@ ${canchas}`;
             </div>
           </section>
         )}
-
-        <p className="mt-8 text-center font-black text-green-900">
-          ⚽ LA CHANGUEADA 🚩
-        </p>
       </div>
 
       <button

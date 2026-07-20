@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import {
+  obtenerCanchasGuardadas,
+  type Cancha,
+} from "../datos/canchas";
 
 type ResultadoGuardado = {
   jugador: {
@@ -125,12 +129,15 @@ function agruparPorMes(
 
 export default function Historial() {
   const [historial, setHistorial] = useState<FechaGuardada[]>([]);
-  const [mesesAbiertos, setMesesAbiertos] = useState<string[]>([]);
+const [mesesAbiertos, setMesesAbiertos] = useState<string[]>([]);
+const [canchas, setCanchas] = useState<Cancha[]>([]);
 
   useEffect(() => {
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+  setCanchas(obtenerCanchasGuardadas());
+
+  const datos = localStorage.getItem(
+    "laChangueadaHistorial"
+  );
 
     if (!datos) return;
 
@@ -152,6 +159,16 @@ export default function Historial() {
         : [...actuales, titulo]
     );
   }
+
+  function obtenerNombreCancha(fecha: FechaGuardada) {
+  if (!fecha.cancha) return "";
+
+  const canchaActual = canchas.find(
+    (cancha) => cancha.id === fecha.cancha?.id
+  );
+
+  return canchaActual?.nombre ?? fecha.cancha.nombre;
+}
 
   function eliminarFecha(fecha: FechaGuardada) {
   const confirmar = window.confirm(
@@ -222,26 +239,24 @@ export default function Historial() {
                         key={fecha.id}
                         className="mb-6 rounded-xl bg-white p-5 text-green-900"
                       >
-                        <h2 className="text-2xl font-bold">
-  {fecha.fecha}
+                        <div className="mb-2">
+  <div className="flex items-center gap-3 text-xl font-bold">
+    <span>{fecha.fecha}</span>
+
+    {fecha.cancha && (
+      <span>
+        🚩 {obtenerNombreCancha(fecha)}
+      </span>
+    )}
+  </div>
+
   {nombreVuelta(fecha, historial) && (
-    <>
-      {" · "}
+    <p className="mt-1 text-xl font-medium text-gray-600">
       {nombreVuelta(fecha, historial)}
-    </>
+    </p>
   )}
-</h2>
-
-                        <p className="text-sm text-gray-600">
-                          {new Date(
-                            fecha.id
-                          ).toLocaleTimeString("es-AR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-
-                        <hr className="my-3" />
+</div>
+                        <hr className="my-2" />
 
                         <p className="text-lg font-bold">
                           General
