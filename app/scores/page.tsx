@@ -158,7 +158,7 @@ export default function Scores() {
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl bg-white p-5 text-green-900">
+      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <p>
   <span className="font-bold">
     🚩 {nombreCancha}
@@ -172,15 +172,15 @@ export default function Scores() {
 </p>
       </div>
 
-      <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
-        <h2 className="mb-4 text-2xl font-bold">
+      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
+        <h2 className="mb-3 text-2xl font-bold">
           Scores
         </h2>
 
         {jugadoresUnicos.map((jugador) => (
           <div
             key={jugador.id}
-            className="flex items-center justify-between gap-4 border-b py-3"
+            className="flex items-center justify-between gap-4 border-b py-2"
           >
             <span className="font-bold">
               {jugador.nombre}
@@ -203,7 +203,7 @@ export default function Scores() {
         ))}
       </div>
 
-      <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
+      <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
         <h2 className="text-2xl font-bold">
           Resumen
         </h2>
