@@ -92,7 +92,7 @@ export default function PerfilJugador() {
 
       <div className="rounded-xl bg-white p-5 text-green-900">
   <p className="text-lg font-bold">
-    📅 Fechas jugadas: {resumen.jugadas}
+    ⚽ Changueadas jugadas: {resumen.jugadas}
   </p>
 
   <div className="mt-5">
@@ -185,7 +185,7 @@ export default function PerfilJugador() {
           <div className="mt-4 space-y-3">
             <div className="flex items-center justify-between">
               <span className="font-bold">
-                📅 Fechas jugadas
+                ⚽ Changueadas jugadas
               </span>
               <span className="font-bold">
                 {cancha.jugadas}

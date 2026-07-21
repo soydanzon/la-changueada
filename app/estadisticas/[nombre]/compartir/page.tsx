@@ -80,7 +80,7 @@ export default function CompartirPerfil() {
         (cancha) =>
           `🚩 ${cancha.cancha}
 
-📅 Fechas jugadas: ${cancha.jugadas}
+⚽ Changueadas jugadas: ${cancha.jugadas}
 🏆 Victorias: ${cancha.victorias}
 🥇🥈🥉 Podios: ${cancha.podios}
 📊 Promedio: ${formatearRespectoPar(
@@ -97,7 +97,7 @@ FOOTGOLF
 
 ${nombre}
 
-📅 Fechas jugadas: ${resumen.jugadas}
+⚽ Changueadas jugadas: ${resumen.jugadas}
 
 🏆 Victorias: ${resumen.victorias}
 General: ${resumen.victoriasGeneral}
@@ -177,7 +177,7 @@ ${canchas}`;
 
         <div className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
           <p className="text-lg font-bold">
-            📅 Fechas jugadas: {resumen.jugadas}
+            ⚽ Changueadas jugadas: {resumen.jugadas}
           </p>
 
           <div className="mt-5">
@@ -265,7 +265,7 @@ ${canchas}`;
                   <div className="mt-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-bold">
-                        📅 Fechas jugadas
+                        ⚽ Changueadas jugadas
                       </span>
 
                       <span className="font-bold">
