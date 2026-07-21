@@ -333,7 +333,7 @@ export default function NuevaFecha() {
   </span>
 </p>
 
-            <p className="mt-2 font-bold">
+            <p className="mt-2 text-xl font-bold">
               👥 Jugadores: {totalJugadores}
             </p>
 
