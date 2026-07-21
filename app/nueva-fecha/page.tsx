@@ -234,7 +234,7 @@ export default function NuevaFecha() {
       })
     );
 
-    router.push("/scores");
+    router.push("/previa");
   }
 
   const jugadoresFiltrados = listaJugadores

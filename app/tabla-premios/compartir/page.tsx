@@ -85,13 +85,13 @@ ${filas}`;
 
       <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 shadow-2xl">
         <div className="rounded-2xl bg-green-900 p-6 text-center text-white">
-          <p className="text-sm font-bold tracking-[0.3em]">
-            FOOTGOLF
-          </p>
+          <h1 className="text-2xl font-black text-white">
+  ⚽ La Changueada 🚩
+</h1>
 
-          <h1 className="mt-2 text-4xl font-black">
-            LA CHANGUEADA
-          </h1>
+<p className="mt-1 text-sm font-semibold tracking-[0.25em] text-green-200">
+  FOOTGOLF
+</p>
 
           <p className="mt-3 text-xl font-bold">
             🏆 Tabla de Premios
@@ -149,10 +149,6 @@ ${filas}`;
             </tbody>
           </table>
         </div>
-
-        <p className="mt-8 text-center font-black text-green-900">
-          LA CHANGUEADA 🚩
-        </p>
       </div>
 
       <button
