@@ -288,7 +288,7 @@ Resultados ${categoria}`,
           {cancha && (
   <p className="mt-1 text-base text-green-900">
     <span className="font-bold">
-      🚩 {cancha.nombre}
+      ⛳ {cancha.nombre}
     </span>
 
     &nbsp;&nbsp;&nbsp;

@@ -91,7 +91,7 @@ export default function DetalleHandicap() {
                 </span>
 
                 <span>
-                  🚩 {fecha.cancha}
+                  ⛳ {fecha.cancha}
                 </span>
 
                 <span className="font-bold">

@@ -215,11 +215,11 @@ if (filaConTotalIncorrecto) {
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
   <div className="flex items-center gap-3">
-    <span className="text-4xl">
+    <span className="text-3xl">
       🏆
     </span>
 
-    <h1 className="text-4xl font-black">
+    <h1 className="text-3xl font-black">
       Tabla de Premios
     </h1>
   </div>

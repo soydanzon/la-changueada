@@ -172,14 +172,14 @@ export default function PerfilJugador() {
       {estadisticasCancha.length > 0 && (
   <div className="mt-6 rounded-xl bg-white p-5 text-green-900">
     <h2 className="mb-5 text-2xl font-bold">
-      📍 Estadísticas por cancha
+      📌 Estadísticas por cancha
     </h2>
 
     <div className="space-y-6">
       {estadisticasCancha.map((cancha) => (
         <div key={cancha.canchaId}>
           <h3 className="text-xl font-bold">
-            🚩 {cancha.cancha}
+            ⛳ {cancha.cancha}
           </h3>
 
           <div className="mt-4 space-y-3">

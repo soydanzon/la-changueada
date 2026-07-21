@@ -245,7 +245,7 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
 
     {fecha.cancha && (
       <span>
-        🚩 {obtenerNombreCancha(fecha)}
+        ⛳ {obtenerNombreCancha(fecha)}
       </span>
     )}
   </div>

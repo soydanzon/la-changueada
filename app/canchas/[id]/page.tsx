@@ -59,7 +59,7 @@ export default function EditarCancha() {
   return (
     <main className="min-h-screen bg-green-950 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-black">
+        <h1 className="text-3xl font-black">
           ✏️ Editar cancha
         </h1>
 

@@ -42,8 +42,8 @@ export default function NuevaCancha() {
   return (
     <main className="min-h-screen bg-green-950 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-black">
-          🚩 Nueva cancha
+        <h1 className="text-3xl font-black">
+          ⛳ Nueva cancha
         </h1>
 
         <div className="flex gap-2">

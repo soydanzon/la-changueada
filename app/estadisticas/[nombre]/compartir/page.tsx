@@ -78,7 +78,7 @@ export default function CompartirPerfil() {
     const canchas = estadisticasCancha
       .map(
         (cancha) =>
-          `🚩 ${cancha.cancha}
+          `⛳ ${cancha.cancha}
 
 ⚽ Changueadas jugadas: ${cancha.jugadas}
 🏆 Victorias: ${cancha.victorias}
@@ -119,7 +119,7 @@ Viejitos: ${resumen.podiosViejitos}
 💰 Ganado: ${formatearPesos(resumen.ganado)}
 📈 Balance: ${formatearPesos(resumen.balance)}
 
-📍 ESTADÍSTICAS POR CANCHA
+📌 Estadísticas por cancha
 
 ${canchas}`;
   }
@@ -252,14 +252,14 @@ ${canchas}`;
         {estadisticasCancha.length > 0 && (
           <section className="mt-6 rounded-2xl bg-green-50 p-5 text-green-950">
             <h2 className="mb-5 text-2xl font-bold">
-              📍 Estadísticas por cancha
+              📌 Estadísticas por cancha
             </h2>
 
             <div className="space-y-6">
               {estadisticasCancha.map((cancha, index) => (
                 <div key={cancha.canchaId}>
                   <h3 className="text-xl font-bold">
-                    🚩 {cancha.cancha}
+                    ⛳ {cancha.cancha}
                   </h3>
 
                   <div className="mt-4 space-y-3">

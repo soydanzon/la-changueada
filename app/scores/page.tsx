@@ -148,7 +148,7 @@ export default function Scores() {
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           Cargar Scores
         </h1>
 
@@ -161,7 +161,7 @@ export default function Scores() {
       <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <p>
   <span className="font-bold">
-    🚩 {nombreCancha}
+    ⛳ {nombreCancha}
   </span>
 
   &nbsp;&nbsp;&nbsp;

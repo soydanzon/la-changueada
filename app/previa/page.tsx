@@ -19,8 +19,6 @@ import {
 } from "../premios/tablaPremios";
 
 import { config } from "../config/config";
-import BotonInicio from "../components/BotonInicio";
-import BotonVolver from "../components/BotonVolver";
 
 type FechaActual = {
   general: number[];
@@ -49,10 +47,19 @@ function obtenerPremios(
   );
 }
 
+function obtenerIconoPuesto(index: number) {
+  if (index === 0) return "🥇";
+  if (index === 1) return "🥈";
+  if (index === 2) return "🥉";
+
+  return `${index + 1}º`;
+}
+
 export default function Previa() {
   const router = useRouter();
 
   const [cargando, setCargando] = useState(true);
+
   const [fechaActual, setFechaActual] =
     useState<FechaActual | null>(null);
 
@@ -223,7 +230,7 @@ export default function Previa() {
     router.push("/scores");
   }
 
-  async function compartirPrevia() {
+async function compartirPrevia() {
   const fechaDeHoy = new Date().toLocaleDateString(
     "es-AR"
   );
@@ -251,78 +258,122 @@ export default function Previa() {
     }
   }
 
-  const textoGeneral =
-    jugadoresGeneral.length > 0
-      ? jugadoresGeneral
-          .map((jugador) => jugador.nombre)
-          .join("\n")
-      : "Sin jugadores anotados";
+  function obtenerIconoPuesto(index: number) {
+    if (index === 0) return "🥇";
+    if (index === 1) return "🥈";
+    if (index === 2) return "🥉";
 
-  const textoViejitos =
-    jugadoresViejitos.length > 0
-      ? jugadoresViejitos
-          .map((jugador) => jugador.nombre)
-          .join("\n")
-      : "Sin jugadores anotados";
+    return `${index + 1}º`;
+  }
 
-  const textoPremiosGeneral =
-    premiosGeneral.length > 0
-      ? premiosGeneral
-          .map(
-            (premio, index) =>
-              `${index + 1}° ${formatearDinero(premio)}`
-          )
-          .join("\n")
-      : "Sin premios configurados";
+  function crearTextoPremios(premios: number[]) {
+    if (premios.length === 0) {
+      return "Sin premios configurados";
+    }
 
-  const textoPremiosViejitos =
-    premiosViejitos.length > 0
-      ? premiosViejitos
-          .map(
-            (premio, index) =>
-              `${index + 1}° ${formatearDinero(premio)}`
-          )
-          .join("\n")
-      : "Sin premios configurados";
+    return premios
+      .map(
+        (premio, index) =>
+          `${obtenerIconoPuesto(
+            index
+          )} ${formatearDinero(premio)}`
+      )
+      .join("\n");
+  }
 
-  const textoSegundaVuelta = esSegundaVuelta
-    ? "\nSEGUNDA VUELTA"
-    : "";
+  const idsGeneral = new Set(
+    jugadoresGeneral.map((jugador) => jugador.id)
+  );
 
-  const bloqueGeneral =
-  jugadoresGeneral.length > 0
-    ? `
+  const idsViejitos = new Set(
+    jugadoresViejitos.map((jugador) => jugador.id)
+  );
 
-GENERAL (${jugadoresGeneral.length})
-${textoGeneral}
+  const jugadoresSoloGeneral = jugadoresGeneral
+    .filter(
+      (jugador) => !idsViejitos.has(jugador.id)
+    )
+    .sort((a, b) =>
+      a.nombre.localeCompare(b.nombre, "es")
+    );
 
-💰 POZO GENERAL
-${formatearDinero(pozoGeneral)}
+  const jugadoresGeneralYViejitos = jugadoresGeneral
+    .filter((jugador) =>
+      idsViejitos.has(jugador.id)
+    )
+    .sort((a, b) =>
+      a.nombre.localeCompare(b.nombre, "es")
+    );
 
-🏆 PREMIOS GENERAL
-${textoPremiosGeneral}`
-    : "";
+  const jugadoresSoloViejitos = jugadoresViejitos
+    .filter(
+      (jugador) => !idsGeneral.has(jugador.id)
+    )
+    .sort((a, b) =>
+      a.nombre.localeCompare(b.nombre, "es")
+    );
 
-const bloqueViejitos =
-  jugadoresViejitos.length > 0
-    ? `
+  const textoJugadores = [
+    ...jugadoresSoloGeneral.map(
+      (jugador) => `${jugador.nombre} (G)`
+    ),
+    ...jugadoresGeneralYViejitos.map(
+      (jugador) => `${jugador.nombre} (G y V)`
+    ),
+    ...jugadoresSoloViejitos.map(
+      (jugador) => `${jugador.nombre} (V)`
+    ),
+  ].join("\n");
 
-VIEJITOS (${jugadoresViejitos.length})
-${textoViejitos}
+  const lineas: string[] = [
+    "⚽️ La Changueada 🚩",
+    "",
+    fechaDeHoy,
+  ];
 
-💰 POZO VIEJITOS
-${formatearDinero(pozoViejitos)}
+  if (esSegundaVuelta) {
+    lineas.push("SEGUNDA VUELTA");
+  }
 
-🏆 PREMIOS VIEJITOS
-${textoPremiosViejitos}`
-    : "";
-  
-    const texto = `⚽ LA CHANGUEADA 🚩
- ${fechaDeHoy}${textoSegundaVuelta}
+  lineas.push(
+    "",
+    `⛳ ${cancha?.nombre ?? "Cancha"} Par ${
+      cancha?.par ?? "-"
+    }`
+  );
 
-⛳ ${cancha?.nombre ?? "Cancha"} — Par ${
-  cancha?.par ?? "-"
-}${bloqueGeneral}${bloqueViejitos}`
+  if (jugadoresGeneral.length > 0) {
+    lineas.push(
+      "",
+      `💰 Pozo General (${jugadoresGeneral.length})`,
+      formatearDinero(pozoGeneral),
+      "",
+      "🏆 Premios General",
+      crearTextoPremios(premiosGeneral)
+    );
+  }
+
+  if (jugadoresViejitos.length > 0) {
+    lineas.push(
+      "",
+      `💰 Pozo Viejitos (${jugadoresViejitos.length})`,
+      formatearDinero(pozoViejitos),
+      "",
+      "🏆 Premios Viejitos",
+      crearTextoPremios(premiosViejitos)
+    );
+  }
+
+  if (textoJugadores) {
+    lineas.push(
+      "",
+      "👥 Jugadores",
+      "",
+      textoJugadores
+    );
+  }
+
+  const texto = lineas.join("\n");
 
   try {
     if (navigator.share) {
@@ -369,16 +420,9 @@ ${textoPremiosViejitos}`
   if (!fechaActual) {
     return (
       <main className="min-h-screen bg-green-900 p-6 text-white">
-        <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-4xl font-bold">
-            Previa
-          </h1>
-
-          <div className="flex gap-2">
-            <BotonVolver />
-            <BotonInicio />
-          </div>
-        </div>
+        <h1 className="mb-8 text-3xl font-bold">
+          Previa
+        </h1>
 
         <div className="rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl font-bold">
@@ -398,21 +442,16 @@ ${textoPremiosViejitos}`
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold">
-          Previa
-        </h1>
+      <h1 className="mb-8 text-3xl font-bold">
+        🚀 Previa
+      </h1>
 
-        <div className="flex gap-2">
-          <BotonVolver />
-          <BotonInicio />
-        </div>
-      </div>
-
-      <div className="mb-4 rounded-xl bg-white p-4 text-green-900">
+      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <p className="text-xl">
           <span className="font-bold">
-            🚩 {cancha?.nombre ?? "Cancha no encontrada"}
+            ⛳️{" "}
+            {cancha?.nombre ??
+              "Cancha no encontrada"}
           </span>
 
           {cancha && (
@@ -423,160 +462,176 @@ ${textoPremiosViejitos}`
         </p>
       </div>
 
-      <div className="mb-4 rounded-xl bg-white p-4 text-green-900">
-        <h2 className="mb-3 text-2xl font-bold">
-          Resumen
+      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
+        <h2 className="mb-4 text-2xl font-bold">
+          📝 Resumen
         </h2>
 
-        <div className="space-y-2">
-          <div className="flex justify-between gap-4">
-            <span>General</span>
-
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-4">
             <span className="font-bold">
+              🙎🏻‍♂️ General
+            </span>
+
+            <span>
               {jugadoresGeneral.length} jugadores
             </span>
           </div>
 
-          <div className="flex justify-between gap-4">
-            <span>Pozo General</span>
+          <div className="flex items-center justify-between gap-4">
+            <span>💰 Pozo General</span>
 
             <span className="font-bold">
               {formatearDinero(pozoGeneral)}
             </span>
           </div>
 
-          <div className="border-t pt-2" />
+          <div className="border-t border-green-200" />
 
-          <div className="flex justify-between gap-4">
-            <span>Viejitos</span>
-
+          <div className="flex items-center justify-between gap-4">
             <span className="font-bold">
+              🧓🏻 Viejitos
+            </span>
+
+            <span>
               {jugadoresViejitos.length} jugadores
             </span>
           </div>
 
-          <div className="flex justify-between gap-4">
-            <span>Pozo Viejitos</span>
+          <div className="flex items-center justify-between gap-4">
+            <span>💰 Pozo Viejitos</span>
 
             <span className="font-bold">
               {formatearDinero(pozoViejitos)}
             </span>
           </div>
+
+          <div className="border-t border-green-200" />
+
+          <div>
+            <h3 className="mb-2 text-xl font-bold">
+              🏆 Premios General
+            </h3>
+
+            {premiosGeneral.length > 0 ? (
+              <div>
+                {premiosGeneral.map(
+                  (premio, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+                    >
+                      <span>
+                        {obtenerIconoPuesto(index)}
+                        {index < 3 ? "" : " puesto"}
+                      </span>
+
+                      <span className="font-bold">
+                        {formatearDinero(premio)}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+              <p className="text-sm">
+                No hay premios configurados para{" "}
+                {jugadoresGeneral.length} jugadores.
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-green-200" />
+
+          <div>
+            <h3 className="mb-2 text-xl font-bold">
+              🏆 Premios Viejitos
+            </h3>
+
+            {premiosViejitos.length > 0 ? (
+              <div>
+                {premiosViejitos.map(
+                  (premio, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+                    >
+                      <span>
+                        {obtenerIconoPuesto(index)}
+                        {index < 3 ? "" : " puesto"}
+                      </span>
+
+                      <span className="font-bold">
+                        {formatearDinero(premio)}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            ) : (
+              <p className="text-sm">
+                No hay premios configurados para{" "}
+                {jugadoresViejitos.length} jugadores.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="mb-4 rounded-xl bg-white p-4 text-green-900">
+      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <h2 className="mb-3 text-2xl font-bold">
-          Premios General
+          👥 Jugadores
         </h2>
 
-        {premiosGeneral.length > 0 ? (
-          <div className="space-y-2">
-            {premiosGeneral.map((premio, index) => (
-              <div
-                key={index}
-                className="flex justify-between border-b py-2 last:border-b-0"
-              >
-                <span>
-                  {index + 1}º puesto
-                </span>
+        <div>
+          {jugadoresUnicos.map((jugador) => {
+            const juegaGeneral =
+              fechaActual.general.includes(jugador.id);
 
-                <span className="font-bold">
-                  {formatearDinero(premio)}
-                </span>
+            const juegaViejitos =
+              fechaActual.viejitos.includes(
+                jugador.id
+              );
+
+            return (
+              <div
+                key={jugador.id}
+                className="border-b border-green-100 py-3 last:border-b-0"
+              >
+                <p className="font-bold">
+                  {jugador.nombre}
+                </p>
+
+                <p className="text-sm">
+                  {juegaGeneral && juegaViejitos
+                    ? "General y Viejitos"
+                    : juegaGeneral
+                      ? "General"
+                      : "Viejitos"}
+                </p>
               </div>
-            ))}
-          </div>
-        ) : (
-          <p>
-            No hay una tabla de premios configurada para{" "}
-            {jugadoresGeneral.length} jugadores.
-          </p>
-        )}
+            );
+          })}
+        </div>
       </div>
 
-      <div className="mb-4 rounded-xl bg-white p-4 text-green-900">
-        <h2 className="mb-3 text-2xl font-bold">
-          Premios Viejitos
-        </h2>
-
-        {premiosViejitos.length > 0 ? (
-          <div className="space-y-2">
-            {premiosViejitos.map((premio, index) => (
-              <div
-                key={index}
-                className="flex justify-between border-b py-2 last:border-b-0"
-              >
-                <span>
-                  {index + 1}º puesto
-                </span>
-
-                <span className="font-bold">
-                  {formatearDinero(premio)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>
-            No hay una tabla de premios configurada para{" "}
-            {jugadoresViejitos.length} jugadores.
-          </p>
-        )}
-      </div>
-
-      <div className="mb-4 rounded-xl bg-white p-4 text-green-900">
-        <h2 className="mb-3 text-2xl font-bold">
-          Jugadores
-        </h2>
-
-        <div className="space-y-2">
-  {jugadoresUnicos.map((jugador) => {
-    const juegaGeneral =
-      fechaActual.general.includes(jugador.id);
-
-    const juegaViejitos =
-      fechaActual.viejitos.includes(jugador.id);
-
-    return (
-      <div
-        key={jugador.id}
-        className="border-b py-3 last:border-b-0"
+      <button
+        onClick={compartirPrevia}
+        className="mb-4 w-full rounded-xl bg-white p-3 text-2xl font-bold text-green-900"
       >
-        <p className="font-bold">
-          {jugador.nombre}
-        </p>
-
-        <p className="text-sm">
-          {juegaGeneral && juegaViejitos
-            ? "General y Viejitos"
-            : juegaGeneral
-              ? "General"
-              : "Viejitos"}
-        </p>
-      </div>
-    );
-  })}
-</div>
-      </div>
-
-<button
-  onClick={compartirPrevia}
-  className="mb-4 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
->
-  📤 Compartir previa
-</button>
+        📤 Compartir previa
+      </button>
 
       <button
         onClick={modificarFecha}
-        className="mb-4 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+        className="mb-4 w-full rounded-xl bg-green-700 p-3 text-xl font-bold text-white"
       >
         Modificar fecha
       </button>
 
       <button
         onClick={continuarAScores}
-        className="w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
+        className="w-full rounded-xl bg-white p-3 text-2xl font-bold text-green-900"
       >
         Cargar scores
       </button>

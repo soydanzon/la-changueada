@@ -301,7 +301,7 @@ export default function Resultados() {
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           Resultados
         </h1>
 
@@ -315,7 +315,7 @@ export default function Resultados() {
         <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl">
   <span className="font-bold">
-    🚩 {canchaFecha.nombre}
+    ⛳ {canchaFecha.nombre}
   </span>
 
   &nbsp;&nbsp;&nbsp;

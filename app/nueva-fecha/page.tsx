@@ -323,7 +323,7 @@ export default function NuevaFecha() {
           <div className="mt-5 border-t border-gray-200 pt-5">
             <p className="text-xl">
   <span className="font-bold">
-    🚩 {cancha.nombre}
+    ⛳ {cancha.nombre}
   </span>
 
   &nbsp;&nbsp;&nbsp;

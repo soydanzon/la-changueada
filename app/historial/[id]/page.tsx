@@ -198,7 +198,7 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between gap-4 bg-green-900 px-6 py-4">
-        <h1 className="text-4xl font-bold">
+        <h1 className="text-3xl font-bold">
           {fecha.fecha}
         </h1>
 
@@ -212,7 +212,7 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
         <div className="rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl">
             <span className="font-bold">
-              🚩 {obtenerNombreCancha()}
+              ⛳ {obtenerNombreCancha()}
             </span>
 
             <span className="ml-5 font-normal">
