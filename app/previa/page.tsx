@@ -468,114 +468,110 @@ async function compartirPrevia() {
         </h2>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <span className="font-bold">
-              🙎🏻‍♂️ General
-            </span>
+  <div className="flex items-center justify-between gap-4">
+    <span className="font-bold">
+      🙎🏻‍♂️ General
+    </span>
 
+    <span>
+      {jugadoresGeneral.length} jugadores
+    </span>
+  </div>
+
+  <div className="flex items-center justify-between gap-4">
+    <span>💰 Pozo General</span>
+
+    <span className="font-bold">
+      {formatearDinero(pozoGeneral)}
+    </span>
+  </div>
+
+  <div className="pt-2">
+    <h3 className="mb-2 text-xl font-bold">
+      🏆 Premios General
+    </h3>
+
+    {premiosGeneral.length > 0 ? (
+      <div>
+        {premiosGeneral.map((premio, index) => (
+          <div
+            key={index}
+            className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+          >
             <span>
-              {jugadoresGeneral.length} jugadores
+              {obtenerIconoPuesto(index)}
+              {index < 3 ? "" : " puesto"}
             </span>
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <span>💰 Pozo General</span>
 
             <span className="font-bold">
-              {formatearDinero(pozoGeneral)}
+              {formatearDinero(premio)}
             </span>
           </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm">
+        No hay premios configurados para{" "}
+        {jugadoresGeneral.length} jugadores.
+      </p>
+    )}
+  </div>
 
-          <div className="border-t border-green-200" />
+  {jugadoresViejitos.length > 0 && (
+    <>
+      <div className="border-t border-green-200" />
 
-          <div className="flex items-center justify-between gap-4">
-            <span className="font-bold">
-              🧓🏻 Viejitos
-            </span>
+      <div className="flex items-center justify-between gap-4">
+        <span className="font-bold">
+          🧓🏻 Viejitos
+        </span>
 
-            <span>
-              {jugadoresViejitos.length} jugadores
-            </span>
-          </div>
+        <span>
+          {jugadoresViejitos.length} jugadores
+        </span>
+      </div>
 
-          <div className="flex items-center justify-between gap-4">
-            <span>💰 Pozo Viejitos</span>
+      <div className="flex items-center justify-between gap-4">
+        <span>💰 Pozo Viejitos</span>
 
-            <span className="font-bold">
-              {formatearDinero(pozoViejitos)}
-            </span>
-          </div>
+        <span className="font-bold">
+          {formatearDinero(pozoViejitos)}
+        </span>
+      </div>
 
-          <div className="border-t border-green-200" />
+      <div className="pt-2">
+        <h3 className="mb-2 text-xl font-bold">
+          🏆 Premios Viejitos
+        </h3>
 
+        {premiosViejitos.length > 0 ? (
           <div>
-            <h3 className="mb-2 text-xl font-bold">
-              🏆 Premios General
-            </h3>
+            {premiosViejitos.map((premio, index) => (
+              <div
+                key={index}
+                className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+              >
+                <span>
+                  {obtenerIconoPuesto(index)}
+                  {index < 3 ? "" : " puesto"}
+                </span>
 
-            {premiosGeneral.length > 0 ? (
-              <div>
-                {premiosGeneral.map(
-                  (premio, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
-                    >
-                      <span>
-                        {obtenerIconoPuesto(index)}
-                        {index < 3 ? "" : " puesto"}
-                      </span>
-
-                      <span className="font-bold">
-                        {formatearDinero(premio)}
-                      </span>
-                    </div>
-                  )
-                )}
+                <span className="font-bold">
+                  {formatearDinero(premio)}
+                </span>
               </div>
-            ) : (
-              <p className="text-sm">
-                No hay premios configurados para{" "}
-                {jugadoresGeneral.length} jugadores.
-              </p>
-            )}
+            ))}
           </div>
-
-          <div className="border-t border-green-200" />
-
-          <div>
-            <h3 className="mb-2 text-xl font-bold">
-              🏆 Premios Viejitos
-            </h3>
-
-            {premiosViejitos.length > 0 ? (
-              <div>
-                {premiosViejitos.map(
-                  (premio, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
-                    >
-                      <span>
-                        {obtenerIconoPuesto(index)}
-                        {index < 3 ? "" : " puesto"}
-                      </span>
-
-                      <span className="font-bold">
-                        {formatearDinero(premio)}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-            ) : (
-              <p className="text-sm">
-                No hay premios configurados para{" "}
-                {jugadoresViejitos.length} jugadores.
-              </p>
-            )}
-          </div>
-        </div>
+        ) : (
+          <p className="text-sm">
+            No hay premios configurados para{" "}
+            {jugadoresViejitos.length} jugadores.
+          </p>
+        )}
+      </div>
+    </>
+  )}
+</div>
       </div>
 
       <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
@@ -599,16 +595,17 @@ async function compartirPrevia() {
                 className="border-b border-green-100 py-3 last:border-b-0"
               >
                 <p className="font-bold">
-                  {jugador.nombre}
-                </p>
-
-                <p className="text-sm">
-                  {juegaGeneral && juegaViejitos
-                    ? "General y Viejitos"
-                    : juegaGeneral
-                      ? "General"
-                      : "Viejitos"}
-                </p>
+  {jugador.nombre}{" "}
+  <span className="font-normal text-sm">
+    (
+    {juegaGeneral && juegaViejitos
+      ? "G y V"
+      : juegaGeneral
+        ? "G"
+        : "V"}
+    )
+  </span>
+</p>
               </div>
             );
           })}

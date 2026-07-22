@@ -350,19 +350,21 @@ export default function NuevaFecha() {
               </span>
             </div>
 
-            <div className="mt-2 flex justify-between gap-4">
-              <span>
-                Viejitos:{" "}
-                <strong>{viejitos.length}</strong>
-              </span>
+            {viejitos.length > 0 && (
+  <div className="mt-2 flex justify-between gap-4">
+    <span>
+      Viejitos:{" "}
+      <strong>{viejitos.length}</strong>
+    </span>
 
-              <span className="text-right">
-                $
-                {(
-                  viejitos.length * valorChangueada
-                ).toLocaleString("es-AR")}
-              </span>
-            </div>
+    <span className="text-right">
+      $
+      {(
+        viejitos.length * valorChangueada
+      ).toLocaleString("es-AR")}
+    </span>
+  </div>
+)}
           </div>
 
           <div className="mt-5 border-t border-gray-200 pt-5">
@@ -400,35 +402,37 @@ export default function NuevaFecha() {
               )}
             </div>
 
-            <div className="mt-5">
-              <p className="font-bold">
-                Viejitos — {viejitos.length} jugadores
-              </p>
+            {viejitos.length > 0 && (
+  <div className="mt-5">
+    <p className="font-bold">
+      Viejitos — {viejitos.length} jugadores
+    </p>
 
-              {premiosViejitos.length > 0 ? (
-                <div className="mt-2 space-y-1">
-                  {premiosViejitos.map(
-                    (premio, indice) => (
-                      <p key={`viejitos-${indice}`}>
-                        {indice + 1}.º —{" "}
-                        <strong>
-                          $
-                          {premio.toLocaleString(
-                            "es-AR"
-                          )}
-                        </strong>
-                      </p>
-                    )
-                  )}
-                </div>
-              ) : (
-                <p className="mt-2 text-gray-500">
-                  {tablaPremiosCargada
-                    ? "Sin reparto configurado"
-                    : "Cargando premios..."}
-                </p>
-              )}
-            </div>
+    {premiosViejitos.length > 0 ? (
+      <div className="mt-2 space-y-1">
+        {premiosViejitos.map(
+          (premio, indice) => (
+            <p key={`viejitos-${indice}`}>
+              {indice + 1}.º —{" "}
+              <strong>
+                $
+                {premio.toLocaleString(
+                  "es-AR"
+                )}
+              </strong>
+            </p>
+          )
+        )}
+      </div>
+    ) : (
+      <p className="mt-2 text-gray-500">
+        {tablaPremiosCargada
+          ? "Sin reparto configurado"
+          : "Cargando premios..."}
+      </p>
+    )}
+  </div>
+)}
           </div>
 
           <button
