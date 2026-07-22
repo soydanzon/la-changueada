@@ -240,15 +240,23 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
                         className="mb-6 rounded-xl bg-white p-5 text-green-900"
                       >
                         <div className="mb-2">
-  <div className="flex items-center gap-3 text-xl font-bold">
-    <span>{fecha.fecha}</span>
+  <div className="flex items-center gap-3 text-xl">
+  <span className="font-bold">
+    {fecha.fecha}
+  </span>
 
-    {fecha.cancha && (
-      <span>
-        ⛳ {obtenerNombreCancha(fecha)}
+  {fecha.cancha && (
+    <span className="inline-flex items-center gap-3">
+      <span className="font-bold">
+        ⛳️ {obtenerNombreCancha(fecha)}
       </span>
-    )}
-  </div>
+
+      <span className="font-normal">
+        Par {fecha.cancha.par}
+      </span>
+    </span>
+  )}
+</div>
 
   {nombreVuelta(fecha, historial) && (
     <p className="mt-1 text-xl font-medium text-gray-600">
@@ -314,63 +322,67 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
                           )}
                         </p>
 
-                        <hr className="my-3" />
+                        {fecha.viejitos.length > 0 && (
+  <>
+    <hr className="my-3" />
 
-                        <p className="text-lg font-bold">
-                          Viejitos
-                        </p>
+    <p className="text-lg font-bold">
+      Viejitos
+    </p>
 
-                        <p>
-                          Jugadores: {fecha.viejitos.length}
-                        </p>
+    <p>
+      Jugadores: {fecha.viejitos.length}
+    </p>
 
-                        <div className="mt-2 space-y-1">
-                          {premiados(fecha.viejitos).map(
-                            (resultado) => (
-                              <div
-                                key={`${fecha.id}-viejitos-${resultado.jugador.nombre}-${resultado.puesto}`}
-                                className="flex justify-between gap-4"
-                              >
-                                <span>
-  {resultado.puesto}.{" "}
-  {resultado.jugador.nombre} -{" "}
+    <div className="mt-2 space-y-1">
+      {premiados(fecha.viejitos).map(
+        (resultado) => (
+          <div
+            key={`${fecha.id}-viejitos-${resultado.jugador.nombre}-${resultado.puesto}`}
+            className="flex justify-between gap-4"
+          >
+            <span>
+              {resultado.puesto}.{" "}
+              {resultado.jugador.nombre} -{" "}
 
-  <strong>
-    {resultado.score}
-  </strong>
+              <strong>
+                {resultado.score}
+              </strong>
 
-  {fecha.cancha && (
-    <>
-      {" "}
-      <span className="font-normal">
-        (
-        {resultado.score - fecha.cancha.par === 0
-          ? "P"
-          : resultado.score - fecha.cancha.par > 0
-            ? `+${resultado.score - fecha.cancha.par}`
-            : resultado.score - fecha.cancha.par}
+              {fecha.cancha && (
+                <>
+                  {" "}
+                  <span className="font-normal">
+                    (
+                    {resultado.score - fecha.cancha.par === 0
+                      ? "P"
+                      : resultado.score - fecha.cancha.par > 0
+                        ? `+${resultado.score - fecha.cancha.par}`
+                        : resultado.score - fecha.cancha.par}
+                    )
+                  </span>
+                </>
+              )}
+            </span>
+
+            <strong>
+              {formatearPesos(
+                resultado.premio
+              )}
+            </strong>
+          </div>
         )
-      </span>
-    </>
-  )}
-</span>
+      )}
+    </div>
 
-                                <strong>
-                                  {formatearPesos(
-                                    resultado.premio
-                                  )}
-                                </strong>
-                              </div>
-                            )
-                          )}
-                        </div>
-
-                        <p className="mt-3 font-bold">
-                          Total:{" "}
-                          {formatearPesos(
-                            totalPremios(fecha.viejitos)
-                          )}
-                        </p>
+    <p className="mt-3 font-bold">
+      Total:{" "}
+      {formatearPesos(
+        totalPremios(fecha.viejitos)
+      )}
+    </p>
+  </>
+)}
 
                         <div className="mt-5 flex gap-3">
   <button

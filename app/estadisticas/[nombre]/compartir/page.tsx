@@ -100,12 +100,18 @@ ${nombre}
 ⚽ Changueadas jugadas: ${resumen.jugadas}
 
 🏆 Victorias: ${resumen.victorias}
-General: ${resumen.victoriasGeneral}
-Viejitos: ${resumen.victoriasViejitos}
+General: ${resumen.victoriasGeneral}${
+  resumen.victoriasViejitos > 0
+    ? `\nViejitos: ${resumen.victoriasViejitos}`
+    : ""
+}
 
 🥇🥈🥉 Podios: ${resumen.podios}
-General: ${resumen.podiosGeneral}
-Viejitos: ${resumen.podiosViejitos}
+General: ${resumen.podiosGeneral}${
+  resumen.podiosViejitos > 0
+    ? `\nViejitos: ${resumen.podiosViejitos}`
+    : ""
+}
 
 📊 Promedio: ${formatearRespectoPar(
       resumen.promedio
@@ -192,18 +198,22 @@ ${canchas}`;
                 <span>{resumen.victoriasGeneral}</span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span>Viejitos</span>
-                <span>{resumen.victoriasViejitos}</span>
-              </div>
+              {resumen.victoriasViejitos > 0 && (
+  <div className="flex items-center justify-between">
+    <span>Viejitos</span>
+    <span>{resumen.victoriasViejitos}</span>
+  </div>
+)}
             </div>
           </div>
 
           <div className="mt-5">
-            <div className="flex items-center justify-between text-lg font-bold">
-              <span>🥇🥈🥉 Podios</span>
-              <span>{resumen.podios}</span>
-            </div>
+            {resumen.podiosViejitos > 0 && (
+  <div className="flex items-center justify-between">
+    <span>Viejitos</span>
+    <span>{resumen.podiosViejitos}</span>
+  </div>
+)}
 
             <div className="mt-2 space-y-1 font-normal">
               <div className="flex items-center justify-between">

@@ -272,7 +272,7 @@ Resultados ${categoria}`,
       >
         <header className="border-b border-gray-200 pb-4 text-center">
           <h1 className="text-2xl font-black text-green-900">
-            LA CHANGUEADA
+            ⚽ LA CHANGUEADA 🚩
           </h1>
 
           <p className="mt-1 text-sm font-semibold text-gray-700">
@@ -337,23 +337,27 @@ Resultados ${categoria}`,
         📤 Compartir General
       </button>
 
-      <Placa
-        referencia={placaViejitosRef}
-        categoria="Viejitos"
-        resultados={viejitos}
-      />
+      {viejitos.length > 0 && (
+  <>
+    <Placa
+      referencia={placaViejitosRef}
+      categoria="Viejitos"
+      resultados={viejitos}
+    />
 
-      <button
-        onClick={() =>
-          compartirImagen(
-            placaViejitosRef.current,
-            "Viejitos"
-          )
-        }
-        className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
-      >
-        📤 Compartir Viejitos
-      </button>
+    <button
+      onClick={() =>
+        compartirImagen(
+          placaViejitosRef.current,
+          "Viejitos"
+        )
+      }
+      className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+    >
+      📤 Compartir Viejitos
+    </button>
+  </>
+)}
     </main>
   );
 }
