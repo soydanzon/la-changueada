@@ -354,32 +354,34 @@ export default function Resultados() {
         ))}
       </div>
 
-      <div className="rounded-xl bg-white p-5 text-green-900">
-        <h2 className="mb-4 text-2xl font-bold">
-          Viejitos
-        </h2>
+      {viejitos.length > 0 && (
+  <div className="rounded-xl bg-white p-5 text-green-900">
+    <h2 className="mb-4 text-2xl font-bold">
+      Viejitos
+    </h2>
 
-        {viejitos.map((resultado) => (
-          <div
-            key={resultado.jugador.id}
-            className="flex items-center justify-between border-b gap-4 py-3"
-          >
-            <span>
-              {resultado.puesto}.{" "}
-              {resultado.jugador.nombre} -{" "}
-              {resultado.score}
-            </span>
+    {viejitos.map((resultado) => (
+      <div
+        key={resultado.jugador.id}
+        className="flex items-center justify-between border-b gap-4 py-3"
+      >
+        <span>
+          {resultado.puesto}.{" "}
+          {resultado.jugador.nombre} -{" "}
+          {resultado.score}
+        </span>
 
-            <strong>
-              {resultado.premio > 0
-                ? formatearPesos(
-                    resultado.premio
-                  )
-                : "-"}
-            </strong>
-          </div>
-        ))}
+        <strong>
+          {resultado.premio > 0
+            ? formatearPesos(
+                resultado.premio
+              )
+            : "-"}
+        </strong>
       </div>
+    ))}
+  </div>
+)}
 
       {jugadoresConPagoMarcado.length > 0 && (
         <div className="mt-8 rounded-xl bg-white p-5 text-green-900">

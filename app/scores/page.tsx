@@ -212,9 +212,11 @@ export default function Scores() {
           General: {general.length} jugadores
         </p>
 
-        <p>
-          Viejitos: {viejitos.length} jugadores
-        </p>
+        {viejitos.length > 0 && (
+  <p>
+    Viejitos: {viejitos.length} jugadores
+  </p>
+)}
       </div>
 
       <button

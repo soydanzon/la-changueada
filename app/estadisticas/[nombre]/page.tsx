@@ -102,16 +102,18 @@ export default function PerfilJugador() {
     </div>
 
     <div className="mt-2 space-y-1 font-normal">
-      <div className="flex items-center justify-between">
-        <span>General</span>
-        <span>{resumen.victoriasGeneral}</span>
-      </div>
+  <div className="flex items-center justify-between">
+    <span>General</span>
+    <span>{resumen.victoriasGeneral}</span>
+  </div>
 
-      <div className="flex items-center justify-between">
-        <span>Viejitos</span>
-        <span>{resumen.victoriasViejitos}</span>
-      </div>
+  {resumen.victoriasViejitos > 0 && (
+    <div className="flex items-center justify-between">
+      <span>Viejitos</span>
+      <span>{resumen.victoriasViejitos}</span>
     </div>
+  )}
+</div>
   </div>
 
   <div className="mt-5">
@@ -121,16 +123,18 @@ export default function PerfilJugador() {
     </div>
 
     <div className="mt-2 space-y-1 font-normal">
-      <div className="flex items-center justify-between">
-        <span>General</span>
-        <span>{resumen.podiosGeneral}</span>
-      </div>
+  <div className="flex items-center justify-between">
+    <span>General</span>
+    <span>{resumen.podiosGeneral}</span>
+  </div>
 
-      <div className="flex items-center justify-between">
-        <span>Viejitos</span>
-        <span>{resumen.podiosViejitos}</span>
-      </div>
+  {resumen.podiosViejitos > 0 && (
+    <div className="flex items-center justify-between">
+      <span>Viejitos</span>
+      <span>{resumen.podiosViejitos}</span>
     </div>
+  )}
+</div>
   </div>
 
   <div className="mt-6 space-y-3">

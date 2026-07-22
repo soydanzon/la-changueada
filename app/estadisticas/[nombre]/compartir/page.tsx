@@ -208,25 +208,25 @@ ${canchas}`;
           </div>
 
           <div className="mt-5">
-            {resumen.podiosViejitos > 0 && (
-  <div className="flex items-center justify-between">
-    <span>Viejitos</span>
-    <span>{resumen.podiosViejitos}</span>
+  <div className="flex items-center justify-between text-lg font-bold">
+    <span>🥇🥈🥉 Podios</span>
+    <span>{resumen.podios}</span>
   </div>
-)}
 
-            <div className="mt-2 space-y-1 font-normal">
-              <div className="flex items-center justify-between">
-                <span>General</span>
-                <span>{resumen.podiosGeneral}</span>
-              </div>
+  <div className="mt-2 space-y-1 font-normal">
+    <div className="flex items-center justify-between">
+      <span>General</span>
+      <span>{resumen.podiosGeneral}</span>
+    </div>
 
-              <div className="flex items-center justify-between">
-                <span>Viejitos</span>
-                <span>{resumen.podiosViejitos}</span>
-              </div>
-            </div>
-          </div>
+    {resumen.podiosViejitos > 0 && (
+      <div className="flex items-center justify-between">
+        <span>Viejitos</span>
+        <span>{resumen.podiosViejitos}</span>
+      </div>
+    )}
+  </div>
+</div>
 
           <div className="mt-6 space-y-3">
             <p className="text-lg font-bold">
