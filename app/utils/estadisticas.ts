@@ -16,15 +16,25 @@ export type CanchaFecha = {
 export type FechaGuardada = {
   id: number;
   fecha: string;
+  formato?: "edad" | "categorias";
   cancha?: CanchaFecha | null;
+
   general: Resultado[];
   viejitos: Resultado[];
+
+  categoriaA?: Resultado[];
+  categoriaB?: Resultado[];
 };
 
 export type EstadisticaJugador = {
   nombre: string;
 
   jugadas: number;
+
+  participacionesGeneral: number;
+  participacionesViejitos: number;
+  participacionesCategoriaA: number;
+  participacionesCategoriaB: number;
 
   aportado: number;
   ganado: number;
@@ -33,10 +43,14 @@ export type EstadisticaJugador = {
   victorias: number;
   victoriasGeneral: number;
   victoriasViejitos: number;
+  victoriasCategoriaA: number;
+  victoriasCategoriaB: number;
 
   podios: number;
   podiosGeneral: number;
   podiosViejitos: number;
+  podiosCategoriaA: number;
+  podiosCategoriaB: number;
 
   sumaScores: number;
   promedioGolpes: number;
@@ -88,135 +102,258 @@ type CanchaActual = {
   id: number;
   nombre: string;
 };
-function obtenerNombreCanchaActual(cancha: CanchaFecha) {
+
+function obtenerNombreCanchaActual(
+  cancha: CanchaFecha
+) {
   if (typeof window === "undefined") {
     return cancha.nombre;
   }
+
   try {
-    const datos = localStorage.getItem("laChangueadaCanchas");
-    if (!datos) return cancha.nombre;
-    const canchas: CanchaActual[] = JSON.parse(datos);
+    const datos = localStorage.getItem(
+      "laChangueadaCanchas"
+    );
+
+    if (!datos) {
+      return cancha.nombre;
+    }
+
+    const canchas: CanchaActual[] =
+      JSON.parse(datos);
+
     return (
-      canchas.find((c) => c.id === cancha.id)?.nombre ??
-      cancha.nombre
+      canchas.find(
+        (canchaActual) =>
+          canchaActual.id === cancha.id
+      )?.nombre ?? cancha.nombre
     );
   } catch {
     return cancha.nombre;
   }
 }
 
+function obtenerResultadosFecha(
+  fecha: FechaGuardada
+) {
+  if (fecha.formato === "categorias") {
+    return {
+      formato: "categorias" as const,
+
+      categoriaUno:
+        fecha.categoriaA ??
+        fecha.general ??
+        [],
+
+      categoriaDos:
+        fecha.categoriaB ??
+        fecha.viejitos ??
+        [],
+    };
+  }
+
+  return {
+    formato: "edad" as const,
+    categoriaUno: fecha.general ?? [],
+    categoriaDos: fecha.viejitos ?? [],
+  };
+}
+
 export function calcularEstadisticas(
   historial: FechaGuardada[]
 ): EstadisticaJugador[] {
-  const mapa = new Map<string, EstadisticaJugador>();
+  const mapa = new Map<
+    string,
+    EstadisticaJugador
+  >();
 
   historial.forEach((fecha) => {
+    const {
+      formato,
+      categoriaUno,
+      categoriaDos,
+    } = obtenerResultadosFecha(fecha);
+
     const nombres = new Set<string>();
 
-    fecha.general.forEach((resultado) => {
+    categoriaUno.forEach((resultado) => {
       nombres.add(resultado.jugador.nombre);
     });
 
-    fecha.viejitos.forEach((resultado) => {
+    categoriaDos.forEach((resultado) => {
       nombres.add(resultado.jugador.nombre);
     });
 
     nombres.forEach((nombre) => {
-      const resultadosGeneral = fecha.general.filter(
-        (resultado) => resultado.jugador.nombre === nombre
-      );
+      const resultadosCategoriaUno =
+        categoriaUno.filter(
+          (resultado) =>
+            resultado.jugador.nombre === nombre
+        );
 
-      const resultadosViejitos = fecha.viejitos.filter(
-        (resultado) => resultado.jugador.nombre === nombre
-      );
+      const resultadosCategoriaDos =
+        categoriaDos.filter(
+          (resultado) =>
+            resultado.jugador.nombre === nombre
+        );
 
       const resultadosJugador = [
-        ...resultadosGeneral,
-        ...resultadosViejitos,
+        ...resultadosCategoriaUno,
+        ...resultadosCategoriaDos,
       ];
 
-      if (resultadosJugador.length === 0) return;
+      if (resultadosJugador.length === 0) {
+        return;
+      }
 
       const score = resultadosJugador[0].score;
 
-      const actual = mapa.get(nombre) || {
-        nombre,
+      const actual =
+        mapa.get(nombre) ?? {
+          nombre,
 
-        jugadas: 0,
+          jugadas: 0,
 
-        aportado: 0,
-        ganado: 0,
-        balance: 0,
+          participacionesGeneral: 0,
+          participacionesViejitos: 0,
+          participacionesCategoriaA: 0,
+          participacionesCategoriaB: 0,
 
-        victorias: 0,
-        victoriasGeneral: 0,
-        victoriasViejitos: 0,
+          aportado: 0,
+          ganado: 0,
+          balance: 0,
 
-        podios: 0,
-        podiosGeneral: 0,
-        podiosViejitos: 0,
+          victorias: 0,
+          victoriasGeneral: 0,
+          victoriasViejitos: 0,
+          victoriasCategoriaA: 0,
+          victoriasCategoriaB: 0,
 
-        sumaScores: 0,
-        promedioGolpes: 0,
+          podios: 0,
+          podiosGeneral: 0,
+          podiosViejitos: 0,
+          podiosCategoriaA: 0,
+          podiosCategoriaB: 0,
 
-        sumaRespectoPar: 0,
-        jugadasConPar: 0,
-        promedio: 0,
+          sumaScores: 0,
+          promedioGolpes: 0,
 
-        mejorScore: 999,
-        mejorScoreGolpes: 999,
-      };
+          sumaRespectoPar: 0,
+          jugadasConPar: 0,
+          promedio: 0,
 
-      // Una sola fecha jugada, aunque participe en las dos categorías.
+          mejorScore: 999,
+          mejorScoreGolpes: 999,
+        };
+
       actual.jugadas += 1;
 
       actual.sumaScores += score;
+
       actual.promedioGolpes =
         actual.sumaScores / actual.jugadas;
 
-      // Cada categoría tiene su propio aporte y sus propios premios.
       actual.aportado +=
-        VALOR_CHANGUEADA * resultadosJugador.length;
+        VALOR_CHANGUEADA *
+        resultadosJugador.length;
 
-      actual.ganado += resultadosJugador.reduce(
-        (total, resultado) => total + resultado.premio,
-        0
-      );
+      actual.ganado +=
+        resultadosJugador.reduce(
+          (total, resultado) =>
+            total + resultado.premio,
+          0
+        );
 
-      actual.victoriasGeneral += resultadosGeneral.filter(
-        (resultado) => resultado.puesto === 1
-      ).length;
+      const victoriasCategoriaUno =
+        resultadosCategoriaUno.filter(
+          (resultado) =>
+            resultado.puesto === 1
+        ).length;
 
-      actual.victoriasViejitos += resultadosViejitos.filter(
-        (resultado) => resultado.puesto === 1
-      ).length;
+      const victoriasCategoriaDos =
+        resultadosCategoriaDos.filter(
+          (resultado) =>
+            resultado.puesto === 1
+        ).length;
+
+      const podiosCategoriaUno =
+        resultadosCategoriaUno.filter(
+          (resultado) =>
+            resultado.puesto <= 3
+        ).length;
+
+      const podiosCategoriaDos =
+        resultadosCategoriaDos.filter(
+          (resultado) =>
+            resultado.puesto <= 3
+        ).length;
+
+      if (formato === "categorias") {
+        actual.participacionesCategoriaA +=
+          resultadosCategoriaUno.length;
+
+        actual.participacionesCategoriaB +=
+          resultadosCategoriaDos.length;
+
+        actual.victoriasCategoriaA +=
+          victoriasCategoriaUno;
+
+        actual.victoriasCategoriaB +=
+          victoriasCategoriaDos;
+
+        actual.podiosCategoriaA +=
+          podiosCategoriaUno;
+
+        actual.podiosCategoriaB +=
+          podiosCategoriaDos;
+      } else {
+        actual.participacionesGeneral +=
+          resultadosCategoriaUno.length;
+
+        actual.participacionesViejitos +=
+          resultadosCategoriaDos.length;
+
+        actual.victoriasGeneral +=
+          victoriasCategoriaUno;
+
+        actual.victoriasViejitos +=
+          victoriasCategoriaDos;
+
+        actual.podiosGeneral +=
+          podiosCategoriaUno;
+
+        actual.podiosViejitos +=
+          podiosCategoriaDos;
+      }
 
       actual.victorias =
         actual.victoriasGeneral +
-        actual.victoriasViejitos;
-
-      actual.podiosGeneral += resultadosGeneral.filter(
-        (resultado) => resultado.puesto <= 3
-      ).length;
-
-      actual.podiosViejitos += resultadosViejitos.filter(
-        (resultado) => resultado.puesto <= 3
-      ).length;
+        actual.victoriasViejitos +
+        actual.victoriasCategoriaA +
+        actual.victoriasCategoriaB;
 
       actual.podios =
         actual.podiosGeneral +
-        actual.podiosViejitos;
+        actual.podiosViejitos +
+        actual.podiosCategoriaA +
+        actual.podiosCategoriaB;
 
       if (fecha.cancha) {
-        const respectoPar = score - fecha.cancha.par;
+        const respectoPar =
+          score - fecha.cancha.par;
 
         actual.jugadasConPar += 1;
-        actual.sumaRespectoPar += respectoPar;
+
+        actual.sumaRespectoPar +=
+          respectoPar;
 
         actual.promedio =
-          actual.sumaRespectoPar / actual.jugadasConPar;
+          actual.sumaRespectoPar /
+          actual.jugadasConPar;
 
-        if (respectoPar < actual.mejorScore) {
+        if (
+          respectoPar < actual.mejorScore
+        ) {
           actual.mejorScore = respectoPar;
           actual.mejorScoreGolpes = score;
         }
@@ -229,94 +366,126 @@ export function calcularEstadisticas(
     });
   });
 
-  return Array.from(mapa.values()).map((jugador) => ({
-    ...jugador,
+  return Array.from(mapa.values()).map(
+    (jugador) => ({
+      ...jugador,
 
-    mejorScore:
-      jugador.mejorScore === 999
-        ? 0
-        : jugador.mejorScore,
+      mejorScore:
+        jugador.mejorScore === 999
+          ? 0
+          : jugador.mejorScore,
 
-    mejorScoreGolpes:
-      jugador.mejorScoreGolpes === 999
-        ? 0
-        : jugador.mejorScoreGolpes,
-  }));
+      mejorScoreGolpes:
+        jugador.mejorScoreGolpes === 999
+          ? 0
+          : jugador.mejorScoreGolpes,
+    })
+  );
 }
 
 export function calcularEstadisticasPorCancha(
   historial: FechaGuardada[],
   nombreJugador: string
 ): EstadisticaCancha[] {
-  const mapa = new Map<number, EstadisticaCancha>();
+  const mapa = new Map<
+    number,
+    EstadisticaCancha
+  >();
 
   historial.forEach((fecha) => {
-    if (!fecha.cancha) return;
+    if (!fecha.cancha) {
+      return;
+    }
+
+    const {
+      categoriaUno,
+      categoriaDos,
+    } = obtenerResultadosFecha(fecha);
 
     const resultadosJugador = [
-      ...fecha.general.filter(
+      ...categoriaUno.filter(
         (resultado) =>
-          resultado.jugador.nombre === nombreJugador
+          resultado.jugador.nombre ===
+          nombreJugador
       ),
 
-      ...fecha.viejitos.filter(
+      ...categoriaDos.filter(
         (resultado) =>
-          resultado.jugador.nombre === nombreJugador
+          resultado.jugador.nombre ===
+          nombreJugador
       ),
     ];
 
-    if (resultadosJugador.length === 0) return;
+    if (resultadosJugador.length === 0) {
+      return;
+    }
 
     const score = resultadosJugador[0].score;
-    const respectoPar = score - fecha.cancha.par;
 
-    const actual = mapa.get(fecha.cancha.id) || {
-      canchaId: fecha.cancha.id,
-      cancha: obtenerNombreCanchaActual(fecha.cancha),
-      par: fecha.cancha.par,
+    const respectoPar =
+      score - fecha.cancha.par;
 
-      jugadas: 0,
-      victorias: 0,
-      podios: 0,
+    const actual =
+      mapa.get(fecha.cancha.id) ?? {
+        canchaId: fecha.cancha.id,
+        cancha:
+          obtenerNombreCanchaActual(
+            fecha.cancha
+          ),
+        par: fecha.cancha.par,
 
-      sumaScores: 0,
-      promedioGolpes: 0,
+        jugadas: 0,
+        victorias: 0,
+        podios: 0,
 
-      sumaRespectoPar: 0,
-      promedioRespectoPar: 0,
+        sumaScores: 0,
+        promedioGolpes: 0,
 
-      mejorVuelta: 999,
-      mejorVueltaGolpes: 999,
-    };
+        sumaRespectoPar: 0,
+        promedioRespectoPar: 0,
+
+        mejorVuelta: 999,
+        mejorVueltaGolpes: 999,
+      };
 
     actual.jugadas += 1;
 
-    actual.victorias += resultadosJugador.filter(
-      (resultado) => resultado.puesto === 1
-    ).length;
+    actual.victorias +=
+      resultadosJugador.filter(
+        (resultado) =>
+          resultado.puesto === 1
+      ).length;
 
-    actual.podios += resultadosJugador.filter(
-      (resultado) => resultado.puesto <= 3
-    ).length;
+    actual.podios +=
+      resultadosJugador.filter(
+        (resultado) =>
+          resultado.puesto <= 3
+      ).length;
 
     actual.sumaScores += score;
 
     actual.promedioGolpes =
       actual.sumaScores / actual.jugadas;
 
-    actual.sumaRespectoPar += respectoPar;
+    actual.sumaRespectoPar +=
+      respectoPar;
 
     actual.promedioRespectoPar =
-      actual.sumaRespectoPar / actual.jugadas;
+      actual.sumaRespectoPar /
+      actual.jugadas;
 
-    if (respectoPar < actual.mejorVuelta) {
+    if (
+      respectoPar < actual.mejorVuelta
+    ) {
       actual.mejorVuelta = respectoPar;
       actual.mejorVueltaGolpes = score;
     }
 
-    actual.cancha = obtenerNombreCanchaActual(
-  fecha.cancha
-);
+    actual.cancha =
+      obtenerNombreCanchaActual(
+        fecha.cancha
+      );
+
     mapa.set(fecha.cancha.id, actual);
   });
 
@@ -334,7 +503,9 @@ export function calcularEstadisticasPorCancha(
           ? 0
           : cancha.mejorVueltaGolpes,
     }))
-    .sort((a, b) => b.jugadas - a.jugadas);
+    .sort(
+      (a, b) => b.jugadas - a.jugadas
+    );
 }
 
 export function calcularHandicap(
@@ -345,42 +516,63 @@ export function calcularHandicap(
     Omit<FechaHandicap, "cuenta">[]
   >();
 
-  const historialOrdenado = [...historial].sort(
-    (a, b) => a.id - b.id
-  );
+  const historialOrdenado = [
+    ...historial,
+  ].sort((a, b) => a.id - b.id);
 
   historialOrdenado.forEach((fecha) => {
-  if (!fecha.cancha) return;
+    if (!fecha.cancha) {
+      return;
+    }
 
-  const cancha = fecha.cancha;
+    const cancha = fecha.cancha;
 
-  const nombres = new Set<string>();
+    const {
+      categoriaUno,
+      categoriaDos,
+    } = obtenerResultadosFecha(fecha);
 
-    fecha.general.forEach((resultado) => {
+    const nombres = new Set<string>();
+
+    categoriaUno.forEach((resultado) => {
       nombres.add(resultado.jugador.nombre);
     });
 
-    fecha.viejitos.forEach((resultado) => {
+    categoriaDos.forEach((resultado) => {
       nombres.add(resultado.jugador.nombre);
     });
 
     nombres.forEach((nombre) => {
       const resultado =
-        fecha.general.find(
-          (r) => r.jugador.nombre === nombre
+        categoriaUno.find(
+          (resultadoCategoria) =>
+            resultadoCategoria.jugador.nombre ===
+            nombre
         ) ??
-        fecha.viejitos.find(
-          (r) => r.jugador.nombre === nombre
+        categoriaDos.find(
+          (resultadoCategoria) =>
+            resultadoCategoria.jugador.nombre ===
+            nombre
         );
 
-      if (!resultado) return;
+      if (!resultado) {
+        return;
+      }
 
-      const fechasJugador = mapa.get(nombre) || [];
+      const fechasJugador =
+        mapa.get(nombre) ?? [];
 
       fechasJugador.push({
         fecha: fecha.fecha,
-        cancha: obtenerNombreCanchaActual(cancha),
-        score: resultado.score - cancha.par,
+
+        cancha:
+          obtenerNombreCanchaActual(
+            cancha
+          ),
+
+        score:
+          resultado.score - cancha.par,
+
         golpes: resultado.score,
       });
 
@@ -389,45 +581,72 @@ export function calcularHandicap(
   });
 
   return Array.from(mapa.entries())
-    .map(([nombre, todasLasFechas]) => {
-      const ultimas16 = todasLasFechas.slice(-16);
+    .map(
+      ([nombre, todasLasFechas]) => {
+        const ultimas16 =
+          todasLasFechas.slice(-16);
 
-      const cantidadQueCuenta = Math.min(
-        8,
-        Math.ceil(ultimas16.length / 2)
-      );
+        const cantidadQueCuenta =
+          Math.min(
+            8,
+            Math.ceil(
+              ultimas16.length / 2
+            )
+          );
 
-      const indicesQueCuentan = ultimas16
-        .map((fecha, index) => ({
-          index,
-          score: fecha.score,
-        }))
-        .sort((a, b) => a.score - b.score)
-        .slice(0, cantidadQueCuenta)
-        .map((fecha) => fecha.index);
+        const indicesQueCuentan =
+          ultimas16
+            .map((fecha, index) => ({
+              index,
+              score: fecha.score,
+            }))
+            .sort(
+              (a, b) =>
+                a.score - b.score
+            )
+            .slice(
+              0,
+              cantidadQueCuenta
+            )
+            .map(
+              (fecha) => fecha.index
+            );
 
-      const fechas = ultimas16.map((fecha, index) => ({
-        ...fecha,
-        cuenta: indicesQueCuentan.includes(index),
-      }));
+        const fechas = ultimas16.map(
+          (fecha, index) => ({
+            ...fecha,
 
-      const fechasQueCuentan = fechas.filter(
-        (fecha) => fecha.cuenta
-      );
+            cuenta:
+              indicesQueCuentan.includes(
+                index
+              ),
+          })
+        );
 
-      const handicap =
-        fechasQueCuentan.length > 0
-          ? fechasQueCuentan.reduce(
-              (total, fecha) => total + fecha.score,
-              0
-            ) / fechasQueCuentan.length
-          : 0;
+        const fechasQueCuentan =
+          fechas.filter(
+            (fecha) => fecha.cuenta
+          );
 
-      return {
-        nombre,
-        handicap,
-        fechas,
-      };
-    })
-    .sort((a, b) => a.handicap - b.handicap);
+        const handicap =
+          fechasQueCuentan.length > 0
+            ? fechasQueCuentan.reduce(
+                (total, fecha) =>
+                  total + fecha.score,
+                0
+              ) /
+              fechasQueCuentan.length
+            : 0;
+
+        return {
+          nombre,
+          handicap,
+          fechas,
+        };
+      }
+    )
+    .sort(
+      (a, b) =>
+        a.handicap - b.handicap
+    );
 }

@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import {
   jugadores,
   type Jugador,
 } from "../datos/jugadores";
+
 import { obtenerCanchasGuardadas } from "../datos/canchas";
 import { obtenerTablaPremios } from "../premios/tablaPremios";
 import BotonInicio from "../components/BotonInicio";
@@ -28,13 +30,28 @@ type CanchaFecha = {
   par: number;
 };
 
-type FechaActual = {
+type FechaPorEdad = {
+  formato?: "edad";
   general: number[];
   viejitos: number[];
   pagosPendientes?: number[];
   pagosCompletados?: number[];
   cancha: number;
 };
+
+type FechaPorCategorias = {
+  formato: "categorias";
+  jugadores: number[];
+  categoriaA: number[];
+  categoriaB: number[];
+  pagosPendientes?: number[];
+  pagosCompletados?: number[];
+  cancha: number;
+};
+
+type FechaActual =
+  | FechaPorEdad
+  | FechaPorCategorias;
 
 function calcularPremios(
   resultados: ResultadoBase[]
@@ -54,17 +71,18 @@ function calcularPremios(
   while (i < resultados.length) {
     const scoreActual = resultados[i].score;
 
-    const empatados = resultados.filter(
-      (resultado) =>
-        resultado.score === scoreActual
-    );
+    let cantidad = 1;
 
-    const inicio = i;
-    const cantidad = empatados.length;
+    while (
+      i + cantidad < resultados.length &&
+      resultados[i + cantidad].score === scoreActual
+    ) {
+      cantidad += 1;
+    }
 
     const premiosInvolucrados = premios.slice(
-      inicio,
-      inicio + cantidad
+      i,
+      i + cantidad
     );
 
     const totalPremios =
@@ -80,14 +98,16 @@ function calcularPremios(
     const resto =
       totalPremios - premioBase * cantidad;
 
-    empatados.forEach((resultado, index) => {
-      finales.push({
-        ...resultado,
-        puesto: inicio + 1,
-        premio:
-          premioBase + (index === 0 ? resto : 0),
+    resultados
+      .slice(i, i + cantidad)
+      .forEach((resultado, index) => {
+        finales.push({
+          ...resultado,
+          puesto: i + 1,
+          premio:
+            premioBase + (index === 0 ? resto : 0),
+        });
       });
-    });
 
     i += cantidad;
   }
@@ -100,15 +120,26 @@ function formatearPesos(valor: number) {
 }
 
 export default function Resultados() {
-  const [general, setGeneral] = useState<Resultado[]>([]);
-  const [viejitos, setViejitos] = useState<Resultado[]>([]);
+  const [categoriaUno, setCategoriaUno] = useState<
+    Resultado[]
+  >([]);
+
+  const [categoriaDos, setCategoriaDos] = useState<
+    Resultado[]
+  >([]);
+
+  const [formato, setFormato] = useState<
+    "edad" | "categorias"
+  >("edad");
 
   const [listaJugadores, setListaJugadores] = useState<
     Jugador[]
   >([]);
 
-  const [pagosPendientesOriginales, setPagosPendientesOriginales] =
-    useState<number[]>([]);
+  const [
+    pagosPendientesOriginales,
+    setPagosPendientesOriginales,
+  ] = useState<number[]>([]);
 
   const [pagosCompletados, setPagosCompletados] =
     useState<number[]>([]);
@@ -128,7 +159,7 @@ export default function Resultados() {
       setFechaGuardada(true);
     }
 
-    const fecha = localStorage.getItem(
+    const fechaGuardadaActual = localStorage.getItem(
       "laChangueadaFechaActual"
     );
 
@@ -140,69 +171,98 @@ export default function Resultados() {
       "laChangueadaJugadores"
     );
 
-    if (!fecha || !scoresGuardados) return;
-
-    const datos: FechaActual = JSON.parse(fecha);
-    const scores = JSON.parse(scoresGuardados);
-
-    const canchaEncontrada =
-      obtenerCanchasGuardadas().find(
-        (cancha) => cancha.id === datos.cancha
-      );
-
-    if (canchaEncontrada) {
-      setCanchaFecha({
-        id: canchaEncontrada.id,
-        nombre: canchaEncontrada.nombre,
-        par: canchaEncontrada.par,
-      });
+    if (!fechaGuardadaActual || !scoresGuardados) {
+      return;
     }
 
-    const lista: Jugador[] = jugadoresGuardados
-      ? JSON.parse(jugadoresGuardados)
-      : jugadores;
+    try {
+      const datos: FechaActual = JSON.parse(
+        fechaGuardadaActual
+      );
 
-    setListaJugadores(lista);
+      const scores: Record<number, string> =
+        JSON.parse(scoresGuardados);
 
-    setPagosPendientesOriginales(
-      datos.pagosPendientes ?? []
-    );
+      const canchaEncontrada =
+        obtenerCanchasGuardadas().find(
+          (cancha) => cancha.id === datos.cancha
+        );
 
-    setPagosCompletados(
-      datos.pagosCompletados ?? []
-    );
+      if (canchaEncontrada) {
+        setCanchaFecha({
+          id: canchaEncontrada.id,
+          nombre: canchaEncontrada.nombre,
+          par: canchaEncontrada.par,
+        });
+      }
 
-    const generalOrdenado = lista
-      .filter((jugador) =>
-        datos.general.includes(jugador.id)
-      )
-      .map((jugador) => ({
-        jugador,
-        score: Number(
-          scores[jugador.id] ?? 999
-        ),
-      }))
-      .sort((a, b) => a.score - b.score);
+      const lista: Jugador[] = jugadoresGuardados
+        ? JSON.parse(jugadoresGuardados)
+        : jugadores;
 
-    const viejitosOrdenado = lista
-      .filter((jugador) =>
-        datos.viejitos.includes(jugador.id)
-      )
-      .map((jugador) => ({
-        jugador,
-        score: Number(
-          scores[jugador.id] ?? 999
-        ),
-      }))
-      .sort((a, b) => a.score - b.score);
+      setListaJugadores(lista);
 
-    setGeneral(
-      calcularPremios(generalOrdenado)
-    );
+      setPagosPendientesOriginales(
+        datos.pagosPendientes ?? []
+      );
 
-    setViejitos(
-      calcularPremios(viejitosOrdenado)
-    );
+      setPagosCompletados(
+        datos.pagosCompletados ?? []
+      );
+
+      const idsCategoriaUno =
+        datos.formato === "categorias"
+          ? datos.categoriaA ?? []
+          : datos.general ?? [];
+
+      const idsCategoriaDos =
+        datos.formato === "categorias"
+          ? datos.categoriaB ?? []
+          : datos.viejitos ?? [];
+
+      setFormato(
+        datos.formato === "categorias"
+          ? "categorias"
+          : "edad"
+      );
+
+      const resultadosCategoriaUno = lista
+        .filter((jugador) =>
+          idsCategoriaUno.includes(jugador.id)
+        )
+        .map((jugador) => ({
+          jugador,
+          score: Number(
+            scores[jugador.id] ?? 999
+          ),
+        }))
+        .sort((a, b) => a.score - b.score);
+
+      const resultadosCategoriaDos = lista
+        .filter((jugador) =>
+          idsCategoriaDos.includes(jugador.id)
+        )
+        .map((jugador) => ({
+          jugador,
+          score: Number(
+            scores[jugador.id] ?? 999
+          ),
+        }))
+        .sort((a, b) => a.score - b.score);
+
+      setCategoriaUno(
+        calcularPremios(resultadosCategoriaUno)
+      );
+
+      setCategoriaDos(
+        calcularPremios(resultadosCategoriaDos)
+      );
+    } catch (error) {
+      console.error(
+        "No se pudieron calcular los resultados:",
+        error
+      );
+    }
   }, []);
 
   function cambiarEstadoPago(jugadorId: number) {
@@ -237,27 +297,46 @@ export default function Resultados() {
   function guardarFecha() {
     if (fechaGuardada) return;
 
-    const historialGuardado =
-      localStorage.getItem(
-        "laChangueadaHistorial"
-      );
+    const historialGuardado = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
 
     const historial = historialGuardado
       ? JSON.parse(historialGuardado)
       : [];
 
-    const nuevaFecha = {
+    const baseFecha = {
       id: Date.now(),
-      fecha: new Date().toLocaleDateString(
-        "es-AR"
-      ),
+      fecha: new Date().toLocaleDateString("es-AR"),
       cancha: canchaFecha,
-      general,
-      viejitos,
       pagosPendientes:
         pagosPendientesOriginales,
       pagosCompletados,
     };
+
+    const nuevaFecha =
+      formato === "categorias"
+        ? {
+            ...baseFecha,
+            formato: "categorias",
+
+            categoriaA: categoriaUno,
+            categoriaB: categoriaDos,
+
+            /*
+              Se mantienen también estas dos copias
+              para que el hándicap y las estadísticas
+              actuales sigan leyendo las vueltas.
+            */
+            general: categoriaUno,
+            viejitos: categoriaDos,
+          }
+        : {
+            ...baseFecha,
+            formato: "edad",
+            general: categoriaUno,
+            viejitos: categoriaDos,
+          };
 
     localStorage.setItem(
       "laChangueadaHistorial",
@@ -298,6 +377,16 @@ export default function Resultados() {
         !pagosCompletados.includes(jugadorId)
     ).length;
 
+  const nombreCategoriaUno =
+    formato === "categorias"
+      ? "Categoría A"
+      : "General";
+
+  const nombreCategoriaDos =
+    formato === "categorias"
+      ? "Categoría B"
+      : "Viejitos";
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
@@ -314,28 +403,29 @@ export default function Resultados() {
       {canchaFecha && (
         <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl">
-  <span className="font-bold">
-    ⛳ {canchaFecha.nombre}
-  </span>
+            <span className="font-bold">
+              ⛳ {canchaFecha.nombre}
+            </span>
 
-  &nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;
 
-  <span className="font-normal">
-    Par {canchaFecha.par}
-  </span>
-</p>
+            <span className="font-normal">
+              Par {canchaFecha.par}
+            </span>
+          </p>
         </div>
       )}
 
       <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
         <h2 className="mb-4 text-2xl font-bold">
-          General
+          {formato === "categorias" ? "🅰️ " : ""}
+          {nombreCategoriaUno}
         </h2>
 
-        {general.map((resultado) => (
+        {categoriaUno.map((resultado) => (
           <div
             key={resultado.jugador.id}
-            className="flex items-center justify-between border-b gap-4 py-3"
+            className="flex items-center justify-between gap-4 border-b py-3"
           >
             <span>
               {resultado.puesto}.{" "}
@@ -354,34 +444,37 @@ export default function Resultados() {
         ))}
       </div>
 
-      {viejitos.length > 0 && (
-  <div className="rounded-xl bg-white p-5 text-green-900">
-    <h2 className="mb-4 text-2xl font-bold">
-      Viejitos
-    </h2>
+      {categoriaDos.length > 0 && (
+        <div className="rounded-xl bg-white p-5 text-green-900">
+          <h2 className="mb-4 text-2xl font-bold">
+            {formato === "categorias"
+              ? "🅱️ "
+              : ""}
+            {nombreCategoriaDos}
+          </h2>
 
-    {viejitos.map((resultado) => (
-      <div
-        key={resultado.jugador.id}
-        className="flex items-center justify-between border-b gap-4 py-3"
-      >
-        <span>
-          {resultado.puesto}.{" "}
-          {resultado.jugador.nombre} -{" "}
-          {resultado.score}
-        </span>
+          {categoriaDos.map((resultado) => (
+            <div
+              key={resultado.jugador.id}
+              className="flex items-center justify-between gap-4 border-b py-3"
+            >
+              <span>
+                {resultado.puesto}.{" "}
+                {resultado.jugador.nombre} -{" "}
+                {resultado.score}
+              </span>
 
-        <strong>
-          {resultado.premio > 0
-            ? formatearPesos(
-                resultado.premio
-              )
-            : "-"}
-        </strong>
-      </div>
-    ))}
-  </div>
-)}
+              <strong>
+                {resultado.premio > 0
+                  ? formatearPesos(
+                      resultado.premio
+                    )
+                  : "-"}
+              </strong>
+            </div>
+          ))}
+        </div>
+      )}
 
       {jugadoresConPagoMarcado.length > 0 && (
         <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
@@ -402,9 +495,7 @@ export default function Resultados() {
                   key={jugador.id}
                   className="flex items-center justify-between gap-4 py-2 last:border-b-0"
                 >
-                  <span>
-                    {jugador.nombre}
-                  </span>
+                  <span>{jugador.nombre}</span>
 
                   <button
                     type="button"

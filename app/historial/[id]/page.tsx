@@ -27,9 +27,14 @@ type CanchaFecha = {
 type FechaGuardada = {
   id: number;
   fecha: string;
+  formato?: "edad" | "categorias";
   cancha?: CanchaFecha | null;
-  general: Resultado[];
-  viejitos: Resultado[];
+
+  general?: Resultado[];
+  viejitos?: Resultado[];
+
+  categoriaA?: Resultado[];
+  categoriaB?: Resultado[];
 };
 
 function formatearPesos(valor: number) {
@@ -60,6 +65,33 @@ function formatearScore(score: number, par?: number) {
   }
 
   return `${score} (${relativo})`;
+}
+
+function obtenerResultadosFecha(fecha: FechaGuardada) {
+  if (fecha.formato === "categorias") {
+    return {
+      tituloUno: "🅰️ Categoría A",
+      tituloDos: "🅱️ Categoría B",
+
+      resultadosUno:
+        fecha.categoriaA ??
+        fecha.general ??
+        [],
+
+      resultadosDos:
+        fecha.categoriaB ??
+        fecha.viejitos ??
+        [],
+    };
+  }
+
+  return {
+    tituloUno: "General",
+    tituloDos: "Viejitos",
+
+    resultadosUno: fecha.general ?? [],
+    resultadosDos: fecha.viejitos ?? [],
+  };
 }
 
 function TablaResultados({
@@ -96,7 +128,7 @@ function TablaResultados({
                     {medalla(resultado.puesto)}
                   </span>
 
-                  <span className="font-bold">
+                  <span className="min-w-0 break-words font-bold">
                     {resultado.jugador.nombre}
                   </span>
                 </div>
@@ -114,9 +146,10 @@ function TablaResultados({
         </div>
       )}
 
-      {premiados.length > 0 && noPremiados.length > 0 && (
-        <div className="my-1 border-t border-green-900/30" />
-      )}
+      {premiados.length > 0 &&
+        noPremiados.length > 0 && (
+          <div className="my-1 border-t border-green-900/30" />
+        )}
 
       {noPremiados.length > 0 && (
         <div>
@@ -134,7 +167,7 @@ function TablaResultados({
                   {medalla(resultado.puesto)}
                 </span>
 
-                <span className="font-semibold">
+                <span className="min-w-0 break-words font-semibold">
                   {resultado.jugador.nombre}
                 </span>
               </div>
@@ -153,40 +186,56 @@ function TablaResultados({
 export default function DetalleFecha() {
   const params = useParams();
 
-  const [fecha, setFecha] = useState<FechaGuardada | null>(null);
-const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [fecha, setFecha] =
+    useState<FechaGuardada | null>(null);
+
+  const [canchas, setCanchas] =
+    useState<Cancha[]>([]);
 
   useEffect(() => {
-  setCanchas(obtenerCanchasGuardadas());
+    setCanchas(obtenerCanchasGuardadas());
 
-  const datos = localStorage.getItem(
-    "laChangueadaHistorial"
-  );
-
-    if (!datos) return;
-
-    const historial: FechaGuardada[] = JSON.parse(datos);
-
-    const encontrada = historial.find(
-      (fechaGuardada) =>
-        fechaGuardada.id === Number(params.id)
+    const datos = localStorage.getItem(
+      "laChangueadaHistorial"
     );
 
-    if (encontrada) {
-      setFecha(encontrada);
+    if (!datos) {
+      return;
+    }
+
+    try {
+      const historial: FechaGuardada[] =
+        JSON.parse(datos);
+
+      const encontrada = historial.find(
+        (fechaGuardada) =>
+          fechaGuardada.id === Number(params.id)
+      );
+
+      if (encontrada) {
+        setFecha(encontrada);
+      }
+    } catch {
+      setFecha(null);
     }
   }, [params.id]);
 
   function obtenerNombreCancha() {
-  if (!fecha?.cancha) return "";
+    if (!fecha?.cancha) {
+      return "";
+    }
 
-  const canchaActual = canchas.find(
-    (cancha) => cancha.id === fecha.cancha?.id
-  );
+    const canchaActual = canchas.find(
+      (cancha) =>
+        cancha.id === fecha.cancha?.id
+    );
 
-  return canchaActual?.nombre ?? fecha.cancha.nombre;
-}
-  
+    return (
+      canchaActual?.nombre ??
+      fecha.cancha.nombre
+    );
+  }
+
   if (!fecha) {
     return (
       <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -194,6 +243,13 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
       </main>
     );
   }
+
+  const {
+    tituloUno,
+    tituloDos,
+    resultadosUno,
+    resultadosDos,
+  } = obtenerResultadosFecha(fecha);
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -222,27 +278,27 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
         </div>
       )}
 
-      {fecha.general.length > 0 && (
+      {resultadosUno.length > 0 && (
         <section className="mt-6 rounded-xl bg-white p-5 text-green-900">
           <h2 className="mb-2 text-2xl font-bold">
-            General
+            {tituloUno}
           </h2>
 
           <TablaResultados
-            resultados={fecha.general}
+            resultados={resultadosUno}
             par={fecha.cancha?.par}
           />
         </section>
       )}
 
-      {fecha.viejitos.length > 0 && (
+      {resultadosDos.length > 0 && (
         <section className="mt-6 rounded-xl bg-white p-5 text-green-900">
           <h2 className="mb-2 text-2xl font-bold">
-            Viejitos
+            {tituloDos}
           </h2>
 
           <TablaResultados
-            resultados={fecha.viejitos}
+            resultados={resultadosDos}
             par={fecha.cancha?.par}
           />
         </section>

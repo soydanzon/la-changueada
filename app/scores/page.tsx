@@ -2,25 +2,51 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import {
   jugadores,
   type Jugador,
 } from "../datos/jugadores";
+
 import { obtenerCanchasGuardadas } from "../datos/canchas";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
-type FechaActual = {
+type FechaPorEdad = {
+  formato?: "edad";
   general: number[];
   viejitos: number[];
   cancha: number;
+  pagosPendientes?: number[];
 };
+
+type FechaPorCategorias = {
+  formato: "categorias";
+  jugadores: number[];
+  categoriaA: number[];
+  categoriaB: number[];
+  cancha: number;
+  pagosPendientes?: number[];
+};
+
+type FechaActual =
+  | FechaPorEdad
+  | FechaPorCategorias;
 
 export default function Scores() {
   const router = useRouter();
 
-  const [general, setGeneral] = useState<Jugador[]>([]);
-  const [viejitos, setViejitos] = useState<Jugador[]>([]);
+  const [categoriaUno, setCategoriaUno] = useState<
+    Jugador[]
+  >([]);
+
+  const [categoriaDos, setCategoriaDos] = useState<
+    Jugador[]
+  >([]);
+
+  const [formato, setFormato] = useState<
+    "edad" | "categorias"
+  >("edad");
 
   const [scores, setScores] = useState<
     Record<number, string>
@@ -32,7 +58,7 @@ export default function Scores() {
   const [parCancha, setParCancha] = useState(0);
 
   useEffect(() => {
-    const fecha = localStorage.getItem(
+    const fechaGuardada = localStorage.getItem(
       "laChangueadaFechaActual"
     );
 
@@ -41,42 +67,78 @@ export default function Scores() {
     );
 
     if (scoresGuardados) {
-      setScores(JSON.parse(scoresGuardados));
+      try {
+        setScores(JSON.parse(scoresGuardados));
+      } catch {
+        setScores({});
+      }
     }
 
-    if (!fecha) return;
+    if (!fechaGuardada) return;
 
-    const datos: FechaActual = JSON.parse(fecha);
+    try {
+      const datos: FechaActual =
+        JSON.parse(fechaGuardada);
 
-    const cancha = obtenerCanchasGuardadas().find(
-      (canchaGuardada) =>
-        canchaGuardada.id === datos.cancha
-    );
+      const cancha = obtenerCanchasGuardadas().find(
+        (canchaGuardada) =>
+          canchaGuardada.id === datos.cancha
+      );
 
-    if (cancha) {
-      setNombreCancha(cancha.nombre);
-      setParCancha(cancha.par);
+      if (cancha) {
+        setNombreCancha(cancha.nombre);
+        setParCancha(cancha.par);
+      }
+
+      const jugadoresGuardados = localStorage.getItem(
+        "laChangueadaJugadores"
+      );
+
+      const lista: Jugador[] = jugadoresGuardados
+        ? JSON.parse(jugadoresGuardados)
+        : jugadores;
+
+      if (datos.formato === "categorias") {
+        setFormato("categorias");
+
+        setCategoriaUno(
+          lista.filter((jugador) =>
+            (datos.categoriaA ?? []).includes(
+              jugador.id
+            )
+          )
+        );
+
+        setCategoriaDos(
+          lista.filter((jugador) =>
+            (datos.categoriaB ?? []).includes(
+              jugador.id
+            )
+          )
+        );
+
+        return;
+      }
+
+      setFormato("edad");
+
+      setCategoriaUno(
+        lista.filter((jugador) =>
+          (datos.general ?? []).includes(jugador.id)
+        )
+      );
+
+      setCategoriaDos(
+        lista.filter((jugador) =>
+          (datos.viejitos ?? []).includes(jugador.id)
+        )
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo cargar la fecha:",
+        error
+      );
     }
-
-    const guardados = localStorage.getItem(
-      "laChangueadaJugadores"
-    );
-
-    const lista: Jugador[] = guardados
-      ? JSON.parse(guardados)
-      : jugadores;
-
-    setGeneral(
-      lista.filter((jugador) =>
-        datos.general.includes(jugador.id)
-      )
-    );
-
-    setViejitos(
-      lista.filter((jugador) =>
-        datos.viejitos.includes(jugador.id)
-      )
-    );
   }, []);
 
   function cambiarScore(id: number, valor: string) {
@@ -103,20 +165,45 @@ export default function Scores() {
     const fechaActual: FechaActual =
       JSON.parse(fechaGuardada);
 
+    if (fechaActual.formato === "categorias") {
+      localStorage.setItem(
+        "laChangueadaNuevaFechaCategoriasBorrador",
+        JSON.stringify({
+          canchaId: fechaActual.cancha,
+          jugadores: fechaActual.jugadores,
+          categoriaA: fechaActual.categoriaA,
+          categoriaB: fechaActual.categoriaB,
+          pagosPendientes:
+            fechaActual.pagosPendientes ?? [],
+          busqueda: "",
+        })
+      );
+
+      localStorage.removeItem(
+        "laChangueadaScores"
+      );
+
+      router.push("/nueva-fecha/categorias");
+      return;
+    }
+
     localStorage.setItem(
-  "laChangueadaNuevaFechaBorrador",
-  JSON.stringify({
-    canchaId: fechaActual.cancha,
-    general: fechaActual.general,
-    viejitos: fechaActual.viejitos,
-    pagosPendientes: (fechaActual as any).pagosPendientes ?? [],
-    busqueda: "",
-  })
-);
+      "laChangueadaNuevaFechaBorrador",
+      JSON.stringify({
+        canchaId: fechaActual.cancha,
+        general: fechaActual.general,
+        viejitos: fechaActual.viejitos,
+        pagosPendientes:
+          fechaActual.pagosPendientes ?? [],
+        busqueda: "",
+      })
+    );
 
-    localStorage.removeItem("laChangueadaScores");
+    localStorage.removeItem(
+      "laChangueadaScores"
+    );
 
-    router.push("/nueva-fecha");
+    router.push("/nueva-fecha/edad");
   }
 
   function calcularResultados() {
@@ -129,8 +216,8 @@ export default function Scores() {
   }
 
   const jugadoresUnicos = [
-    ...general,
-    ...viejitos,
+    ...categoriaUno,
+    ...categoriaDos,
   ]
     .filter(
       (jugador, index, array) =>
@@ -144,6 +231,16 @@ export default function Scores() {
         sensitivity: "base",
       })
     );
+
+  const nombreCategoriaUno =
+    formato === "categorias"
+      ? "Categoría A"
+      : "General";
+
+  const nombreCategoriaDos =
+    formato === "categorias"
+      ? "Categoría B"
+      : "Viejitos";
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -160,16 +257,16 @@ export default function Scores() {
 
       <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <p>
-  <span className="font-bold">
-    ⛳ {nombreCancha}
-  </span>
+          <span className="font-bold">
+            ⛳ {nombreCancha}
+          </span>
 
-  &nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp;&nbsp;
 
-  <span className="font-normal">
-    Par {parCancha}
-  </span>
-</p>
+          <span className="font-normal">
+            Par {parCancha}
+          </span>
+        </p>
       </div>
 
       <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
@@ -182,9 +279,24 @@ export default function Scores() {
             key={jugador.id}
             className="flex items-center justify-between gap-4 border-b py-2"
           >
-            <span className="font-bold">
-              {jugador.nombre}
-            </span>
+            <div>
+              <span className="font-bold">
+                {jugador.nombre}
+              </span>
+
+              {formato === "categorias" && (
+                <span className="ml-2 text-sm font-normal">
+                  (
+                  {categoriaUno.some(
+                    (jugadorCategoria) =>
+                      jugadorCategoria.id === jugador.id
+                  )
+                    ? "A"
+                    : "B"}
+                  )
+                </span>
+              )}
+            </div>
 
             <input
               type="number"
@@ -209,14 +321,16 @@ export default function Scores() {
         </h2>
 
         <p className="mt-3">
-          General: {general.length} jugadores
+          {nombreCategoriaUno}:{" "}
+          {categoriaUno.length} jugadores
         </p>
 
-        {viejitos.length > 0 && (
-  <p>
-    Viejitos: {viejitos.length} jugadores
-  </p>
-)}
+        {categoriaDos.length > 0 && (
+          <p>
+            {nombreCategoriaDos}:{" "}
+            {categoriaDos.length} jugadores
+          </p>
+        )}
       </div>
 
       <button

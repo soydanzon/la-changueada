@@ -27,9 +27,14 @@ type CanchaFecha = {
 type FechaGuardada = {
   id: number;
   fecha: string;
+  formato?: "edad" | "categorias";
   cancha?: CanchaFecha | null;
-  general: Resultado[];
-  viejitos: Resultado[];
+
+  general?: Resultado[];
+  viejitos?: Resultado[];
+
+  categoriaA?: Resultado[];
+  categoriaB?: Resultado[];
 };
 
 function nombreVuelta(
@@ -64,82 +69,165 @@ function nombreVuelta(
   return `${posicion}ª vuelta`;
 }
 
-export default function Compartir() {
-  const [general, setGeneral] = useState<Resultado[]>([]);
-  const [viejitos, setViejitos] = useState<Resultado[]>([]);
-  const [fecha, setFecha] = useState("");
-const [nombreDeVuelta, setNombreDeVuelta] =
-  useState("");
-const [cancha, setCancha] =
-  useState<CanchaFecha | null>(null);
+function obtenerResultadosFecha(
+  fecha: FechaGuardada
+) {
+  if (fecha.formato === "categorias") {
+    return {
+      formato: "categorias" as const,
 
-  const placaGeneralRef = useRef<HTMLDivElement>(null);
-  const placaViejitosRef = useRef<HTMLDivElement>(null);
+      resultadosUno:
+        fecha.categoriaA ??
+        fecha.general ??
+        [],
+
+      resultadosDos:
+        fecha.categoriaB ??
+        fecha.viejitos ??
+        [],
+    };
+  }
+
+  return {
+    formato: "edad" as const,
+    resultadosUno: fecha.general ?? [],
+    resultadosDos: fecha.viejitos ?? [],
+  };
+}
+
+export default function Compartir() {
+  const [resultadosUno, setResultadosUno] =
+    useState<Resultado[]>([]);
+
+  const [resultadosDos, setResultadosDos] =
+    useState<Resultado[]>([]);
+
+  const [fecha, setFecha] = useState("");
+
+  const [nombreDeVuelta, setNombreDeVuelta] =
+    useState("");
+
+  const [cancha, setCancha] =
+    useState<CanchaFecha | null>(null);
+
+  const [formato, setFormato] =
+    useState<"edad" | "categorias">("edad");
+
+  const placaUnoRef =
+    useRef<HTMLDivElement>(null);
+
+  const placaDosRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const historial = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+    const historialGuardado =
+      localStorage.getItem(
+        "laChangueadaHistorial"
+      );
 
-    const fechaElegida = localStorage.getItem(
-      "laChangueadaFechaParaCompartir"
-    );
+    const fechaElegida =
+      localStorage.getItem(
+        "laChangueadaFechaParaCompartir"
+      );
 
-    if (!historial) return;
+    if (!historialGuardado) {
+      return;
+    }
 
-    const fechas: FechaGuardada[] = JSON.parse(historial);
+    try {
+      const fechas: FechaGuardada[] =
+        JSON.parse(historialGuardado);
 
-    const fechaSeleccionada = fechaElegida
-      ? fechas.find(
-          (fechaGuardada) =>
-            fechaGuardada.id === Number(fechaElegida)
+      const fechaSeleccionada =
+        fechaElegida
+          ? fechas.find(
+              (fechaGuardada) =>
+                fechaGuardada.id ===
+                Number(fechaElegida)
+            )
+          : fechas[0];
+
+      if (!fechaSeleccionada) {
+        return;
+      }
+
+      const {
+        formato: formatoFecha,
+        resultadosUno:
+          resultadosCategoriaUno,
+        resultadosDos:
+          resultadosCategoriaDos,
+      } = obtenerResultadosFecha(
+        fechaSeleccionada
+      );
+
+      setResultadosUno(
+        resultadosCategoriaUno
+      );
+
+      setResultadosDos(
+        resultadosCategoriaDos
+      );
+
+      setFecha(fechaSeleccionada.fecha);
+      setFormato(formatoFecha);
+
+      setNombreDeVuelta(
+        nombreVuelta(
+          fechaSeleccionada,
+          fechas
         )
-      : fechas[0];
+      );
 
-    if (!fechaSeleccionada) return;
+      if (fechaSeleccionada.cancha) {
+        const canchaActual =
+          obtenerCanchasGuardadas().find(
+            (canchaGuardada: Cancha) =>
+              canchaGuardada.id ===
+              fechaSeleccionada.cancha?.id
+          );
 
-    setGeneral(fechaSeleccionada.general);
-    setViejitos(fechaSeleccionada.viejitos);
-    setFecha(fechaSeleccionada.fecha);
-
-setNombreDeVuelta(
-  nombreVuelta(fechaSeleccionada, fechas)
-);
-
-if (fechaSeleccionada.cancha) {
-  const canchaActual = obtenerCanchasGuardadas().find(
-    (c: Cancha) =>
-      c.id === fechaSeleccionada.cancha!.id
-  );
-
-  setCancha({
-    ...fechaSeleccionada.cancha,
-    nombre:
-      canchaActual?.nombre ??
-      fechaSeleccionada.cancha.nombre,
-  });
-} else {
-  setCancha(null);
-}
+        setCancha({
+          ...fechaSeleccionada.cancha,
+          nombre:
+            canchaActual?.nombre ??
+            fechaSeleccionada.cancha.nombre,
+        });
+      } else {
+        setCancha(null);
+      }
+    } catch {
+      setResultadosUno([]);
+      setResultadosDos([]);
+      setFecha("");
+      setNombreDeVuelta("");
+      setCancha(null);
+      setFormato("edad");
+    }
   }, []);
 
   async function compartirImagen(
     placa: HTMLDivElement | null,
     categoria: string
   ) {
-    if (!placa) return;
+    if (!placa) {
+      return;
+    }
 
     try {
-      const dataUrl = await htmlToImage.toPng(placa, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: "#ffffff",
-      });
+      const dataUrl =
+        await htmlToImage.toPng(placa, {
+          cacheBust: true,
+          pixelRatio: 2,
+          backgroundColor: "#ffffff",
+        });
 
       const respuesta = await fetch(dataUrl);
       const blob = await respuesta.blob();
 
-      const nombreCategoria = categoria.toLowerCase();
+      const nombreCategoria = categoria
+        .toLowerCase()
+        .replace(/\s+/g, "-");
 
       const archivo = new File(
         [blob],
@@ -160,7 +248,11 @@ if (fechaSeleccionada.cancha) {
         await navigator.share({
           title: `La Changueada - ${categoria}`,
           text: `⚽ LA CHANGUEADA 🚩
-${fecha}${nombreDeVuelta ? ` · ${nombreDeVuelta}` : ""}
+${fecha}${
+            nombreDeVuelta
+              ? ` · ${nombreDeVuelta}`
+              : ""
+          }
 Resultados ${categoria}`,
           files: [archivo],
         });
@@ -168,13 +260,18 @@ Resultados ${categoria}`,
         return;
       }
 
-      const enlace = document.createElement("a");
+      const enlace =
+        document.createElement("a");
+
       enlace.href = dataUrl;
       enlace.download = archivo.name;
       enlace.click();
     } catch (error) {
       console.error(error);
-      alert("No se pudo generar la imagen.");
+
+      alert(
+        "No se pudo generar la imagen."
+      );
     }
   }
 
@@ -191,65 +288,94 @@ Resultados ${categoria}`,
       );
     }
 
-    const resultadosVisibles = resultados.slice(0, 15);
+    const resultadosVisibles =
+      resultados.slice(0, 15);
 
     return (
       <div className="mt-3">
-        {resultadosVisibles.map((resultado, indice) => {
-          const anterior = resultados[indice - 1];
-          const siguiente = resultados[indice + 1];
+        {resultadosVisibles.map(
+          (resultado, indice) => {
+            const anterior =
+              resultadosVisibles[indice - 1];
 
-          const empatado =
-            anterior?.score === resultado.score ||
-            siguiente?.score === resultado.score;
+            const siguiente =
+              resultadosVisibles[indice + 1];
 
-          let posicion = empatado
-            ? `T${resultado.puesto}.`
-            : `${resultado.puesto}.`;
+            const empatado =
+              anterior?.score ===
+                resultado.score ||
+              siguiente?.score ===
+                resultado.score;
 
-          if (resultado.puesto === 1) {
-            posicion = empatado ? "T🥇" : "🥇";
-          } else if (resultado.puesto === 2) {
-            posicion = empatado ? "T🥈" : "🥈";
-          } else if (resultado.puesto === 3) {
-            posicion = empatado ? "T🥉" : "🥉";
-          }
+            let posicion = empatado
+              ? `T${resultado.puesto}.`
+              : `${resultado.puesto}.`;
 
-          return (
-            <div
-              key={`${resultado.puesto}-${resultado.jugador.nombre}`}
-              className="flex items-center justify-between gap-4 px-2 py-1.5"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="w-9 shrink-0 font-black">
-                  {posicion}
-                </span>
+            if (resultado.puesto === 1) {
+              posicion = empatado
+                ? "T🥇"
+                : "🥇";
+            } else if (
+              resultado.puesto === 2
+            ) {
+              posicion = empatado
+                ? "T🥈"
+                : "🥈";
+            } else if (
+              resultado.puesto === 3
+            ) {
+              posicion = empatado
+                ? "T🥉"
+                : "🥉";
+            }
 
-                <span className="truncate font-semibold">
-                  {resultado.jugador.nombre}
-                </span>
+            return (
+              <div
+                key={`${resultado.puesto}-${resultado.jugador.nombre}`}
+                className="flex items-center justify-between gap-4 px-2 py-1.5"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="w-9 shrink-0 font-black">
+                    {posicion}
+                  </span>
+
+                  <span className="truncate font-semibold">
+                    {
+                      resultado.jugador
+                        .nombre
+                    }
+                  </span>
+                </div>
+
+                <div className="flex shrink-0 items-baseline gap-1">
+                  <span className="font-black">
+                    {resultado.score}
+                  </span>
+
+                  {cancha && (
+                    <span className="font-normal">
+                      (
+                      {resultado.score -
+                        cancha.par ===
+                      0
+                        ? "P"
+                        : resultado.score -
+                              cancha.par >
+                            0
+                          ? `+${
+                              resultado.score -
+                              cancha.par
+                            }`
+                          : resultado.score -
+                            cancha.par}
+                      )
+                    </span>
+                  )}
+                </div>
               </div>
-
-              <div className="flex shrink-0 items-baseline gap-1">
-  <span className="font-black">
-    {resultado.score}
-  </span>
-
-  {cancha && (
-    <span className="font-normal">
-      (
-      {resultado.score - cancha.par === 0
-        ? "P"
-        : resultado.score - cancha.par > 0
-          ? `+${resultado.score - cancha.par}`
-          : resultado.score - cancha.par}
-      )
-    </span>
-  )}
-</div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
     );
   }
@@ -263,7 +389,8 @@ Resultados ${categoria}`,
     categoria: string;
     resultados: Resultado[];
   }) {
-    const esTop15 = resultados.length > 15;
+    const esTop15 =
+      resultados.length > 15;
 
     return (
       <div
@@ -276,41 +403,65 @@ Resultados ${categoria}`,
           </h1>
 
           <p className="mt-1 text-sm font-semibold text-gray-700">
-  {fecha}
-  {nombreDeVuelta && (
-    <>
-      {" · "}
-      {nombreDeVuelta}
-    </>
-  )}
-</p>
+            {fecha}
+
+            {nombreDeVuelta && (
+              <>
+                {" · "}
+                {nombreDeVuelta}
+              </>
+            )}
+          </p>
 
           {cancha && (
-  <p className="mt-1 text-base text-green-900">
-    <span className="font-bold">
-      ⛳ {cancha.nombre}
-    </span>
+            <p className="mt-1 text-base text-green-900">
+              <span className="font-bold">
+                ⛳ {cancha.nombre}
+              </span>
 
-    &nbsp;&nbsp;&nbsp;
+              &nbsp;&nbsp;&nbsp;
 
-    <span className="font-normal">
-      Par {cancha.par}
-    </span>
-  </p>
-)}
+              <span className="font-normal">
+                Par {cancha.par}
+              </span>
+            </p>
+          )}
         </header>
 
         <section className="pt-4">
           <h2 className="text-center text-lg font-black text-green-900">
             {esTop15 && "Top 15 · "}
-            {categoria} · {resultados.length} jugadores
+            {categoria} ·{" "}
+            {resultados.length} jugadores
           </h2>
 
-          <ListaResultados resultados={resultados} />
+          <ListaResultados
+            resultados={resultados}
+          />
         </section>
       </div>
     );
   }
+
+  const nombreCategoriaUno =
+    formato === "categorias"
+      ? "Categoría A"
+      : "General";
+
+  const tituloCategoriaUno =
+    formato === "categorias"
+      ? "🅰️ Categoría A"
+      : "General";
+
+  const nombreCategoriaDos =
+    formato === "categorias"
+      ? "Categoría B"
+      : "Viejitos";
+
+  const tituloCategoriaDos =
+    formato === "categorias"
+      ? "🅱️ Categoría B"
+      : "Viejitos";
 
   return (
     <main className="min-h-screen bg-green-900 p-4 text-black">
@@ -319,45 +470,60 @@ Resultados ${categoria}`,
         <BotonInicio />
       </div>
 
-      <Placa
-        referencia={placaGeneralRef}
-        categoria="General"
-        resultados={general}
-      />
+      {resultadosUno.length > 0 && (
+        <>
+          <Placa
+            referencia={placaUnoRef}
+            categoria={tituloCategoriaUno}
+            resultados={resultadosUno}
+          />
 
-      <button
-        onClick={() =>
-          compartirImagen(
-            placaGeneralRef.current,
-            "General"
-          )
-        }
-        className="mx-auto mb-10 mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
-      >
-        📤 Compartir General
-      </button>
+          <button
+            type="button"
+            onClick={() =>
+              compartirImagen(
+                placaUnoRef.current,
+                nombreCategoriaUno
+              )
+            }
+            className="mx-auto mb-10 mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+          >
+            📤 Compartir{" "}
+            {nombreCategoriaUno}
+          </button>
+        </>
+      )}
 
-      {viejitos.length > 0 && (
-  <>
-    <Placa
-      referencia={placaViejitosRef}
-      categoria="Viejitos"
-      resultados={viejitos}
-    />
+      {resultadosDos.length > 0 && (
+        <>
+          <Placa
+            referencia={placaDosRef}
+            categoria={tituloCategoriaDos}
+            resultados={resultadosDos}
+          />
 
-    <button
-      onClick={() =>
-        compartirImagen(
-          placaViejitosRef.current,
-          "Viejitos"
-        )
-      }
-      className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
-    >
-      📤 Compartir Viejitos
-    </button>
-  </>
-)}
+          <button
+            type="button"
+            onClick={() =>
+              compartirImagen(
+                placaDosRef.current,
+                nombreCategoriaDos
+              )
+            }
+            className="mx-auto mt-4 block w-full max-w-xl rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+          >
+            📤 Compartir{" "}
+            {nombreCategoriaDos}
+          </button>
+        </>
+      )}
+
+      {resultadosUno.length === 0 &&
+        resultadosDos.length === 0 && (
+          <div className="mx-auto max-w-xl rounded-xl bg-white p-5 text-center font-bold text-green-900">
+            No hay resultados para compartir.
+          </div>
+        )}
     </main>
   );
 }

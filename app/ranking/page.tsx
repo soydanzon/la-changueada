@@ -9,9 +9,10 @@ import {
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
-type EstadisticaConPresencias = EstadisticaJugador & {
-  presencias: number;
-};
+type EstadisticaConPresencias =
+  EstadisticaJugador & {
+    presencias: number;
+  };
 
 type TipoRanking =
   | "presencias"
@@ -90,20 +91,22 @@ function RankingBloque({
         </span>
       </button>
 
-      {jugadores.slice(0, 5).map((jugador, index) => (
-        <div
-          key={jugador.nombre}
-          className="flex justify-between gap-4 border-b py-2"
-        >
-          <span className="min-w-0 truncate">
-            {index + 1}. {jugador.nombre}
-          </span>
+      {jugadores
+        .slice(0, 5)
+        .map((jugador, index) => (
+          <div
+            key={jugador.nombre}
+            className="flex justify-between gap-4 border-b py-2"
+          >
+            <span className="min-w-0 truncate">
+              {index + 1}. {jugador.nombre}
+            </span>
 
-          <strong className="shrink-0">
-            {mostrarValor(jugador, tipo)}
-          </strong>
-        </div>
-      ))}
+            <strong className="shrink-0">
+              {mostrarValor(jugador, tipo)}
+            </strong>
+          </div>
+        ))}
     </div>
   );
 }
@@ -122,7 +125,9 @@ function ModalRanking({
     >
       <div
         className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white text-green-900 shadow-2xl"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(evento) =>
+          evento.stopPropagation()
+        }
       >
         <div className="flex items-center justify-between gap-4 border-b p-5">
           <h2 className="text-2xl font-bold">
@@ -140,24 +145,29 @@ function ModalRanking({
         </div>
 
         <div className="overflow-y-auto px-5 pb-5">
-          {ranking.jugadores.map((jugador, index) => (
-            <div
-              key={jugador.nombre}
-              className="flex items-center justify-between gap-4 border-b py-3"
-            >
-              <span className="min-w-0">
-                <strong className="mr-2">
-                  {index + 1}.
+          {ranking.jugadores.map(
+            (jugador, index) => (
+              <div
+                key={jugador.nombre}
+                className="flex items-center justify-between gap-4 border-b py-3"
+              >
+                <span className="min-w-0">
+                  <strong className="mr-2">
+                    {index + 1}.
+                  </strong>
+
+                  {jugador.nombre}
+                </span>
+
+                <strong className="shrink-0">
+                  {mostrarValor(
+                    jugador,
+                    ranking.tipo
+                  )}
                 </strong>
-
-                {jugador.nombre}
-              </span>
-
-              <strong className="shrink-0">
-                {mostrarValor(jugador, ranking.tipo)}
-              </strong>
-            </div>
-          ))}
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>
@@ -165,70 +175,136 @@ function ModalRanking({
 }
 
 export default function Ranking() {
-  const [estadisticas, setEstadisticas] = useState<
-    EstadisticaConPresencias[]
-  >([]);
+  const [estadisticas, setEstadisticas] =
+    useState<
+      EstadisticaConPresencias[]
+    >([]);
 
-  const [rankingSeleccionado, setRankingSeleccionado] =
-    useState<RankingSeleccionado | null>(null);
+  const [
+    rankingSeleccionado,
+    setRankingSeleccionado,
+  ] =
+    useState<RankingSeleccionado | null>(
+      null
+    );
 
   useEffect(() => {
     const datos = localStorage.getItem(
       "laChangueadaHistorial"
     );
 
-    if (!datos) return;
+    if (!datos) {
+      return;
+    }
 
-    const historial: FechaGuardada[] = JSON.parse(datos);
+    try {
+      const historial: FechaGuardada[] =
+        JSON.parse(datos);
 
-    const presenciasPorJugador = new Map<string, number>();
+      const presenciasPorJugador =
+        new Map<string, number>();
 
-    historial.forEach((fecha) => {
-      const jugadoresDeLaFecha = new Set<string>();
+      historial.forEach((fecha) => {
+        const jugadoresDeLaFecha =
+          new Set<string>();
 
-      fecha.general.forEach((resultado) => {
-        jugadoresDeLaFecha.add(resultado.jugador.nombre);
-      });
+        if (fecha.formato === "categorias") {
+          const categoriaA =
+            fecha.categoriaA ?? [];
 
-      fecha.viejitos.forEach((resultado) => {
-        jugadoresDeLaFecha.add(resultado.jugador.nombre);
-      });
+          const categoriaB =
+            fecha.categoriaB ?? [];
 
-      jugadoresDeLaFecha.forEach((nombre) => {
-        presenciasPorJugador.set(
-          nombre,
-          (presenciasPorJugador.get(nombre) ?? 0) + 1
+          categoriaA.forEach(
+            (resultado) => {
+              jugadoresDeLaFecha.add(
+                resultado.jugador.nombre
+              );
+            }
+          );
+
+          categoriaB.forEach(
+            (resultado) => {
+              jugadoresDeLaFecha.add(
+                resultado.jugador.nombre
+              );
+            }
+          );
+        } else {
+          const general =
+            fecha.general ?? [];
+
+          const viejitos =
+            fecha.viejitos ?? [];
+
+          general.forEach((resultado) => {
+            jugadoresDeLaFecha.add(
+              resultado.jugador.nombre
+            );
+          });
+
+          viejitos.forEach(
+            (resultado) => {
+              jugadoresDeLaFecha.add(
+                resultado.jugador.nombre
+              );
+            }
+          );
+        }
+
+        jugadoresDeLaFecha.forEach(
+          (nombre) => {
+            presenciasPorJugador.set(
+              nombre,
+              (presenciasPorJugador.get(
+                nombre
+              ) ?? 0) + 1
+            );
+          }
         );
       });
-    });
 
-    const estadisticasCalculadas =
-      calcularEstadisticas(historial).map((jugador) => ({
-        ...jugador,
-        presencias:
-          presenciasPorJugador.get(jugador.nombre) ?? 0,
-      }));
+      const estadisticasCalculadas =
+        calcularEstadisticas(historial).map(
+          (jugador) => ({
+            ...jugador,
+            presencias:
+              presenciasPorJugador.get(
+                jugador.nombre
+              ) ?? 0,
+          })
+        );
 
-    setEstadisticas(estadisticasCalculadas);
+      setEstadisticas(
+        estadisticasCalculadas
+      );
+    } catch {
+      setEstadisticas([]);
+    }
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = rankingSeleccionado
-      ? "hidden"
-      : "";
+    document.body.style.overflow =
+      rankingSeleccionado
+        ? "hidden"
+        : "";
 
     return () => {
       document.body.style.overflow = "";
     };
   }, [rankingSeleccionado]);
 
-  const porPresencias = [...estadisticas].sort(
+  const porPresencias = [
+    ...estadisticas,
+  ].sort(
     (a, b) =>
       b.presencias - a.presencias ||
       a.nombre.localeCompare(b.nombre)
   );
 
-  const porVictorias = [...estadisticas].sort(
+  const porVictorias = [
+    ...estadisticas,
+  ].sort(
     (a, b) =>
       b.victorias - a.victorias ||
       a.nombre.localeCompare(b.nombre)
@@ -240,13 +316,17 @@ export default function Ranking() {
       a.nombre.localeCompare(b.nombre)
   );
 
-  const porPromedio = [...estadisticas].sort(
+  const porPromedio = [
+    ...estadisticas,
+  ].sort(
     (a, b) =>
       a.promedio - b.promedio ||
       a.nombre.localeCompare(b.nombre)
   );
 
-  const porMejorScore = [...estadisticas].sort(
+  const porMejorScore = [
+    ...estadisticas,
+  ].sort(
     (a, b) =>
       a.mejorScore - b.mejorScore ||
       a.nombre.localeCompare(b.nombre)
@@ -258,7 +338,9 @@ export default function Ranking() {
       a.nombre.localeCompare(b.nombre)
   );
 
-  const porBalance = [...estadisticas].sort(
+  const porBalance = [
+    ...estadisticas,
+  ].sort(
     (a, b) =>
       b.balance - a.balance ||
       a.nombre.localeCompare(b.nombre)
@@ -385,7 +467,9 @@ export default function Ranking() {
       {rankingSeleccionado && (
         <ModalRanking
           ranking={rankingSeleccionado}
-          alCerrar={() => setRankingSeleccionado(null)}
+          alCerrar={() =>
+            setRankingSeleccionado(null)
+          }
         />
       )}
     </main>

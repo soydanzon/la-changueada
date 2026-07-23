@@ -26,9 +26,14 @@ type CanchaFecha = {
 type FechaGuardada = {
   id: number;
   fecha: string;
+  formato?: "edad" | "categorias";
   cancha?: CanchaFecha | null;
-  general: ResultadoGuardado[];
-  viejitos: ResultadoGuardado[];
+
+  general?: ResultadoGuardado[];
+  viejitos?: ResultadoGuardado[];
+
+  categoriaA?: ResultadoGuardado[];
+  categoriaB?: ResultadoGuardado[];
 };
 
 type GrupoHistorial = {
@@ -40,15 +45,65 @@ function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
 
-function totalPremios(resultados: ResultadoGuardado[]) {
+function formatearRespectoPar(valor: number) {
+  if (valor === 0) {
+    return "P";
+  }
+
+  return valor > 0 ? `+${valor}` : String(valor);
+}
+
+function totalPremios(
+  resultados: ResultadoGuardado[]
+) {
   return resultados.reduce(
-    (total, resultado) => total + resultado.premio,
+    (total, resultado) =>
+      total + resultado.premio,
     0
   );
 }
 
-function premiados(resultados: ResultadoGuardado[]) {
-  return resultados.filter((resultado) => resultado.premio > 0);
+function premiados(
+  resultados: ResultadoGuardado[]
+) {
+  return resultados.filter(
+    (resultado) => resultado.premio > 0
+  );
+}
+
+function obtenerResultadosFecha(
+  fecha: FechaGuardada
+) {
+  if (fecha.formato === "categorias") {
+    return {
+      tituloUno: "🅰️ Categoría A",
+      tituloDos: "🅱️ Categoría B",
+
+      resultadosUno:
+        fecha.categoriaA ??
+        fecha.general ??
+        [],
+
+      resultadosDos:
+        fecha.categoriaB ??
+        fecha.viejitos ??
+        [],
+
+      claveUno: "categoria-a",
+      claveDos: "categoria-b",
+    };
+  }
+
+  return {
+    tituloUno: "General",
+    tituloDos: "Viejitos",
+
+    resultadosUno: fecha.general ?? [],
+    resultadosDos: fecha.viejitos ?? [],
+
+    claveUno: "general",
+    claveDos: "viejitos",
+  };
 }
 
 function nombreVuelta(
@@ -62,7 +117,9 @@ function nombreVuelta(
   const fechasDelMismoDia = historial
     .filter(
       (fecha) =>
-        new Date(fecha.id).toLocaleDateString("es-AR") ===
+        new Date(
+          fecha.id
+        ).toLocaleDateString("es-AR") ===
         diaActual
     )
     .sort((a, b) => a.id - b.id);
@@ -73,12 +130,21 @@ function nombreVuelta(
 
   const posicion =
     fechasDelMismoDia.findIndex(
-      (fecha) => fecha.id === fechaActual.id
+      (fecha) =>
+        fecha.id === fechaActual.id
     ) + 1;
 
-  if (posicion === 1) return "Primera vuelta";
-  if (posicion === 2) return "Segunda vuelta";
-  if (posicion === 3) return "Tercera vuelta";
+  if (posicion === 1) {
+    return "Primera vuelta";
+  }
+
+  if (posicion === 2) {
+    return "Segunda vuelta";
+  }
+
+  if (posicion === 3) {
+    return "Tercera vuelta";
+  }
 
   return `${posicion}ª vuelta`;
 }
@@ -99,7 +165,10 @@ function verDetalle(id: number) {
 function agruparPorMes(
   historial: FechaGuardada[]
 ): GrupoHistorial[] {
-  const grupos = new Map<string, FechaGuardada[]>();
+  const grupos = new Map<
+    string,
+    FechaGuardada[]
+  >();
 
   [...historial]
     .sort((a, b) => b.id - a.id)
@@ -111,11 +180,15 @@ function agruparPorMes(
           month: "long",
           year: "numeric",
         })
-        .replace(/^./, (letra) => letra.toUpperCase());
+        .replace(/^./, (letra) =>
+          letra.toUpperCase()
+        );
 
-      const fechasDelMes = grupos.get(titulo) || [];
+      const fechasDelMes =
+        grupos.get(titulo) ?? [];
 
       fechasDelMes.push(fecha);
+
       grupos.set(titulo, fechasDelMes);
     });
 
@@ -128,68 +201,99 @@ function agruparPorMes(
 }
 
 export default function Historial() {
-  const [historial, setHistorial] = useState<FechaGuardada[]>([]);
-const [mesesAbiertos, setMesesAbiertos] = useState<string[]>([]);
-const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [historial, setHistorial] =
+    useState<FechaGuardada[]>([]);
+
+  const [mesesAbiertos, setMesesAbiertos] =
+    useState<string[]>([]);
+
+  const [canchas, setCanchas] =
+    useState<Cancha[]>([]);
 
   useEffect(() => {
-  setCanchas(obtenerCanchasGuardadas());
+    setCanchas(obtenerCanchasGuardadas());
 
-  const datos = localStorage.getItem(
-    "laChangueadaHistorial"
-  );
+    const datos = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
 
-    if (!datos) return;
+    if (!datos) {
+      return;
+    }
 
-    const fechas: FechaGuardada[] = JSON.parse(datos);
+    try {
+      const fechas: FechaGuardada[] =
+        JSON.parse(datos);
 
-    setHistorial(fechas);
+      setHistorial(fechas);
 
-    const grupos = agruparPorMes(fechas);
+      const grupos =
+        agruparPorMes(fechas);
 
-    if (grupos.length > 0) {
-      setMesesAbiertos([grupos[0].titulo]);
+      if (grupos.length > 0) {
+        setMesesAbiertos([
+          grupos[0].titulo,
+        ]);
+      }
+    } catch {
+      setHistorial([]);
     }
   }, []);
 
   function cambiarMes(titulo: string) {
     setMesesAbiertos((actuales) =>
       actuales.includes(titulo)
-        ? actuales.filter((mes) => mes !== titulo)
+        ? actuales.filter(
+            (mes) => mes !== titulo
+          )
         : [...actuales, titulo]
     );
   }
 
-  function obtenerNombreCancha(fecha: FechaGuardada) {
-  if (!fecha.cancha) return "";
+  function obtenerNombreCancha(
+    fecha: FechaGuardada
+  ) {
+    if (!fecha.cancha) {
+      return "";
+    }
 
-  const canchaActual = canchas.find(
-    (cancha) => cancha.id === fecha.cancha?.id
-  );
+    const canchaActual = canchas.find(
+      (cancha) =>
+        cancha.id === fecha.cancha?.id
+    );
 
-  return canchaActual?.nombre ?? fecha.cancha.nombre;
-}
+    return (
+      canchaActual?.nombre ??
+      fecha.cancha.nombre
+    );
+  }
 
-  function eliminarFecha(fecha: FechaGuardada) {
-  const confirmar = window.confirm(
-    `¿Eliminar la fecha del ${fecha.fecha}?`
-  );
+  function eliminarFecha(
+    fecha: FechaGuardada
+  ) {
+    const confirmar = window.confirm(
+      `¿Eliminar la fecha del ${fecha.fecha}?`
+    );
 
-  if (!confirmar) return;
+    if (!confirmar) {
+      return;
+    }
 
-  const nuevoHistorial = historial.filter(
-    (item) => item.id !== fecha.id
-  );
+    const nuevoHistorial =
+      historial.filter(
+        (item) => item.id !== fecha.id
+      );
 
-  localStorage.setItem(
-    "laChangueadaHistorial",
-    JSON.stringify(nuevoHistorial)
-  );
+    localStorage.setItem(
+      "laChangueadaHistorial",
+      JSON.stringify(nuevoHistorial)
+    );
 
-  setHistorial(nuevoHistorial);
-}
+    setHistorial(nuevoHistorial);
+  }
 
-  const grupos = agruparPorMes(historial);
+  const grupos =
+    agruparPorMes(historial);
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -211,12 +315,18 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
       ) : (
         <div className="space-y-6">
           {grupos.map((grupo) => {
-            const abierto = mesesAbiertos.includes(grupo.titulo);
+            const abierto =
+              mesesAbiertos.includes(
+                grupo.titulo
+              );
 
             return (
               <section key={grupo.titulo}>
                 <button
-                  onClick={() => cambiarMes(grupo.titulo)}
+                  type="button"
+                  onClick={() =>
+                    cambiarMes(grupo.titulo)
+                  }
                   className="flex w-full items-center justify-between rounded-xl bg-green-950 p-4 text-left text-white"
                 >
                   <span className="text-2xl font-bold">
@@ -234,180 +344,262 @@ const [canchas, setCanchas] = useState<Cancha[]>([]);
 
                 {abierto && (
                   <div className="mt-4">
-                    {grupo.fechas.map((fecha) => (
-                      <div
-                        key={fecha.id}
-                        className="mb-6 rounded-xl bg-white p-5 text-green-900"
-                      >
-                        <div className="mb-2">
-  <div className="flex items-center gap-3 text-xl">
-  <span className="font-bold">
-    {fecha.fecha}
-  </span>
+                    {grupo.fechas.map(
+                      (fecha) => {
+                        const {
+                          tituloUno,
+                          tituloDos,
+                          resultadosUno,
+                          resultadosDos,
+                          claveUno,
+                          claveDos,
+                        } =
+                          obtenerResultadosFecha(
+                            fecha
+                          );
 
-  {fecha.cancha && (
-    <span className="inline-flex items-center gap-3">
-      <span className="font-bold">
-        ⛳️ {obtenerNombreCancha(fecha)}
-      </span>
+                        return (
+                          <div
+                            key={fecha.id}
+                            className="mb-6 rounded-xl bg-white p-5 text-green-900"
+                          >
+                            <div className="mb-2">
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xl">
+                                <span className="font-bold">
+                                  {fecha.fecha}
+                                </span>
 
-      <span className="font-normal">
-        Par {fecha.cancha.par}
-      </span>
-    </span>
-  )}
-</div>
+                                {fecha.cancha && (
+                                  <span className="inline-flex flex-wrap items-center gap-x-3">
+                                    <span className="font-bold">
+                                      ⛳️{" "}
+                                      {obtenerNombreCancha(
+                                        fecha
+                                      )}
+                                    </span>
 
-  {nombreVuelta(fecha, historial) && (
-    <p className="mt-1 text-xl font-medium text-gray-600">
-      {nombreVuelta(fecha, historial)}
-    </p>
-  )}
-</div>
-                        <hr className="my-2" />
-
-                        <p className="text-lg font-bold">
-                          General
-                        </p>
-
-                        <p>
-                          Jugadores: {fecha.general.length}
-                        </p>
-
-                        <div className="mt-2 space-y-1">
-                          {premiados(fecha.general).map(
-                            (resultado) => (
-                              <div
-                                key={`${fecha.id}-general-${resultado.jugador.nombre}-${resultado.puesto}`}
-                                className="flex justify-between gap-4"
-                              >
-                                <span>
-  {resultado.puesto}.{" "}
-  {resultado.jugador.nombre} -{" "}
-
-  <strong>
-    {resultado.score}
-  </strong>
-
-  {fecha.cancha && (
-    <>
-      {" "}
-      <span className="font-normal">
-        (
-        {resultado.score - fecha.cancha.par === 0
-          ? "P"
-          : resultado.score - fecha.cancha.par > 0
-            ? `+${resultado.score - fecha.cancha.par}`
-            : resultado.score - fecha.cancha.par}
-        )
-      </span>
-    </>
-  )}
-</span>
-
-                                <strong>
-                                  {formatearPesos(
-                                    resultado.premio
-                                  )}
-                                </strong>
+                                    <span className="font-normal">
+                                      Par{" "}
+                                      {
+                                        fecha.cancha
+                                          .par
+                                      }
+                                    </span>
+                                  </span>
+                                )}
                               </div>
-                            )
-                          )}
-                        </div>
 
-                        <p className="mt-3 font-bold">
-                          Total:{" "}
-                          {formatearPesos(
-                            totalPremios(fecha.general)
-                          )}
-                        </p>
+                              {nombreVuelta(
+                                fecha,
+                                historial
+                              ) && (
+                                <p className="mt-1 text-xl font-medium text-gray-600">
+                                  {nombreVuelta(
+                                    fecha,
+                                    historial
+                                  )}
+                                </p>
+                              )}
+                            </div>
 
-                        {fecha.viejitos.length > 0 && (
-  <>
-    <hr className="my-3" />
+                            <hr className="my-2" />
 
-    <p className="text-lg font-bold">
-      Viejitos
-    </p>
+                            <p className="text-lg font-bold">
+                              {tituloUno}
+                            </p>
 
-    <p>
-      Jugadores: {fecha.viejitos.length}
-    </p>
+                            <p>
+                              Jugadores:{" "}
+                              {
+                                resultadosUno.length
+                              }
+                            </p>
 
-    <div className="mt-2 space-y-1">
-      {premiados(fecha.viejitos).map(
-        (resultado) => (
-          <div
-            key={`${fecha.id}-viejitos-${resultado.jugador.nombre}-${resultado.puesto}`}
-            className="flex justify-between gap-4"
-          >
-            <span>
-              {resultado.puesto}.{" "}
-              {resultado.jugador.nombre} -{" "}
+                            <div className="mt-2 space-y-1">
+                              {premiados(
+                                resultadosUno
+                              ).map(
+                                (resultado) => (
+                                  <div
+                                    key={`${fecha.id}-${claveUno}-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                    className="flex justify-between gap-4"
+                                  >
+                                    <span>
+                                      {
+                                        resultado.puesto
+                                      }
+                                      .{" "}
+                                      {
+                                        resultado
+                                          .jugador
+                                          .nombre
+                                      }{" "}
+                                      -{" "}
+                                      <strong>
+                                        {
+                                          resultado.score
+                                        }
+                                      </strong>
 
-              <strong>
-                {resultado.score}
-              </strong>
+                                      {fecha.cancha && (
+                                        <>
+                                          {" "}
+                                          <span className="font-normal">
+                                            (
+                                            {formatearRespectoPar(
+                                              resultado.score -
+                                                fecha
+                                                  .cancha
+                                                  .par
+                                            )}
+                                            )
+                                          </span>
+                                        </>
+                                      )}
+                                    </span>
 
-              {fecha.cancha && (
-                <>
-                  {" "}
-                  <span className="font-normal">
-                    (
-                    {resultado.score - fecha.cancha.par === 0
-                      ? "P"
-                      : resultado.score - fecha.cancha.par > 0
-                        ? `+${resultado.score - fecha.cancha.par}`
-                        : resultado.score - fecha.cancha.par}
-                    )
-                  </span>
-                </>
-              )}
-            </span>
+                                    <strong>
+                                      {formatearPesos(
+                                        resultado.premio
+                                      )}
+                                    </strong>
+                                  </div>
+                                )
+                              )}
+                            </div>
 
-            <strong>
-              {formatearPesos(
-                resultado.premio
-              )}
-            </strong>
-          </div>
-        )
-      )}
-    </div>
+                            <p className="mt-3 font-bold">
+                              Total:{" "}
+                              {formatearPesos(
+                                totalPremios(
+                                  resultadosUno
+                                )
+                              )}
+                            </p>
 
-    <p className="mt-3 font-bold">
-      Total:{" "}
-      {formatearPesos(
-        totalPremios(fecha.viejitos)
-      )}
-    </p>
-  </>
-)}
+                            {resultadosDos.length >
+                              0 && (
+                              <>
+                                <hr className="my-3" />
 
-                        <div className="mt-5 flex gap-3">
-  <button
-    onClick={() => verDetalle(fecha.id)}
-    className="flex-1 flex items-center justify-center rounded-xl bg-green-700 py-3 text-xl text-white font-bold"
-  >
-    📝 Ver
-  </button>
+                                <p className="text-lg font-bold">
+                                  {tituloDos}
+                                </p>
 
-  <button
-    onClick={() => verPlaca(fecha.id)}
-    className="flex-1 flex items-center justify-center rounded-xl bg-blue-600 py-3 text-xl text-white font-bold"
-  >
-    📤 Placa
-  </button>
+                                <p>
+                                  Jugadores:{" "}
+                                  {
+                                    resultadosDos.length
+                                  }
+                                </p>
 
-  <button
-    onClick={() => eliminarFecha(fecha)}
-    className="flex-1 flex items-center justify-center rounded-xl bg-red-600 py-3 text-xl text-white font-bold"
-  >
-    🗑️ Eliminar
-  </button>
-</div>
-                      </div>
-                    ))}
+                                <div className="mt-2 space-y-1">
+                                  {premiados(
+                                    resultadosDos
+                                  ).map(
+                                    (
+                                      resultado
+                                    ) => (
+                                      <div
+                                        key={`${fecha.id}-${claveDos}-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                        className="flex justify-between gap-4"
+                                      >
+                                        <span>
+                                          {
+                                            resultado.puesto
+                                          }
+                                          .{" "}
+                                          {
+                                            resultado
+                                              .jugador
+                                              .nombre
+                                          }{" "}
+                                          -{" "}
+                                          <strong>
+                                            {
+                                              resultado.score
+                                            }
+                                          </strong>
+
+                                          {fecha.cancha && (
+                                            <>
+                                              {" "}
+                                              <span className="font-normal">
+                                                (
+                                                {formatearRespectoPar(
+                                                  resultado.score -
+                                                    fecha
+                                                      .cancha
+                                                      .par
+                                                )}
+                                                )
+                                              </span>
+                                            </>
+                                          )}
+                                        </span>
+
+                                        <strong>
+                                          {formatearPesos(
+                                            resultado.premio
+                                          )}
+                                        </strong>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+
+                                <p className="mt-3 font-bold">
+                                  Total:{" "}
+                                  {formatearPesos(
+                                    totalPremios(
+                                      resultadosDos
+                                    )
+                                  )}
+                                </p>
+                              </>
+                            )}
+
+                            <div className="mt-5 flex gap-3">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  verDetalle(
+                                    fecha.id
+                                  )
+                                }
+                                className="flex flex-1 items-center justify-center rounded-xl bg-green-700 py-3 text-xl font-bold text-white"
+                              >
+                                📝 Ver
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  verPlaca(
+                                    fecha.id
+                                  )
+                                }
+                                className="flex flex-1 items-center justify-center rounded-xl bg-blue-600 py-3 text-xl font-bold text-white"
+                              >
+                                📤 Placa
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  eliminarFecha(
+                                    fecha
+                                  )
+                                }
+                                className="flex flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-xl font-bold text-white"
+                              >
+                                🗑️ Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                    )}
                   </div>
                 )}
               </section>
