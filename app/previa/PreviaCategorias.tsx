@@ -39,6 +39,11 @@ type JugadorConHandicap = Jugador & {
   handicap: number | null;
 };
 
+type PremioVisible = {
+  premio: number;
+  puestoOriginal: number;
+};
+
 function formatearDinero(valor: number) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -64,6 +69,17 @@ function obtenerPremios(
   );
 }
 
+function obtenerPremiosVisibles(
+  premios: number[]
+): PremioVisible[] {
+  return premios
+    .map((premio, index) => ({
+      premio,
+      puestoOriginal: index,
+    }))
+    .filter(({ premio }) => premio > 0);
+}
+
 function obtenerIconoPuesto(index: number) {
   if (index === 0) return "🥇";
   if (index === 1) return "🥈";
@@ -84,9 +100,8 @@ export default function PreviaCategorias() {
     Jugador[]
   >([]);
 
-  const [cancha, setCancha] = useState<Cancha | null>(
-    null
-  );
+  const [cancha, setCancha] =
+    useState<Cancha | null>(null);
 
   const [tablaPremios, setTablaPremios] = useState<
     FilaPremios[]
@@ -95,13 +110,13 @@ export default function PreviaCategorias() {
   const [valorChangueada, setValorChangueada] =
     useState(config.valorChangueada);
 
-  const [categoriaA, setCategoriaA] = useState<number[]>(
-    []
-  );
+  const [categoriaA, setCategoriaA] = useState<
+    number[]
+  >([]);
 
-  const [categoriaB, setCategoriaB] = useState<number[]>(
-    []
-  );
+  const [categoriaB, setCategoriaB] = useState<
+    number[]
+  >([]);
 
   const [handicapsPorNombre, setHandicapsPorNombre] =
     useState<Map<string, number>>(new Map());
@@ -129,18 +144,20 @@ export default function PreviaCategorias() {
         return;
       }
 
-      const jugadoresGuardados = localStorage.getItem(
-        "laChangueadaJugadores"
-      );
+      const jugadoresGuardados =
+        localStorage.getItem(
+          "laChangueadaJugadores"
+        );
 
       const jugadoresDisponibles: Jugador[] =
         jugadoresGuardados
           ? JSON.parse(jugadoresGuardados)
           : jugadores;
 
-      const historialGuardado = localStorage.getItem(
-        "laChangueadaHistorial"
-      );
+      const historialGuardado =
+        localStorage.getItem(
+          "laChangueadaHistorial"
+        );
 
       const historial: FechaGuardada[] =
         historialGuardado
@@ -150,7 +167,8 @@ export default function PreviaCategorias() {
       const handicapsCalculados =
         calcularHandicap(historial);
 
-      const mapaHandicaps = new Map<string, number>();
+      const mapaHandicaps =
+        new Map<string, number>();
 
       handicapsCalculados.forEach((jugador) => {
         mapaHandicaps.set(
@@ -172,18 +190,22 @@ export default function PreviaCategorias() {
       setCancha(canchaSeleccionada);
       setTablaPremios(obtenerTablaPremios());
 
-      const valorGuardado = localStorage.getItem(
-        "laChangueadaValor"
-      );
+      const valorGuardado =
+        localStorage.getItem(
+          "laChangueadaValor"
+        );
 
       if (valorGuardado) {
-        const valorConvertido = Number(valorGuardado);
+        const valorConvertido =
+          Number(valorGuardado);
 
         if (
           Number.isFinite(valorConvertido) &&
           valorConvertido > 0
         ) {
-          setValorChangueada(valorConvertido);
+          setValorChangueada(
+            valorConvertido
+          );
         }
       }
 
@@ -198,13 +220,16 @@ export default function PreviaCategorias() {
         const jugadoresSeleccionados =
           jugadoresDisponibles
             .filter((jugador) =>
-              fecha.jugadores.includes(jugador.id)
+              fecha.jugadores.includes(
+                jugador.id
+              )
             )
             .map((jugador) => ({
               ...jugador,
               handicap:
-                mapaHandicaps.get(jugador.nombre) ??
-                null,
+                mapaHandicaps.get(
+                  jugador.nombre
+                ) ?? null,
             }));
 
         const jugadoresConHandicap =
@@ -214,11 +239,16 @@ export default function PreviaCategorias() {
                 jugador
               ): jugador is Jugador & {
                 handicap: number;
-              } => jugador.handicap !== null
+              } =>
+                jugador.handicap !== null
             )
             .sort((a, b) => {
-              if (a.handicap !== b.handicap) {
-                return a.handicap - b.handicap;
+              if (
+                a.handicap !== b.handicap
+              ) {
+                return (
+                  a.handicap - b.handicap
+                );
               }
 
               return a.nombre.localeCompare(
@@ -230,9 +260,11 @@ export default function PreviaCategorias() {
               );
             });
 
-        const cantidadCategoriaA = Math.ceil(
-          jugadoresConHandicap.length / 2
-        );
+        const cantidadCategoriaA =
+          Math.ceil(
+            jugadoresConHandicap.length /
+              2
+          );
 
         setCategoriaA(
           jugadoresConHandicap
@@ -261,16 +293,22 @@ export default function PreviaCategorias() {
   const jugadoresSeleccionados = useMemo<
     JugadorConHandicap[]
   >(() => {
-    if (!fechaActual) return [];
+    if (!fechaActual) {
+      return [];
+    }
 
     return listaJugadores
       .filter((jugador) =>
-        fechaActual.jugadores.includes(jugador.id)
+        fechaActual.jugadores.includes(
+          jugador.id
+        )
       )
       .map((jugador) => ({
         ...jugador,
         handicap:
-          handicapsPorNombre.get(jugador.nombre) ?? null,
+          handicapsPorNombre.get(
+            jugador.nombre
+          ) ?? null,
       }));
   }, [
     fechaActual,
@@ -326,38 +364,66 @@ export default function PreviaCategorias() {
       });
   }, [jugadoresSeleccionados, categoriaB]);
 
-  const jugadoresSinCategoria = useMemo(() => {
-    return jugadoresSeleccionados
-      .filter(
-        (jugador) =>
-          !categoriaA.includes(jugador.id) &&
-          !categoriaB.includes(jugador.id)
-      )
-      .sort((a, b) =>
-        a.nombre.localeCompare(b.nombre, "es", {
-          sensitivity: "base",
-        })
-      );
-  }, [
-    jugadoresSeleccionados,
-    categoriaA,
-    categoriaB,
-  ]);
+  const jugadoresSinCategoria =
+    useMemo(() => {
+      return jugadoresSeleccionados
+        .filter(
+          (jugador) =>
+            !categoriaA.includes(
+              jugador.id
+            ) &&
+            !categoriaB.includes(
+              jugador.id
+            )
+        )
+        .sort((a, b) =>
+          a.nombre.localeCompare(
+            b.nombre,
+            "es",
+            {
+              sensitivity: "base",
+            }
+          )
+        );
+    }, [
+      jugadoresSeleccionados,
+      categoriaA,
+      categoriaB,
+    ]);
 
   const premiosA = useMemo(
     () =>
-      obtenerPremios(tablaPremios, jugadoresA.length),
+      obtenerPremios(
+        tablaPremios,
+        jugadoresA.length
+      ),
     [tablaPremios, jugadoresA.length]
   );
 
   const premiosB = useMemo(
     () =>
-      obtenerPremios(tablaPremios, jugadoresB.length),
+      obtenerPremios(
+        tablaPremios,
+        jugadoresB.length
+      ),
     [tablaPremios, jugadoresB.length]
   );
 
-  const pozoA = jugadoresA.length * valorChangueada;
-  const pozoB = jugadoresB.length * valorChangueada;
+  const premiosVisiblesA = useMemo(
+    () => obtenerPremiosVisibles(premiosA),
+    [premiosA]
+  );
+
+  const premiosVisiblesB = useMemo(
+    () => obtenerPremiosVisibles(premiosB),
+    [premiosB]
+  );
+
+  const pozoA =
+    jugadoresA.length * valorChangueada;
+
+  const pozoB =
+    jugadoresB.length * valorChangueada;
 
   function asignarCategoria(
     jugadorId: number,
@@ -371,7 +437,9 @@ export default function PreviaCategorias() {
       );
 
       setCategoriaB((actual) =>
-        actual.filter((id) => id !== jugadorId)
+        actual.filter(
+          (id) => id !== jugadorId
+        )
       );
 
       return;
@@ -384,12 +452,24 @@ export default function PreviaCategorias() {
     );
 
     setCategoriaA((actual) =>
-      actual.filter((id) => id !== jugadorId)
+      actual.filter(
+        (id) => id !== jugadorId
+      )
+    );
+  }
+
+  function abrirHandicap(nombre: string) {
+    router.push(
+      `/handicap/${encodeURIComponent(
+        nombre
+      )}`
     );
   }
 
   function modificarFecha() {
-    if (!fechaActual) return;
+    if (!fechaActual) {
+      return;
+    }
 
     localStorage.setItem(
       "laChangueadaNuevaFechaCategoriasBorrador",
@@ -402,7 +482,9 @@ export default function PreviaCategorias() {
       })
     );
 
-    router.push("/nueva-fecha/categorias");
+    router.push(
+      "/nueva-fecha/categorias"
+    );
   }
 
   function continuarAScores() {
@@ -448,10 +530,12 @@ export default function PreviaCategorias() {
 
         <div className="rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl font-bold">
-            No hay una fecha por categorías en curso.
+            No hay una fecha por categorías
+            en curso.
           </p>
 
           <button
+            type="button"
             onClick={() =>
               router.push("/nueva-fecha")
             }
@@ -495,59 +579,66 @@ export default function PreviaCategorias() {
         </p>
       </div>
 
-      <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
-        <h2 className="mb-2 text-2xl font-bold">
-          🧢 División por hándicap
-        </h2>
-
-        <p className="text-sm">
-          Los mejores hándicaps fueron ubicados en
-          Categoría A. Podés cambiar cualquier jugador
-          manualmente.
-        </p>
-      </div>
-
-      {jugadoresSinCategoria.length > 0 && (
+      {jugadoresSinCategoria.length >
+        0 && (
         <div className="mb-4 rounded-xl bg-yellow-100 p-3 text-yellow-900">
           <h2 className="mb-2 text-xl font-bold">
-            ⚠️ Sin hándicap
+            ⚠️ Sin handicap
           </h2>
 
           <p className="mb-3 text-sm">
-            Elegí manualmente una categoría para estos
-            jugadores.
+            Elegí manualmente una categoría
+            para estos jugadores.
           </p>
 
-          {jugadoresSinCategoria.map((jugador) => (
-            <div
-              key={jugador.id}
-              className="border-b border-yellow-300 py-3 last:border-b-0"
-            >
-              <p className="mb-2 font-bold">
-                {jugador.nombre}
-              </p>
-
-              <div className="grid grid-cols-2 gap-3">
+          {jugadoresSinCategoria.map(
+            (jugador) => (
+              <div
+                key={jugador.id}
+                className="border-b border-yellow-300 py-3 last:border-b-0"
+              >
                 <button
+                  type="button"
                   onClick={() =>
-                    asignarCategoria(jugador.id, "A")
+                    abrirHandicap(
+                      jugador.nombre
+                    )
                   }
-                  className="rounded-xl bg-green-700 p-3 font-bold text-white"
+                  className="mb-2 block text-left font-bold underline decoration-yellow-700/40 underline-offset-4"
                 >
-                  Categoría A
+                  {jugador.nombre}
                 </button>
 
-                <button
-                  onClick={() =>
-                    asignarCategoria(jugador.id, "B")
-                  }
-                  className="rounded-xl bg-blue-700 p-3 font-bold text-white"
-                >
-                  Categoría B
-                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      asignarCategoria(
+                        jugador.id,
+                        "A"
+                      )
+                    }
+                    className="rounded-xl bg-green-700 p-3 font-bold text-white"
+                  >
+                    Categoría A
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      asignarCategoria(
+                        jugador.id,
+                        "B"
+                      )
+                    }
+                    className="rounded-xl bg-blue-700 p-3 font-bold text-white"
+                  >
+                    Categoría B
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
 
@@ -574,23 +665,34 @@ export default function PreviaCategorias() {
           🏆 Premios
         </h3>
 
-        {premiosA.length > 0 ? (
+        {premiosVisiblesA.length > 0 ? (
           <div className="mb-4">
-            {premiosA.map((premio, index) => (
-              <div
-                key={index}
-                className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
-              >
-                <span>
-                  {obtenerIconoPuesto(index)}
-                  {index < 3 ? "" : " puesto"}
-                </span>
+            {premiosVisiblesA.map(
+              ({
+                premio,
+                puestoOriginal,
+              }) => (
+                <div
+                  key={puestoOriginal}
+                  className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+                >
+                  <span>
+                    {obtenerIconoPuesto(
+                      puestoOriginal
+                    )}
+                    {puestoOriginal < 3
+                      ? ""
+                      : " puesto"}
+                  </span>
 
-                <span className="font-bold">
-                  {formatearDinero(premio)}
-                </span>
-              </div>
-            ))}
+                  <span className="font-bold">
+                    {formatearDinero(
+                      premio
+                    )}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         ) : (
           <p className="mb-4 text-sm">
@@ -605,8 +707,16 @@ export default function PreviaCategorias() {
               key={jugador.id}
               className="flex items-center justify-between gap-3 border-b border-green-100 py-3 last:border-b-0"
             >
-              <div>
-                <p className="font-bold">
+              <button
+                type="button"
+                onClick={() =>
+                  abrirHandicap(
+                    jugador.nombre
+                  )
+                }
+                className="min-w-0 text-left"
+              >
+                <p className="truncate font-bold underline decoration-green-700/30 underline-offset-4">
                   {jugador.nombre}
                 </p>
 
@@ -618,13 +728,17 @@ export default function PreviaCategorias() {
                       )
                     : "sin datos"}
                 </p>
-              </div>
+              </button>
 
               <button
+                type="button"
                 onClick={() =>
-                  asignarCategoria(jugador.id, "B")
+                  asignarCategoria(
+                    jugador.id,
+                    "B"
+                  )
                 }
-                className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white"
+                className="shrink-0 rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white"
               >
                 Pasar a B
               </button>
@@ -656,23 +770,34 @@ export default function PreviaCategorias() {
           🏆 Premios
         </h3>
 
-        {premiosB.length > 0 ? (
+        {premiosVisiblesB.length > 0 ? (
           <div className="mb-4">
-            {premiosB.map((premio, index) => (
-              <div
-                key={index}
-                className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
-              >
-                <span>
-                  {obtenerIconoPuesto(index)}
-                  {index < 3 ? "" : " puesto"}
-                </span>
+            {premiosVisiblesB.map(
+              ({
+                premio,
+                puestoOriginal,
+              }) => (
+                <div
+                  key={puestoOriginal}
+                  className="flex justify-between border-b border-green-100 py-2 last:border-b-0"
+                >
+                  <span>
+                    {obtenerIconoPuesto(
+                      puestoOriginal
+                    )}
+                    {puestoOriginal < 3
+                      ? ""
+                      : " puesto"}
+                  </span>
 
-                <span className="font-bold">
-                  {formatearDinero(premio)}
-                </span>
-              </div>
-            ))}
+                  <span className="font-bold">
+                    {formatearDinero(
+                      premio
+                    )}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         ) : (
           <p className="mb-4 text-sm">
@@ -687,8 +812,16 @@ export default function PreviaCategorias() {
               key={jugador.id}
               className="flex items-center justify-between gap-3 border-b border-green-100 py-3 last:border-b-0"
             >
-              <div>
-                <p className="font-bold">
+              <button
+                type="button"
+                onClick={() =>
+                  abrirHandicap(
+                    jugador.nombre
+                  )
+                }
+                className="min-w-0 text-left"
+              >
+                <p className="truncate font-bold underline decoration-green-700/30 underline-offset-4">
                   {jugador.nombre}
                 </p>
 
@@ -700,13 +833,17 @@ export default function PreviaCategorias() {
                       )
                     : "sin datos"}
                 </p>
-              </div>
+              </button>
 
               <button
+                type="button"
                 onClick={() =>
-                  asignarCategoria(jugador.id, "A")
+                  asignarCategoria(
+                    jugador.id,
+                    "A"
+                  )
                 }
-                className="rounded-lg bg-green-700 px-3 py-2 text-sm font-bold text-white"
+                className="shrink-0 rounded-lg bg-green-700 px-3 py-2 text-sm font-bold text-white"
               >
                 Pasar a A
               </button>
@@ -716,6 +853,7 @@ export default function PreviaCategorias() {
       </div>
 
       <button
+        type="button"
         onClick={modificarFecha}
         className="mb-4 w-full rounded-xl bg-green-700 p-3 text-xl font-bold text-white"
       >
@@ -723,6 +861,7 @@ export default function PreviaCategorias() {
       </button>
 
       <button
+        type="button"
         onClick={continuarAScores}
         disabled={!puedeContinuar}
         className={`w-full rounded-xl p-3 text-2xl font-bold ${
