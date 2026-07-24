@@ -53,6 +53,43 @@ function formatearRespectoPar(valor: number) {
   return valor > 0 ? `+${valor}` : String(valor);
 }
 
+function formatearScore(
+  score: number,
+  par?: number
+) {
+  if (typeof par !== "number") {
+    return String(score);
+  }
+
+  const relativo = score - par;
+
+  if (relativo === 0) {
+    return `${score} (P)`;
+  }
+
+  if (relativo > 0) {
+    return `${score} (+${relativo})`;
+  }
+
+  return `${score} (${relativo})`;
+}
+
+function medalla(puesto: number) {
+  if (puesto === 1) {
+    return "🥇";
+  }
+
+  if (puesto === 2) {
+    return "🥈";
+  }
+
+  if (puesto === 3) {
+    return "🥉";
+  }
+
+  return `${puesto}.`;
+}
+
 function totalPremios(
   resultados: ResultadoGuardado[]
 ) {
@@ -79,6 +116,12 @@ function obtenerResultadosFecha(
       tituloUno: "🅰️ Categoría A",
       tituloDos: "🅱️ Categoría B",
 
+      tituloCompartirUno:
+        "🅰️ CATEGORÍA A",
+
+      tituloCompartirDos:
+        "🅱️ CATEGORÍA B",
+
       resultadosUno:
         fecha.categoriaA ??
         fecha.general ??
@@ -97,6 +140,12 @@ function obtenerResultadosFecha(
   return {
     tituloUno: "General",
     tituloDos: "Viejitos",
+
+    tituloCompartirUno:
+      "🙎🏻‍♂️ GENERAL",
+
+    tituloCompartirDos:
+      "🧓🏻 VIEJITOS",
 
     resultadosUno: fecha.general ?? [],
     resultadosDos: fecha.viejitos ?? [],
@@ -147,15 +196,6 @@ function nombreVuelta(
   }
 
   return `${posicion}ª vuelta`;
-}
-
-function verPlaca(id: number) {
-  localStorage.setItem(
-    "laChangueadaFechaParaCompartir",
-    String(id)
-  );
-
-  window.location.href = "/compartir";
 }
 
 function verDetalle(id: number) {
@@ -266,6 +306,125 @@ export default function Historial() {
       canchaActual?.nombre ??
       fecha.cancha.nombre
     );
+  }
+
+  async function compartirResultados(
+    fecha: FechaGuardada
+  ) {
+    const {
+      tituloCompartirUno,
+      tituloCompartirDos,
+      resultadosUno,
+      resultadosDos,
+    } = obtenerResultadosFecha(fecha);
+
+    const parFecha = fecha.cancha?.par;
+
+    function crearTextoResultados(
+      resultados: ResultadoGuardado[]
+    ) {
+      return resultados
+        .map(
+          (resultado) =>
+            `${medalla(
+              resultado.puesto
+            )} ${
+              resultado.jugador.nombre
+            } - ${formatearScore(
+              resultado.score,
+              parFecha
+            )}`
+        )
+        .join("\n");
+    }
+
+    const vuelta = nombreVuelta(
+      fecha,
+      historial
+    );
+
+    const lineas: string[] = [
+      "⚽️ La Changueada 🚩",
+      "",
+      fecha.fecha,
+    ];
+
+    if (vuelta) {
+      lineas.push(vuelta.toUpperCase());
+    }
+
+    if (fecha.cancha) {
+      lineas.push(
+        "",
+        `⛳ ${obtenerNombreCancha(
+          fecha
+        )} Par ${fecha.cancha.par}`
+      );
+    }
+
+    if (resultadosUno.length > 0) {
+      lineas.push(
+        "",
+        tituloCompartirUno,
+        "",
+        "🏆 Resultados",
+        "",
+        crearTextoResultados(
+          resultadosUno
+        )
+      );
+    }
+
+    if (resultadosDos.length > 0) {
+      lineas.push(
+        "",
+        tituloCompartirDos,
+        "",
+        "🏆 Resultados",
+        "",
+        crearTextoResultados(
+          resultadosDos
+        )
+      );
+    }
+
+    const texto = lineas.join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title:
+            "Resultados de La Changueada",
+          text: texto,
+        });
+
+        return;
+      }
+
+      await navigator.clipboard.writeText(
+        texto
+      );
+
+      alert(
+        "Los resultados fueron copiados. Ya podés pegarlos en WhatsApp."
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error(
+        "No se pudieron compartir los resultados:",
+        error
+      );
+
+      alert(
+        "No se pudieron compartir los resultados."
+      );
+    }
   }
 
   function eliminarFecha(
@@ -575,13 +734,13 @@ export default function Historial() {
                               <button
                                 type="button"
                                 onClick={() =>
-                                  verPlaca(
-                                    fecha.id
+                                  compartirResultados(
+                                    fecha
                                   )
                                 }
                                 className="flex flex-1 items-center justify-center rounded-xl bg-blue-600 py-3 text-xl font-bold text-white"
                               >
-                                📤 Placa
+                                📤 Compartir
                               </button>
 
                               <button

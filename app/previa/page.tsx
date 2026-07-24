@@ -258,72 +258,42 @@ async function compartirPrevia() {
     }
   }
 
-  function obtenerIconoPuesto(index: number) {
-    if (index === 0) return "🥇";
-    if (index === 1) return "🥈";
-    if (index === 2) return "🥉";
+  function crearTextoPremios(
+    premios: number[]
+  ) {
+    const premiosVisibles = premios
+      .map((premio, index) => ({
+        premio,
+        puestoOriginal: index,
+      }))
+      .filter(
+        ({ premio }) => premio > 0
+      );
 
-    return `${index + 1}º`;
-  }
-
-  function crearTextoPremios(premios: number[]) {
-    if (premios.length === 0) {
+    if (premiosVisibles.length === 0) {
       return "Sin premios configurados";
     }
 
-    return premios
+    return premiosVisibles
       .map(
-        (premio, index) =>
+        ({
+          premio,
+          puestoOriginal,
+        }) =>
           `${obtenerIconoPuesto(
-            index
+            puestoOriginal
           )} ${formatearDinero(premio)}`
       )
       .join("\n");
   }
 
-  const idsGeneral = new Set(
-    jugadoresGeneral.map((jugador) => jugador.id)
-  );
-
-  const idsViejitos = new Set(
-    jugadoresViejitos.map((jugador) => jugador.id)
-  );
-
-  const jugadoresSoloGeneral = jugadoresGeneral
-    .filter(
-      (jugador) => !idsViejitos.has(jugador.id)
-    )
-    .sort((a, b) =>
-      a.nombre.localeCompare(b.nombre, "es")
-    );
-
-  const jugadoresGeneralYViejitos = jugadoresGeneral
-    .filter((jugador) =>
-      idsViejitos.has(jugador.id)
-    )
-    .sort((a, b) =>
-      a.nombre.localeCompare(b.nombre, "es")
-    );
-
-  const jugadoresSoloViejitos = jugadoresViejitos
-    .filter(
-      (jugador) => !idsGeneral.has(jugador.id)
-    )
-    .sort((a, b) =>
-      a.nombre.localeCompare(b.nombre, "es")
-    );
-
-  const textoJugadores = [
-    ...jugadoresSoloGeneral.map(
-      (jugador) => `${jugador.nombre} (G)`
-    ),
-    ...jugadoresGeneralYViejitos.map(
-      (jugador) => `${jugador.nombre} (G y V)`
-    ),
-    ...jugadoresSoloViejitos.map(
-      (jugador) => `${jugador.nombre} (V)`
-    ),
-  ].join("\n");
+  function crearTextoJugadores(
+    lista: Jugador[]
+  ) {
+    return lista
+      .map((jugador) => jugador.nombre)
+      .join("\n");
+  }
 
   const lineas: string[] = [
     "⚽️ La Changueada 🚩",
@@ -345,31 +315,42 @@ async function compartirPrevia() {
   if (jugadoresGeneral.length > 0) {
     lineas.push(
       "",
-      `💰 Pozo General (${jugadoresGeneral.length})`,
-      formatearDinero(pozoGeneral),
+      "🙎🏻‍♂️ GENERAL",
       "",
-      "🏆 Premios General",
-      crearTextoPremios(premiosGeneral)
+      `💰 Pozo: ${formatearDinero(
+        pozoGeneral
+      )}`,
+      "",
+      "🏆 Premios",
+      crearTextoPremios(premiosGeneral),
+      "",
+      `👥 Jugadores (${jugadoresGeneral.length})`,
+      "",
+      crearTextoJugadores(
+        jugadoresGeneral
+      )
     );
   }
 
   if (jugadoresViejitos.length > 0) {
     lineas.push(
       "",
-      `💰 Pozo Viejitos (${jugadoresViejitos.length})`,
-      formatearDinero(pozoViejitos),
+      "🧓🏻 VIEJITOS",
       "",
-      "🏆 Premios Viejitos",
-      crearTextoPremios(premiosViejitos)
-    );
-  }
-
-  if (textoJugadores) {
-    lineas.push(
+      `💰 Pozo: ${formatearDinero(
+        pozoViejitos
+      )}`,
       "",
-      "👥 Jugadores",
+      "🏆 Premios",
+      crearTextoPremios(
+        premiosViejitos
+      ),
       "",
-      textoJugadores
+      `👥 Jugadores (${jugadoresViejitos.length})`,
+      "",
+      crearTextoJugadores(
+        jugadoresViejitos
+      )
     );
   }
 
@@ -385,7 +366,9 @@ async function compartirPrevia() {
       return;
     }
 
-    await navigator.clipboard.writeText(texto);
+    await navigator.clipboard.writeText(
+      texto
+    );
 
     alert(
       "La previa fue copiada. Ya podés pegarla en WhatsApp."
@@ -403,7 +386,9 @@ async function compartirPrevia() {
       error
     );
 
-    alert("No se pudo compartir la previa.");
+    alert(
+      "No se pudo compartir la previa."
+    );
   }
 }
 
@@ -614,23 +599,23 @@ async function compartirPrevia() {
 
       <button
         onClick={compartirPrevia}
-        className="mb-4 w-full rounded-xl bg-white p-3 text-2xl font-bold text-green-900"
+        className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
       >
         📤 Compartir previa
       </button>
 
       <button
         onClick={modificarFecha}
-        className="mb-4 w-full rounded-xl bg-green-700 p-3 text-xl font-bold text-white"
+        className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
       >
-        Modificar fecha
+        ⬅️ Modificar fecha
       </button>
 
       <button
         onClick={continuarAScores}
-        className="w-full rounded-xl bg-white p-3 text-2xl font-bold text-green-900"
+        className="w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
       >
-        Cargar scores
+       📝 Cargar scores
       </button>
     </main>
   );

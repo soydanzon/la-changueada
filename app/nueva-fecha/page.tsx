@@ -20,45 +20,43 @@ export default function ElegirFormatoFecha() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-5 text-green-900">
-        <h2 className="text-center text-2xl font-black">
-          ¿Cómo se va a jugar?
-        </h2>
+      <div className="space-y-10">
+  <div className="rounded-2xl bg-white p-3 mt-12">
+    <button
+      type="button"
+      onClick={() =>
+        router.push("/nueva-fecha/categorias")
+      }
+      className="w-full rounded-2xl bg-green-600 p-7 text-left text-white"
+    >
+      <p className="text-2xl font-black">
+        🅰️ 🅱️ Por categorías
+      </p>
 
-        <div className="mt-6 space-y-4">
-          <button
-            type="button"
-            onClick={() =>
-              router.push("/nueva-fecha/categorias")
-            }
-            className="w-full rounded-2xl bg-green-600 p-5 text-left text-white"
-          >
-            <p className="text-2xl font-black">
-              🅰️🅱️ Por categorías
-            </p>
+      <p className="mt-2 text-xl">
+        Categorías A y B
+      </p>
+    </button>
+  </div>
 
-            <p className="mt-1 text-lg">
-              Categoría A y Categoría B
-            </p>
-          </button>
+  <div className="rounded-2xl bg-white p-3">
+    <button
+      type="button"
+      onClick={() =>
+        router.push("/nueva-fecha/edad")
+      }
+      className="w-full rounded-2xl bg-blue-600 p-7 text-left text-white"
+    >
+      <p className="text-2xl font-black">
+        🙎🏻‍♂️ 🧓🏻 Por edad
+      </p>
 
-          <button
-            type="button"
-            onClick={() =>
-              router.push("/nueva-fecha/edad")
-            }
-            className="w-full rounded-2xl bg-blue-600 p-5 text-left text-white"
-          >
-            <p className="text-2xl font-black">
-              🙎🏻‍♂️🧓🏻 Por edad
-            </p>
-
-            <p className="mt-1 text-lg">
-              General y Viejitos
-            </p>
-          </button>
-        </div>
-      </div>
+      <p className="mt-2 text-xl">
+        General y Viejitos
+      </p>
+    </button>
+  </div>
+</div>
     </main>
   );
 }

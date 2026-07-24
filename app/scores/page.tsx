@@ -246,7 +246,7 @@ export default function Scores() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">
-          Cargar Scores
+         📝 Cargar Scores
         </h1>
 
         <div className="flex gap-2">
@@ -335,16 +335,16 @@ export default function Scores() {
 
       <button
         onClick={anotarJugador}
-        className="mb-4 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+        className="mb-4 w-full rounded-xl bg-white p-4 text-xl font-bold text-green-900"
       >
-        ← Anotar jugador
+        ⬅️ Anotar jugador
       </button>
 
       <button
         onClick={calcularResultados}
-        className="w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
+        className="w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
       >
-        Calcular resultados
+        ✍️ Calcular resultados
       </button>
     </main>
   );

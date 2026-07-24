@@ -255,7 +255,7 @@ export default function NuevaFechaCategorias() {
       {cancha && (
         <div className="mb-6 rounded-2xl bg-white p-5 text-green-900">
           <p className="text-xl font-bold">
-            🅰️🅱️ Por categorías
+            🅰️ 🅱️ Por categorías
           </p>
 
           <p className="mt-3 text-xl font-bold">
@@ -414,8 +414,8 @@ export default function NuevaFechaCategorias() {
                 }`}
               >
                 {jugadorAnotado
-                  ? "✓ Juega"
-                  : "Juega"}
+                  ? "OK"
+                  : "OK"}
               </button>
             </div>
           );

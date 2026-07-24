@@ -49,7 +49,10 @@ function medalla(puesto: number) {
   return `${puesto}.`;
 }
 
-function formatearScore(score: number, par?: number) {
+function formatearScore(
+  score: number,
+  par?: number
+) {
   if (typeof par !== "number") {
     return String(score);
   }
@@ -67,7 +70,9 @@ function formatearScore(score: number, par?: number) {
   return `${score} (${relativo})`;
 }
 
-function obtenerResultadosFecha(fecha: FechaGuardada) {
+function obtenerResultadosFecha(
+  fecha: FechaGuardada
+) {
   if (fecha.formato === "categorias") {
     return {
       tituloUno: "🅰️ Categoría A",
@@ -86,8 +91,8 @@ function obtenerResultadosFecha(fecha: FechaGuardada) {
   }
 
   return {
-    tituloUno: "General",
-    tituloDos: "Viejitos",
+    tituloUno: "🙎🏻‍♂️ General",
+    tituloDos: "🧓🏻 Viejitos",
 
     resultadosUno: fecha.general ?? [],
     resultadosDos: fecha.viejitos ?? [],
@@ -113,36 +118,49 @@ function TablaResultados({
     <div>
       {premiados.length > 0 && (
         <div>
-          {premiados.map((resultado, index) => (
-            <div
-              key={`${resultado.jugador.nombre}-${resultado.puesto}`}
-              className={
-                index < premiados.length - 1
-                  ? "border-b border-green-900/20 py-2.5"
-                  : "py-2.5"
-              }
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="w-8 shrink-0 text-center text-xl font-bold">
-                    {medalla(resultado.puesto)}
-                  </span>
+          {premiados.map(
+            (resultado, index) => (
+              <div
+                key={`${resultado.jugador.nombre}-${resultado.puesto}`}
+                className={
+                  index <
+                  premiados.length - 1
+                    ? "border-b border-green-900/20 py-2.5"
+                    : "py-2.5"
+                }
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span className="w-8 shrink-0 text-center text-xl font-bold">
+                      {medalla(
+                        resultado.puesto
+                      )}
+                    </span>
 
-                  <span className="min-w-0 break-words font-bold">
-                    {resultado.jugador.nombre}
+                    <span className="min-w-0 break-words font-bold">
+                      {
+                        resultado.jugador
+                          .nombre
+                      }
+                    </span>
+                  </div>
+
+                  <span className="shrink-0 text-right font-bold">
+                    {formatearScore(
+                      resultado.score,
+                      par
+                    )}
                   </span>
                 </div>
 
-                <span className="shrink-0 text-right font-bold">
-                  {formatearScore(resultado.score, par)}
-                </span>
+                <p className="mt-1 pl-11 font-bold text-green-700">
+                  {formatearPesos(
+                    resultado.premio
+                  )}
+                </p>
               </div>
-
-              <p className="mt-1 pl-11 font-bold text-green-700">
-                {formatearPesos(resultado.premio)}
-              </p>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
 
@@ -153,30 +171,41 @@ function TablaResultados({
 
       {noPremiados.length > 0 && (
         <div>
-          {noPremiados.map((resultado, index) => (
-            <div
-              key={`${resultado.jugador.nombre}-${resultado.puesto}`}
-              className={`flex items-start justify-between gap-4 py-2 ${
-                index < noPremiados.length - 1
-                  ? "border-b border-green-900/15"
-                  : ""
-              }`}
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="w-8 shrink-0 text-center font-bold">
-                  {medalla(resultado.puesto)}
-                </span>
+          {noPremiados.map(
+            (resultado, index) => (
+              <div
+                key={`${resultado.jugador.nombre}-${resultado.puesto}`}
+                className={`flex items-start justify-between gap-4 py-2 ${
+                  index <
+                  noPremiados.length - 1
+                    ? "border-b border-green-900/15"
+                    : ""
+                }`}
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="w-8 shrink-0 text-center font-bold">
+                    {medalla(
+                      resultado.puesto
+                    )}
+                  </span>
 
-                <span className="min-w-0 break-words font-semibold">
-                  {resultado.jugador.nombre}
+                  <span className="min-w-0 break-words font-semibold">
+                    {
+                      resultado.jugador
+                        .nombre
+                    }
+                  </span>
+                </div>
+
+                <span className="shrink-0 text-right font-semibold">
+                  {formatearScore(
+                    resultado.score,
+                    par
+                  )}
                 </span>
               </div>
-
-              <span className="shrink-0 text-right font-semibold">
-                {formatearScore(resultado.score, par)}
-              </span>
-            </div>
-          ))}
+            )
+          )}
         </div>
       )}
     </div>
@@ -191,6 +220,9 @@ export default function DetalleFecha() {
 
   const [canchas, setCanchas] =
     useState<Cancha[]>([]);
+
+  const [esSegundaVuelta, setEsSegundaVuelta] =
+    useState(false);
 
   useEffect(() => {
     setCanchas(obtenerCanchasGuardadas());
@@ -207,13 +239,29 @@ export default function DetalleFecha() {
       const historial: FechaGuardada[] =
         JSON.parse(datos);
 
+      const idFecha = Number(params.id);
+
       const encontrada = historial.find(
         (fechaGuardada) =>
-          fechaGuardada.id === Number(params.id)
+          fechaGuardada.id === idFecha
       );
 
       if (encontrada) {
         setFecha(encontrada);
+
+        const fechasDelMismoDia =
+          historial.filter(
+            (fechaGuardada) =>
+              fechaGuardada.fecha ===
+              encontrada.fecha
+          );
+
+        const posicion = fechasDelMismoDia.findIndex(
+          (fechaGuardada) =>
+            fechaGuardada.id === idFecha
+        );
+
+        setEsSegundaVuelta(posicion > 0);
       }
     } catch {
       setFecha(null);
@@ -303,6 +351,7 @@ export default function DetalleFecha() {
           />
         </section>
       )}
+
     </main>
   );
 }

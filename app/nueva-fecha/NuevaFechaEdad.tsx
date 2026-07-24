@@ -255,6 +255,8 @@ export default function NuevaFecha() {
     ...viejitos,
   ]).size;
 
+const puedeContinuar = totalJugadores >0;
+
   const jugadoresAnotados = new Set([
     ...general,
     ...viejitos,
@@ -436,11 +438,16 @@ export default function NuevaFecha() {
           </div>
 
           <button
-            onClick={continuar}
-            className="mt-6 w-full rounded-xl bg-green-600 p-4 text-2xl font-bold text-white"
-          >
-            Continuar →
-          </button>
+  onClick={continuar}
+  disabled={!puedeContinuar}
+  className={`mt-6 w-full rounded-xl p-4 text-2xl font-bold text-white ${
+    puedeContinuar
+      ? "bg-green-600"
+      : "cursor-not-allowed bg-gray-400"
+  }`}
+>
+  Continuar →
+</button>
         </div>
       )}
 

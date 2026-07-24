@@ -53,6 +53,17 @@ type FechaActual =
   | FechaPorEdad
   | FechaPorCategorias;
 
+type FechaHistorial = {
+  id: number;
+  fecha: string;
+  formato?: "edad" | "categorias";
+  cancha?: CanchaFecha | null;
+  general?: Resultado[];
+  viejitos?: Resultado[];
+  categoriaA?: Resultado[];
+  categoriaB?: Resultado[];
+};
+
 function calcularPremios(
   resultados: ResultadoBase[]
 ): Resultado[] {
@@ -119,6 +130,85 @@ function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
 
+function formatearScore(
+  score: number,
+  par?: number
+) {
+  if (typeof par !== "number") {
+    return String(score);
+  }
+
+  const respectoPar = score - par;
+
+  if (respectoPar === 0) {
+    return `${score} (P)`;
+  }
+
+  if (respectoPar > 0) {
+    return `${score} (+${respectoPar})`;
+  }
+
+  return `${score} (${respectoPar})`;
+}
+
+function medalla(puesto: number) {
+  if (puesto === 1) {
+    return "🥇";
+  }
+
+  if (puesto === 2) {
+    return "🥈";
+  }
+
+  if (puesto === 3) {
+    return "🥉";
+  }
+
+  return `${puesto}.`;
+}
+
+function obtenerNombreVuelta(
+  idFecha: number,
+  historial: FechaHistorial[]
+) {
+  const diaActual = new Date(
+    idFecha
+  ).toLocaleDateString("es-AR");
+
+  const fechasDelMismoDia = historial
+    .filter(
+      (fecha) =>
+        new Date(
+          fecha.id
+        ).toLocaleDateString("es-AR") ===
+        diaActual
+    )
+    .sort((a, b) => a.id - b.id);
+
+  if (fechasDelMismoDia.length <= 1) {
+    return "";
+  }
+
+  const posicion =
+    fechasDelMismoDia.findIndex(
+      (fecha) => fecha.id === idFecha
+    ) + 1;
+
+  if (posicion === 1) {
+    return "PRIMERA VUELTA";
+  }
+
+  if (posicion === 2) {
+    return "SEGUNDA VUELTA";
+  }
+
+  if (posicion === 3) {
+    return "TERCERA VUELTA";
+  }
+
+  return `${posicion}ª VUELTA`;
+}
+
 export default function Resultados() {
   const [categoriaUno, setCategoriaUno] = useState<
     Resultado[]
@@ -150,6 +240,11 @@ export default function Resultados() {
   const [fechaGuardada, setFechaGuardada] =
     useState(false);
 
+  const [
+    idFechaGuardada,
+    setIdFechaGuardada,
+  ] = useState<number | null>(null);
+
   useEffect(() => {
     const yaGuardada = localStorage.getItem(
       "laChangueadaFechaYaGuardada"
@@ -157,6 +252,26 @@ export default function Resultados() {
 
     if (yaGuardada === "true") {
       setFechaGuardada(true);
+
+      const historialGuardado =
+        localStorage.getItem(
+          "laChangueadaHistorial"
+        );
+
+      if (historialGuardado) {
+        try {
+          const historial: FechaHistorial[] =
+            JSON.parse(historialGuardado);
+
+          if (historial.length > 0) {
+            setIdFechaGuardada(
+              historial[0].id
+            );
+          }
+        } catch {
+          setIdFechaGuardada(null);
+        }
+      }
     }
 
     const fechaGuardadaActual = localStorage.getItem(
@@ -279,7 +394,9 @@ export default function Resultados() {
       "laChangueadaFechaActual"
     );
 
-    if (!fechaGuardadaActual) return;
+    if (!fechaGuardadaActual) {
+      return;
+    }
 
     const datosFecha: FechaActual = JSON.parse(
       fechaGuardadaActual
@@ -295,19 +412,26 @@ export default function Resultados() {
   }
 
   function guardarFecha() {
-    if (fechaGuardada) return;
+    if (fechaGuardada) {
+      return;
+    }
 
     const historialGuardado = localStorage.getItem(
       "laChangueadaHistorial"
     );
 
-    const historial = historialGuardado
-      ? JSON.parse(historialGuardado)
-      : [];
+    const historial: FechaHistorial[] =
+      historialGuardado
+        ? JSON.parse(historialGuardado)
+        : [];
+
+    const nuevoId = Date.now();
 
     const baseFecha = {
-      id: Date.now(),
-      fecha: new Date().toLocaleDateString("es-AR"),
+      id: nuevoId,
+      fecha: new Date(
+        nuevoId
+      ).toLocaleDateString("es-AR"),
       cancha: canchaFecha,
       pagosPendientes:
         pagosPendientesOriginales,
@@ -318,7 +442,7 @@ export default function Resultados() {
       formato === "categorias"
         ? {
             ...baseFecha,
-            formato: "categorias",
+            formato: "categorias" as const,
 
             categoriaA: categoriaUno,
             categoriaB: categoriaDos,
@@ -333,7 +457,7 @@ export default function Resultados() {
           }
         : {
             ...baseFecha,
-            formato: "edad",
+            formato: "edad" as const,
             general: categoriaUno,
             viejitos: categoriaDos,
           };
@@ -351,7 +475,135 @@ export default function Resultados() {
       "true"
     );
 
+    setIdFechaGuardada(nuevoId);
     setFechaGuardada(true);
+  }
+
+  async function compartirResultados() {
+    if (!fechaGuardada || !idFechaGuardada) {
+      return;
+    }
+
+    const historialGuardado = localStorage.getItem(
+      "laChangueadaHistorial"
+    );
+
+    let historial: FechaHistorial[] = [];
+
+    if (historialGuardado) {
+      try {
+        historial = JSON.parse(
+          historialGuardado
+        );
+      } catch {
+        historial = [];
+      }
+    }
+
+    const vuelta = obtenerNombreVuelta(
+      idFechaGuardada,
+      historial
+    );
+
+    const crearTextoResultados = (
+      resultados: Resultado[]
+    ) =>
+      resultados
+        .map(
+          (resultado) =>
+            `${medalla(
+              resultado.puesto
+            )} ${
+              resultado.jugador.nombre
+            } - ${formatearScore(
+              resultado.score,
+              canchaFecha?.par
+            )}`
+        )
+        .join("\n");
+
+    const lineas: string[] = [
+      "⚽️ La Changueada 🚩",
+      "",
+      new Date(
+        idFechaGuardada
+      ).toLocaleDateString("es-AR"),
+    ];
+
+    if (vuelta) {
+      lineas.push(vuelta);
+    }
+
+    if (canchaFecha) {
+      lineas.push(
+        "",
+        `⛳ ${canchaFecha.nombre} Par ${canchaFecha.par}`
+      );
+    }
+
+    if (categoriaUno.length > 0) {
+      lineas.push(
+        "",
+        formato === "categorias"
+          ? "🅰️ CATEGORÍA A"
+          : "🙎🏻‍♂️ GENERAL",
+        "",
+        "🏆 Resultados",
+        "",
+        crearTextoResultados(categoriaUno)
+      );
+    }
+
+    if (categoriaDos.length > 0) {
+      lineas.push(
+        "",
+        formato === "categorias"
+          ? "🅱️ CATEGORÍA B"
+          : "🧓🏻 VIEJITOS",
+        "",
+        "🏆 Resultados",
+        "",
+        crearTextoResultados(categoriaDos)
+      );
+    }
+
+    const texto = lineas.join("\n");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title:
+            "Resultados de La Changueada",
+          text: texto,
+        });
+
+        return;
+      }
+
+      await navigator.clipboard.writeText(
+        texto
+      );
+
+      alert(
+        "Los resultados fueron copiados. Ya podés pegarlos en WhatsApp."
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.name === "AbortError"
+      ) {
+        return;
+      }
+
+      console.error(
+        "No se pudieron compartir los resultados:",
+        error
+      );
+
+      alert(
+        "No se pudieron compartir los resultados."
+      );
+    }
   }
 
   const jugadoresConPagoMarcado =
@@ -380,18 +632,18 @@ export default function Resultados() {
   const nombreCategoriaUno =
     formato === "categorias"
       ? "Categoría A"
-      : "General";
+      : "🙎🏻‍♂️ General";
 
   const nombreCategoriaDos =
     formato === "categorias"
       ? "Categoría B"
-      : "Viejitos";
+      : "🧓🏻 Viejitos";
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">
-          Resultados
+          📋 Resultados
         </h1>
 
         <div className="flex gap-2">
@@ -401,7 +653,7 @@ export default function Resultados() {
       </div>
 
       {canchaFecha && (
-        <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
+        <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
           <p className="text-xl">
             <span className="font-bold">
               ⛳ {canchaFecha.nombre}
@@ -416,8 +668,8 @@ export default function Resultados() {
         </div>
       )}
 
-      <div className="mb-8 rounded-xl bg-white p-5 text-green-900">
-        <h2 className="mb-4 text-2xl font-bold">
+      <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
+        <h2 className="mb-2 text-2xl font-bold">
           {formato === "categorias" ? "🅰️ " : ""}
           {nombreCategoriaUno}
         </h2>
@@ -445,8 +697,8 @@ export default function Resultados() {
       </div>
 
       {categoriaDos.length > 0 && (
-        <div className="rounded-xl bg-white p-5 text-green-900">
-          <h2 className="mb-4 text-2xl font-bold">
+        <div className="rounded-xl bg-white p-3 text-green-900">
+          <h2 className="mb-2 text-2xl font-bold">
             {formato === "categorias"
               ? "🅱️ "
               : ""}
@@ -477,8 +729,8 @@ export default function Resultados() {
       )}
 
       {jugadoresConPagoMarcado.length > 0 && (
-        <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
-          <h2 className="mb-3 text-3xl font-bold">
+        <div className="mt-5 rounded-xl bg-white p-3 text-green-900">
+          <h2 className="mb-3 text-2xl font-bold">
             📌 Pagos pendientes (
             {cantidadPagosPendientes})
           </h2>
@@ -522,8 +774,9 @@ export default function Resultados() {
 
       {!fechaGuardada ? (
         <button
+          type="button"
           onClick={guardarFecha}
-          className="mt-8 w-full rounded-xl bg-white p-5 text-2xl font-bold text-green-900"
+          className="mt-8 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
         >
           Guardar fecha
         </button>
@@ -533,9 +786,17 @@ export default function Resultados() {
             ✅ Fecha guardada correctamente
           </p>
 
+          <button
+            type="button"
+            onClick={compartirResultados}
+            className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-center font-bold text-white"
+          >
+            📤 Compartir resultados
+          </button>
+
           <a
             href="/historial"
-            className="mt-5 block w-full rounded-xl bg-green-700 p-4 text-center font-bold text-white"
+            className="mt-3 block w-full rounded-xl bg-green-700 p-4 text-center font-bold text-white"
           >
             📜 Ver historial
           </a>

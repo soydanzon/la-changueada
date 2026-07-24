@@ -466,6 +466,153 @@ export default function PreviaCategorias() {
     );
   }
 
+  async function compartirPrevia() {
+  const fechaDeHoy = new Date().toLocaleDateString(
+    "es-AR"
+  );
+
+  const historialGuardado = localStorage.getItem(
+    "laChangueadaHistorial"
+  );
+
+  let esSegundaVuelta = false;
+
+  if (historialGuardado) {
+    try {
+      const historial: Array<{ fecha?: string }> =
+        JSON.parse(historialGuardado);
+
+      esSegundaVuelta = historial.some(
+        (fechaGuardada) =>
+          fechaGuardada.fecha === fechaDeHoy
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo leer el historial:",
+        error
+      );
+    }
+  }
+
+  function crearTextoPremios(
+    premios: PremioVisible[]
+  ) {
+    if (premios.length === 0) {
+      return "Sin premios configurados";
+    }
+
+    return premios
+      .map(
+        ({ premio, puestoOriginal }) =>
+          `${obtenerIconoPuesto(
+            puestoOriginal
+          )} ${formatearDinero(premio)}`
+      )
+      .join("\n");
+  }
+
+  function crearTextoJugadores(
+    lista: JugadorConHandicap[]
+  ) {
+    return lista
+      .map(
+        (jugador) =>
+          `${jugador.nombre} - Hcp ${
+            jugador.handicap !== null
+              ? formatearHandicap(
+                  jugador.handicap
+                )
+              : "sin datos"
+          }`
+      )
+      .join("\n");
+  }
+
+  const lineas: string[] = [
+    "⚽️ La Changueada 🚩",
+    "",
+    fechaDeHoy,
+  ];
+
+  if (esSegundaVuelta) {
+    lineas.push("SEGUNDA VUELTA");
+  }
+
+  lineas.push(
+    "",
+    `⛳ ${cancha?.nombre ?? "Cancha"} Par ${
+      cancha?.par ?? "-"
+    }`,
+    "",
+    "🅰️ CATEGORÍA A",
+    "",
+    `💰 Pozo: ${formatearDinero(pozoA)}`,
+    "",
+    "🏆 Premios",
+    crearTextoPremios(premiosVisiblesA)
+  );
+
+  if (jugadoresA.length > 0) {
+    lineas.push(
+      "",
+      `👥 Jugadores (${jugadoresA.length})`,
+      "",
+      crearTextoJugadores(jugadoresA)
+    );
+  }
+
+  lineas.push(
+    "",
+    "🅱️ CATEGORÍA B",
+    "",
+    `💰 Pozo: ${formatearDinero(pozoB)}`,
+    "",
+    "🏆 Premios",
+    crearTextoPremios(premiosVisiblesB)
+  );
+
+  if (jugadoresB.length > 0) {
+    lineas.push(
+      "",
+      `👥 Jugadores (${jugadoresB.length})`,
+      "",
+      crearTextoJugadores(jugadoresB)
+    );
+  }
+
+  const texto = lineas.join("\n");
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "La Changueada",
+        text: texto,
+      });
+
+      return;
+    }
+
+    await navigator.clipboard.writeText(texto);
+
+    alert(
+      "La previa fue copiada. Ya podés pegarla en WhatsApp."
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.name === "AbortError"
+    ) {
+      return;
+    }
+
+    console.error(
+      "No se pudo compartir la previa:",
+      error
+    );
+
+    alert("No se pudo compartir la previa.");
+  }
+}
   function modificarFecha() {
     if (!fechaActual) {
       return;
@@ -575,7 +722,7 @@ export default function PreviaCategorias() {
         </p>
 
         <p className="mt-3 font-bold">
-          🅰️🅱️ Por categorías
+          🅰️ 🅱️ Por categorías
         </p>
       </div>
 
@@ -853,24 +1000,32 @@ export default function PreviaCategorias() {
       </div>
 
       <button
+  type="button"
+  onClick={compartirPrevia}
+  className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
+>
+  📤 Compartir previa
+</button>
+      
+      <button
         type="button"
         onClick={modificarFecha}
-        className="mb-4 w-full rounded-xl bg-green-700 p-3 text-xl font-bold text-white"
+        className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
       >
-        Modificar fecha
+        ⬅️ Modificar fecha
       </button>
 
       <button
         type="button"
         onClick={continuarAScores}
         disabled={!puedeContinuar}
-        className={`w-full rounded-xl p-3 text-2xl font-bold ${
+        className={`w-full rounded-xl p-5 text-2xl font-bold ${
           puedeContinuar
-            ? "bg-white text-green-900"
+            ? "bg-green-600 text-white"
             : "cursor-not-allowed bg-gray-400 text-white"
         }`}
       >
-        Cargar scores
+        📝 Cargar scores
       </button>
     </main>
   );
