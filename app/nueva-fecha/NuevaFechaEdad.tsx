@@ -463,7 +463,7 @@ const puedeContinuar = totalJugadores >0;
 
       <button
         onClick={agregarJugadorDesdeFecha}
-        className="mb-6 mt-4 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white"
+        className="mb-6 mt-4 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
       >
         ➕ Agregar jugador
       </button>

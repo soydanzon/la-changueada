@@ -1002,7 +1002,7 @@ export default function PreviaCategorias() {
       <button
   type="button"
   onClick={compartirPrevia}
-  className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
+  className="mb-4 w-full rounded-xl bg-blue-600 p-3 text-xl font-bold text-white"
 >
   📤 Compartir previa
 </button>
@@ -1010,7 +1010,7 @@ export default function PreviaCategorias() {
       <button
         type="button"
         onClick={modificarFecha}
-        className="mb-4 w-full rounded-xl bg-white p-3 text-xl font-bold text-green-900"
+        className="mb-4 w-full rounded-xl bg-green-700 p-3 text-xl font-bold text-white"
       >
         ⬅️ Modificar fecha
       </button>

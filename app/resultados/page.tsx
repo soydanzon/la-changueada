@@ -789,21 +789,21 @@ export default function Resultados() {
           <button
             type="button"
             onClick={compartirResultados}
-            className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-center font-bold text-white"
+            className="mt-5 w-full text-xl rounded-xl bg-blue-600 p-4 text-center font-bold text-white"
           >
             📤 Compartir resultados
           </button>
 
           <a
             href="/historial"
-            className="mt-3 block w-full rounded-xl bg-green-700 p-4 text-center font-bold text-white"
+            className="mt-3 block w-full text-xl rounded-xl bg-green-900 p-4 text-center font-bold text-white"
           >
             📜 Ver historial
           </a>
 
           <a
             href="/nueva-fecha"
-            className="mt-3 block w-full rounded-xl bg-green-900 p-4 text-center font-bold text-white"
+            className="mt-3 block w-full text-xl rounded-xl bg-green-700 p-4 text-center font-bold text-white"
           >
             ➕ Nueva fecha
           </a>

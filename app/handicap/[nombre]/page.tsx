@@ -55,12 +55,22 @@ export default function DetalleHandicap() {
     );
   }
 
+const ultimasTarjetas = Math.min(
+  jugador.fechas.length,
+  16
+);
+
+const mejoresTarjetas = Math.min(
+  Math.ceil(ultimasTarjetas / 2),
+  8
+);
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold">
-            {nombre}
+           🧢 {nombre}
           </h1>
 
           <p className="text-3xl font-black">
@@ -74,6 +84,10 @@ export default function DetalleHandicap() {
         </div>
       </div>
 
+      <p className="mb-4 text-l text-green-200">
+  Mejores {mejoresTarjetas} de las últimas {ultimasTarjetas} tarjetas
+</p>
+      
       <div className="space-y-2">
         {[...jugador.fechas].reverse().map((fecha, index) => (
           <div

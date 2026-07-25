@@ -315,27 +315,9 @@ export default function Scores() {
         ))}
       </div>
 
-      <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
-        <h2 className="text-2xl font-bold">
-          Resumen
-        </h2>
-
-        <p className="mt-3">
-          {nombreCategoriaUno}:{" "}
-          {categoriaUno.length} jugadores
-        </p>
-
-        {categoriaDos.length > 0 && (
-          <p>
-            {nombreCategoriaDos}:{" "}
-            {categoriaDos.length} jugadores
-          </p>
-        )}
-      </div>
-
       <button
         onClick={anotarJugador}
-        className="mb-4 w-full rounded-xl bg-white p-4 text-xl font-bold text-green-900"
+        className="mb-4 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
       >
         ⬅️ Anotar jugador
       </button>
