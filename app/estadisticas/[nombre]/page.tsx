@@ -124,7 +124,7 @@ export default function PerfilJugador() {
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
         <h1 className="min-w-0 truncate pr-3 text-3xl font-bold">
-          {nombre}
+          📊 {nombre}
         </h1>
 
         <div className="flex shrink-0 gap-2">
