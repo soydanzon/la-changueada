@@ -719,42 +719,51 @@ export default function Historial() {
                             )}
 
                             <div className="mt-5 flex gap-3">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  verDetalle(
-                                    fecha.id
-                                  )
-                                }
-                                className="flex flex-1 items-center justify-center rounded-xl bg-green-700 py-3 text-xl font-bold text-white"
-                              >
-                                📝 Ver
-                              </button>
+  <button
+    type="button"
+    onClick={() =>
+      verDetalle(fecha.id)
+    }
+    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-green-700 py-3 font-bold text-white"
+  >
+    <span className="text-2xl leading-none">
+      📝
+    </span>
+    <span className="text-base leading-none">
+      Fecha
+    </span>
+  </button>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  compartirResultados(
-                                    fecha
-                                  )
-                                }
-                                className="flex flex-1 items-center justify-center rounded-xl bg-blue-600 py-3 text-xl font-bold text-white"
-                              >
-                                📤 Compartir
-                              </button>
+  <button
+    type="button"
+    onClick={() =>
+      compartirResultados(fecha)
+    }
+    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-blue-600 py-3 font-bold text-white"
+  >
+    <span className="text-2xl leading-none">
+      📤
+    </span>
+    <span className="text-base leading-none">
+      Compartir
+    </span>
+  </button>
 
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  eliminarFecha(
-                                    fecha
-                                  )
-                                }
-                                className="flex flex-1 items-center justify-center rounded-xl bg-red-600 py-3 text-xl font-bold text-white"
-                              >
-                                🗑️ Eliminar
-                              </button>
-                            </div>
+  <button
+    type="button"
+    onClick={() =>
+      eliminarFecha(fecha)
+    }
+    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-red-600 py-3 font-bold text-white"
+  >
+    <span className="text-2xl leading-none">
+      🗑️
+    </span>
+    <span className="text-base leading-none">
+      Eliminar
+    </span>
+  </button>
+</div>
                           </div>
                         );
                       }

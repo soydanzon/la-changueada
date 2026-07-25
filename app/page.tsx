@@ -1,22 +1,5 @@
-"use client";
-import { useEffect } from "react";
-
 export default function Home() {
-  useEffect(() => {
-  const metaThemeColor = document.querySelector<HTMLMetaElement>(
-    'meta[name="theme-color"]'
-  );
-
-  if (!metaThemeColor) return;
-
-  const colorAnterior = metaThemeColor.content;
-
-  metaThemeColor.content = "#14532d";
-
-  return () => {
-    metaThemeColor.content = colorAnterior;
-  };
-}, []);
+  
   return (
     <main className="min-h-screen bg-green-950 text-white p-6 flex flex-col overflow-y-auto">
       <div className="mb-10 mt-4 text-center">
