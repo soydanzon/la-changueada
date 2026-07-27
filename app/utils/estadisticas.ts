@@ -521,11 +521,22 @@ export function calcularHandicap(
   ].sort((a, b) => a.id - b.id);
 
   historialOrdenado.forEach((fecha) => {
-    if (!fecha.cancha) {
-      return;
-    }
+  if (!fecha.cancha) {
+    return;
+  }
 
-    const cancha = fecha.cancha;
+  const cancha = fecha.cancha;
+
+  const nombreCancha = obtenerNombreCanchaActual(
+    cancha
+  )
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (!nombreCancha.includes("alamos")) {
+    return;
+  }
 
     const {
       categoriaUno,
