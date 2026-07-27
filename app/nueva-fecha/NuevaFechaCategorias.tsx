@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "../config/config";
+import { normalizarTexto} from "../utils/texto";
+
 
 import {
   jugadores,
@@ -218,12 +220,13 @@ export default function NuevaFechaCategorias() {
     router.push("/previa/categorias");
   }
 
-  const jugadoresFiltrados = listaJugadores
-    .filter((jugador) =>
-      jugador.nombre
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
+
+const jugadoresFiltrados = listaJugadores
+  .filter((jugador) =>
+    normalizarTexto(jugador.nombre).includes(
+      normalizarTexto(busqueda)
     )
+  )
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
       if (!a.frecuente && b.frecuente) return 1;
@@ -354,14 +357,34 @@ export default function NuevaFechaCategorias() {
         ➕ Agregar jugador
       </button>
 
-      {cantidadPagosPendientes > 0 && (
-        <div className="mb-4 rounded-xl bg-white px-4 py-3 font-bold text-red-700">
-          📌 {cantidadPagosPendientes}{" "}
-          {cantidadPagosPendientes === 1
-            ? "pago pendiente"
-            : "pagos pendientes"}
-        </div>
-      )}
+      {jugadoresSeleccionados.length > 0 && (
+  <div className="mb-5 rounded-xl bg-white p-4 text-green-900">
+    <p className="mb-3 text-lg font-bold">
+      👥 Jugadores anotados ({jugadoresSeleccionados.length})
+    </p>
+
+    <div className="flex flex-wrap gap-2">
+      {listaJugadores
+        .filter((j) => jugadoresSeleccionados.includes(j.id))
+        .sort((a, b) =>
+          a.nombre.localeCompare(b.nombre)
+        )
+        .map((jugador) => (
+          <span
+            key={jugador.id}
+            className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
+          >
+            {jugador.nombre}
+            {pagosPendientes.includes(jugador.id) && (
+              <span className="ml-2 text-red-600">
+                🔴
+              </span>
+            )}
+          </span>
+        ))}
+    </div>
+  </div>
+)}
 
       <div className="space-y-3">
         {jugadoresFiltrados.map((jugador) => {

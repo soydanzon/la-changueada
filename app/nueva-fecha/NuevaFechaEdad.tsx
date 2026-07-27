@@ -17,6 +17,7 @@ import {
   obtenerTablaPremios,
   type FilaPremios,
 } from "../premios/tablaPremios";
+import { normalizarTexto} from "../utils/texto"; 
 
 type FechaHistorial = {
   cancha?: {
@@ -145,36 +146,31 @@ export default function NuevaFecha() {
         "laChangueadaNuevaFechaBorrador"
       );
     }
+
+    setTablaPremios(obtenerTablaPremios());
+setTablaPremiosCargada(true);
+
   }, []);
 
-  function cargarTablaPremios() {
-    setTablaPremios(obtenerTablaPremios());
-    setTablaPremiosCargada(true);
-  }
-
   function cambiarGeneral(id: number) {
-    setGeneral((actual) =>
-      actual.includes(id)
-        ? actual.filter(
-            (jugadorId) => jugadorId !== id
-          )
-        : [...actual, id]
-    );
-
-    cargarTablaPremios();
-  }
+  setGeneral((actual) =>
+    actual.includes(id)
+      ? actual.filter(
+          (jugadorId) => jugadorId !== id
+        )
+      : [...actual, id]
+  );
+}
 
   function cambiarViejitos(id: number) {
-    setViejitos((actual) =>
-      actual.includes(id)
-        ? actual.filter(
-            (jugadorId) => jugadorId !== id
-          )
-        : [...actual, id]
-    );
-
-    cargarTablaPremios();
-  }
+  setViejitos((actual) =>
+    actual.includes(id)
+      ? actual.filter(
+          (jugadorId) => jugadorId !== id
+        )
+      : [...actual, id]
+  );
+}
 
   function cambiarPagoPendiente(id: number) {
     const jugadorAnotado =
@@ -238,11 +234,12 @@ export default function NuevaFecha() {
   }
 
   const jugadoresFiltrados = listaJugadores
-    .filter((jugador) =>
-      jugador.nombre
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
+  .filter((jugador) =>
+    normalizarTexto(jugador.nombre).includes(
+      normalizarTexto(busqueda)
     )
+  )
+
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
       if (!a.frecuente && b.frecuente) return 1;
@@ -468,14 +465,38 @@ const puedeContinuar = totalJugadores >0;
         ➕ Agregar jugador
       </button>
 
-      {cantidadPagosPendientes > 0 && (
-        <div className="mb-4 rounded-xl bg-white px-4 py-3 font-bold text-red-700">
-          📌 {cantidadPagosPendientes}{" "}
-          {cantidadPagosPendientes === 1
-            ? "pago pendiente"
-            : "pagos pendientes"}
-        </div>
-      )}
+      {jugadoresAnotados.size > 0 && (
+  <div className="mb-5 rounded-xl bg-white p-4 text-green-900">
+    <p className="mb-3 text-lg font-bold">
+      👥 Jugadores anotados ({jugadoresAnotados.size})
+    </p>
+
+    <div className="flex flex-wrap gap-2">
+      {listaJugadores
+        .filter(
+          (j) =>
+            general.includes(j.id) ||
+            viejitos.includes(j.id)
+        )
+        .sort((a, b) =>
+          a.nombre.localeCompare(b.nombre)
+        )
+        .map((jugador) => (
+          <span
+            key={jugador.id}
+            className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
+          >
+            {jugador.nombre}
+            {pagosPendientes.includes(jugador.id) && (
+              <span className="ml-2 text-red-600">
+                🔴
+              </span>
+            )}
+          </span>
+        ))}
+    </div>
+  </div>
+)}
 
       <div className="space-y-3">
         {jugadoresFiltrados.map((jugador) => {
