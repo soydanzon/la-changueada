@@ -82,6 +82,9 @@ export default function NuevaFechaCategorias() {
     number[]
   >([]);
 
+  const [jugadorParaScroll, setJugadorParaScroll] =
+  useState<number | null>(null);
+
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
@@ -138,13 +141,61 @@ export default function NuevaFechaCategorias() {
         borrador.pagosPendientes ?? []
       );
 
-      setBusqueda(borrador.busqueda ?? "");
+      setBusqueda("");
 
       localStorage.removeItem(
         "laChangueadaNuevaFechaCategoriasBorrador"
       );
     }
+
+    const jugadorRecienCreadoId = Number(
+  localStorage.getItem(
+    "laChangueadaJugadorRecienCreado"
+  )
+);
+
+if (jugadorRecienCreadoId) {
+  setJugadoresSeleccionados((actual) =>
+    actual.includes(jugadorRecienCreadoId)
+      ? actual
+      : [...actual, jugadorRecienCreadoId]
+  );
+
+  setJugadorParaScroll(jugadorRecienCreadoId);
+
+  localStorage.removeItem(
+    "laChangueadaJugadorRecienCreado"
+  );
+}
+
   }, []);
+
+  useEffect(() => {
+  if (jugadorParaScroll === null) return;
+
+  const temporizador = window.setTimeout(() => {
+    const tarjeta = document.getElementById(
+      `jugador-${jugadorParaScroll}`
+    );
+
+    if (tarjeta) {
+      tarjeta.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      setJugadorParaScroll(null);
+    }
+  }, 100);
+
+  return () => {
+    window.clearTimeout(temporizador);
+  };
+}, [
+  jugadorParaScroll,
+  listaJugadores,
+  jugadoresSeleccionados,
+]);
 
   function cambiarJugador(id: number) {
     setJugadoresSeleccionados((actual) => {
@@ -188,9 +239,9 @@ export default function NuevaFechaCategorias() {
     );
 
     localStorage.setItem(
-      "laChangueadaOrigenNuevoJugador",
-      "nueva-fecha/categorias"
-    );
+  "laChangueadaOrigenNuevoJugador",
+  window.location.pathname
+);
 
     router.push("/jugadores/nuevo");
   }
@@ -396,6 +447,7 @@ const jugadoresFiltrados = listaJugadores
 
           return (
             <div
+              id={`jugador-${jugador.id}`}
               key={jugador.id}
               className="rounded-xl bg-white p-4 text-green-900"
             >

@@ -6,6 +6,7 @@ import {
   jugadores,
   type Jugador,
 } from "../../datos/jugadores";
+import { normalizarTexto } from "../../utils/texto";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
 
@@ -13,6 +14,45 @@ export default function NuevoJugador() {
   const [nombre, setNombre] = useState("");
   const [mensaje, setMensaje] = useState("");
   const router = useRouter();
+
+  function volverAlOrigen() {
+  const origen = localStorage.getItem(
+    "laChangueadaOrigenNuevoJugador"
+  );
+
+  const vieneDeCategorias = localStorage.getItem(
+    "laChangueadaNuevaFechaCategoriasBorrador"
+  );
+
+  const vieneDeEdad = localStorage.getItem(
+    "laChangueadaNuevaFechaBorrador"
+  );
+
+  localStorage.removeItem(
+    "laChangueadaOrigenNuevoJugador"
+  );
+
+  if (vieneDeCategorias) {
+    router.push("/nueva-fecha/categorias");
+    return;
+  }
+
+  if (vieneDeEdad) {
+    router.push("/nueva-fecha/edad");
+    return;
+  }
+
+  if (origen) {
+    const rutaCorrecta = origen.startsWith("/")
+      ? origen
+      : `/${origen}`;
+
+    router.push(rutaCorrecta);
+    return;
+  }
+
+  router.push("/jugadores");
+}
 
   function guardarJugador() {
     const nombreLimpio = nombre.trim();
@@ -30,15 +70,23 @@ export default function NuevoJugador() {
       ? JSON.parse(guardados)
       : jugadores;
 
-    const existe = listaActual.some(
+    const jugadorExistente = listaActual.find(
       (jugador) =>
-        jugador.nombre.toLowerCase() ===
-        nombreLimpio.toLowerCase()
+        normalizarTexto(jugador.nombre) ===
+        normalizarTexto(nombreLimpio)
     );
 
-    if (existe) {
-      setMensaje("⚠️ Ese jugador ya existe");
-      return;
+    if (jugadorExistente) {
+      const crearIgual = window.confirm(
+        `⚠️ Ya existe un jugador llamado "${jugadorExistente.nombre}".\n\n¿Estás seguro de que querés crear otro jugador con el mismo nombre?`
+      );
+
+      if (!crearIgual) {
+        setMensaje(
+          "No se agregó el jugador duplicado."
+        );
+        return;
+      }
     }
 
     const nuevoJugador: Jugador = {
@@ -50,24 +98,28 @@ export default function NuevoJugador() {
     const nuevaLista = [...listaActual, nuevoJugador];
 
     localStorage.setItem(
-      "laChangueadaJugadores",
-      JSON.stringify(nuevaLista)
-    );
+  "laChangueadaJugadores",
+  JSON.stringify(nuevaLista)
+);
 
-    const origen = localStorage.getItem(
-      "laChangueadaOrigenNuevoJugador"
-    );
+const origen = localStorage.getItem(
+  "laChangueadaOrigenNuevoJugador"
+);
 
-    if (origen === "nueva-fecha") {
-      localStorage.removeItem(
-        "laChangueadaOrigenNuevoJugador"
-      );
+if (origen?.includes("/categorias")) {
+  localStorage.setItem(
+    "laChangueadaJugadorRecienCreado",
+    String(nuevoJugador.id)
+  );
+} else {
+  localStorage.removeItem(
+    "laChangueadaJugadorRecienCreado"
+  );
+}
 
-      router.push("/nueva-fecha");
-      return;
-    }
+volverAlOrigen();
 
-    router.push("/jugadores");
+    volverAlOrigen();
   }
 
   return (
@@ -87,13 +139,20 @@ export default function NuevoJugador() {
         type="text"
         placeholder="Nombre del jugador"
         value={nombre}
-        onChange={(evento) =>
-          setNombre(evento.target.value)
-        }
+        onChange={(evento) => {
+          setNombre(evento.target.value);
+          setMensaje("");
+        }}
+        onKeyDown={(evento) => {
+          if (evento.key === "Enter") {
+            guardarJugador();
+          }
+        }}
         className="mt-8 w-full rounded-lg bg-white p-4 text-xl text-black"
       />
 
       <button
+        type="button"
         onClick={guardarJugador}
         className="mt-6 rounded-xl bg-white px-6 py-3 text-xl font-bold text-green-900"
       >

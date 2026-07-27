@@ -88,6 +88,9 @@ export default function NuevaFecha() {
   const [tablaPremiosCargada, setTablaPremiosCargada] =
     useState(false);
 
+    const [jugadorParaScroll, setJugadorParaScroll] =
+  useState<number | null>(null);
+
   const cancha =
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
@@ -140,12 +143,26 @@ export default function NuevaFecha() {
       setPagosPendientes(
         borrador.pagosPendientes ?? []
       );
-      setBusqueda(borrador.busqueda ?? "");
+      setBusqueda("");
 
       localStorage.removeItem(
         "laChangueadaNuevaFechaBorrador"
       );
     }
+
+    const jugadorRecienCreadoId = Number(
+  localStorage.getItem(
+    "laChangueadaJugadorRecienCreado"
+  )
+);
+
+if (jugadorRecienCreadoId) {
+  setJugadorParaScroll(jugadorRecienCreadoId);
+
+  localStorage.removeItem(
+    "laChangueadaJugadorRecienCreado"
+  );
+}
 
     setTablaPremios(obtenerTablaPremios());
 setTablaPremiosCargada(true);
@@ -161,6 +178,29 @@ setTablaPremiosCargada(true);
       : [...actual, id]
   );
 }
+
+useEffect(() => {
+  if (jugadorParaScroll === null) return;
+
+  const temporizador = window.setTimeout(() => {
+    const tarjeta = document.getElementById(
+      `jugador-${jugadorParaScroll}`
+    );
+
+    if (tarjeta) {
+      tarjeta.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      setJugadorParaScroll(null);
+    }
+  }, 100);
+
+  return () => {
+    window.clearTimeout(temporizador);
+  };
+}, [jugadorParaScroll, listaJugadores]);
 
   function cambiarViejitos(id: number) {
   setViejitos((actual) =>
@@ -200,9 +240,9 @@ setTablaPremiosCargada(true);
     );
 
     localStorage.setItem(
-      "laChangueadaOrigenNuevoJugador",
-      "nueva-fecha"
-    );
+  "laChangueadaOrigenNuevoJugador",
+  window.location.pathname
+);
 
     router.push("/jugadores/nuevo");
   }
@@ -509,9 +549,10 @@ const puedeContinuar = totalJugadores >0;
 
           return (
             <div
-              key={jugador.id}
-              className="rounded-xl bg-white p-4 text-green-900"
-            >
+  id={`jugador-${jugador.id}`}
+  key={jugador.id}
+  className="rounded-xl bg-white p-4 text-green-900"
+>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 text-lg font-bold">
                   {jugador.frecuente ? "⭐ " : ""}
