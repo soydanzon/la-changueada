@@ -85,6 +85,9 @@ export default function NuevaFecha() {
   const [tablaPremios, setTablaPremios] =
     useState<FilaPremios[]>([]);
 
+    const [borradorCargado, setBorradorCargado] =
+  useState(false);
+
   const [tablaPremiosCargada, setTablaPremiosCargada] =
     useState(false);
 
@@ -129,26 +132,51 @@ export default function NuevaFecha() {
       setListaJugadores(jugadores);
     }
 
-    const borradorGuardado = localStorage.getItem(
-      "laChangueadaNuevaFechaBorrador"
+    const claveBorrador =
+  "laChangueadaNuevaFechaBorrador";
+
+const claveBackup =
+  "laChangueadaNuevaFechaBorradorBackup";
+
+function recuperarBorrador(
+  datos: string | null
+): BorradorNuevaFecha | null {
+  if (!datos) return null;
+
+  try {
+    return JSON.parse(datos);
+  } catch {
+    return null;
+  }
+}
+
+const borradorPrincipal = recuperarBorrador(
+  localStorage.getItem(claveBorrador)
+);
+
+const borradorBackup = recuperarBorrador(
+  localStorage.getItem(claveBackup)
+);
+
+const borrador =
+  borradorPrincipal ?? borradorBackup;
+
+if (borrador) {
+  setCanchaId(borrador.canchaId ?? 0);
+  setGeneral(borrador.general ?? []);
+  setViejitos(borrador.viejitos ?? []);
+  setPagosPendientes(
+    borrador.pagosPendientes ?? []
+  );
+  setBusqueda("");
+
+  if (!borradorPrincipal && borradorBackup) {
+    localStorage.setItem(
+      claveBorrador,
+      JSON.stringify(borradorBackup)
     );
-
-    if (borradorGuardado) {
-      const borrador: BorradorNuevaFecha =
-        JSON.parse(borradorGuardado);
-
-      setCanchaId(borrador.canchaId ?? 0);
-      setGeneral(borrador.general ?? []);
-      setViejitos(borrador.viejitos ?? []);
-      setPagosPendientes(
-        borrador.pagosPendientes ?? []
-      );
-      setBusqueda("");
-
-      localStorage.removeItem(
-        "laChangueadaNuevaFechaBorrador"
-      );
-    }
+  }
+}
 
     const jugadorRecienCreadoId = Number(
   localStorage.getItem(
@@ -166,8 +194,51 @@ if (jugadorRecienCreadoId) {
 
     setTablaPremios(obtenerTablaPremios());
 setTablaPremiosCargada(true);
+setBorradorCargado(true);
 
   }, []);
+
+useEffect(() => {
+  if (!borradorCargado) return;
+
+  const claveBorrador =
+    "laChangueadaNuevaFechaBorrador";
+
+  const claveBackup =
+    "laChangueadaNuevaFechaBorradorBackup";
+
+  const borrador: BorradorNuevaFecha = {
+    canchaId,
+    general,
+    viejitos,
+    pagosPendientes,
+  };
+
+  try {
+    const borradorAnterior =
+      localStorage.getItem(claveBorrador);
+
+    if (borradorAnterior) {
+      localStorage.setItem(
+        claveBackup,
+        borradorAnterior
+      );
+    }
+
+    localStorage.setItem(
+      claveBorrador,
+      JSON.stringify(borrador)
+    );
+  } catch {
+    // Si falla un guardado, se conserva la última copia válida.
+  }
+}, [
+  borradorCargado,
+  canchaId,
+  general,
+  viejitos,
+  pagosPendientes,
+]);
 
   function cambiarGeneral(id: number) {
   setGeneral((actual) =>

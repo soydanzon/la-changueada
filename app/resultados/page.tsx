@@ -471,12 +471,30 @@ export default function Resultados() {
     );
 
     localStorage.setItem(
-      "laChangueadaFechaYaGuardada",
-      "true"
-    );
+  "laChangueadaFechaYaGuardada",
+  "true"
+);
 
-    setIdFechaGuardada(nuevoId);
-    setFechaGuardada(true);
+if (formato === "categorias") {
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaCategoriasBorrador"
+  );
+
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaCategoriasBorradorBackup"
+  );
+} else {
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaBorrador"
+  );
+
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaBorradorBackup"
+  );
+}
+
+setIdFechaGuardada(nuevoId);
+setFechaGuardada(true);
   }
 
   async function compartirResultados() {

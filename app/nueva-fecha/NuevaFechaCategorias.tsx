@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { config } from "../config/config";
-import { normalizarTexto} from "../utils/texto";
-
+import { normalizarTexto } from "../utils/texto";
 
 import {
   jugadores,
@@ -40,7 +39,8 @@ function ordenarCanchasPorUso(canchas: Cancha[]) {
 
   if (!datos) return canchas;
 
-  const historial: FechaHistorial[] = JSON.parse(datos);
+  const historial: FechaHistorial[] =
+    JSON.parse(datos);
 
   function usos(cancha: Cancha) {
     return historial.filter(
@@ -60,36 +60,62 @@ function ordenarCanchasPorUso(canchas: Cancha[]) {
   });
 }
 
+function recuperarBorrador(
+  clave: string
+): BorradorNuevaFechaCategorias | null {
+  const contenido = localStorage.getItem(clave);
+
+  if (!contenido) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(
+      contenido
+    ) as BorradorNuevaFechaCategorias;
+  } catch {
+    return null;
+  }
+}
+
 export default function NuevaFechaCategorias() {
   const router = useRouter();
 
-  const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [canchas, setCanchas] = useState<
+    Cancha[]
+  >([]);
+
   const [canchaId, setCanchaId] = useState(0);
 
   const [valorChangueada, setValorChangueada] =
     useState(config.valorChangueada);
 
-  const [listaJugadores, setListaJugadores] = useState<
-    Jugador[]
-  >([]);
+  const [listaJugadores, setListaJugadores] =
+    useState<Jugador[]>([]);
 
   const [busqueda, setBusqueda] = useState("");
 
-  const [jugadoresSeleccionados, setJugadoresSeleccionados] =
+  const [
+    jugadoresSeleccionados,
+    setJugadoresSeleccionados,
+  ] = useState<number[]>([]);
+
+  const [pagosPendientes, setPagosPendientes] =
     useState<number[]>([]);
 
-  const [pagosPendientes, setPagosPendientes] = useState<
-    number[]
-  >([]);
-
   const [jugadorParaScroll, setJugadorParaScroll] =
-  useState<number | null>(null);
+    useState<number | null>(null);
+
+  const [borradorCargado, setBorradorCargado] =
+    useState(false);
 
   const cancha =
-    canchas.find((c) => c.id === canchaId) ?? canchas[0];
+    canchas.find((c) => c.id === canchaId) ??
+    canchas[0];
 
   useEffect(() => {
     localStorage.removeItem("laChangueadaScores");
+
     localStorage.removeItem(
       "laChangueadaFechaYaGuardada"
     );
@@ -111,27 +137,41 @@ export default function NuevaFechaCategorias() {
       ordenarCanchasPorUso(canchasGuardadas);
 
     setCanchas(canchasOrdenadas);
-    setCanchaId(canchasOrdenadas[0]?.id ?? 0);
+
+    const canchaInicial =
+      canchasOrdenadas[0]?.id ?? 0;
+
+    setCanchaId(canchaInicial);
 
     const guardados = localStorage.getItem(
       "laChangueadaJugadores"
     );
 
     if (guardados) {
-      setListaJugadores(JSON.parse(guardados));
+      try {
+        setListaJugadores(JSON.parse(guardados));
+      } catch {
+        setListaJugadores(jugadores);
+      }
     } else {
       setListaJugadores(jugadores);
     }
 
-    const borradorGuardado = localStorage.getItem(
+    const borradorPrincipal = recuperarBorrador(
       "laChangueadaNuevaFechaCategoriasBorrador"
     );
 
-    if (borradorGuardado) {
-      const borrador: BorradorNuevaFechaCategorias =
-        JSON.parse(borradorGuardado);
+    const borradorBackup = recuperarBorrador(
+      "laChangueadaNuevaFechaCategoriasBorradorBackup"
+    );
 
-      setCanchaId(borrador.canchaId ?? 0);
+    const borrador =
+      borradorPrincipal ?? borradorBackup;
+
+    if (borrador) {
+      setCanchaId(
+        borrador.canchaId ?? canchaInicial
+      );
 
       setJugadoresSeleccionados(
         borrador.jugadores ?? []
@@ -143,59 +183,100 @@ export default function NuevaFechaCategorias() {
 
       setBusqueda("");
 
-      localStorage.removeItem(
-        "laChangueadaNuevaFechaCategoriasBorrador"
-      );
+      if (!borradorPrincipal && borradorBackup) {
+        localStorage.setItem(
+          "laChangueadaNuevaFechaCategoriasBorrador",
+          JSON.stringify(borradorBackup)
+        );
+      }
     }
 
     const jugadorRecienCreadoId = Number(
-  localStorage.getItem(
-    "laChangueadaJugadorRecienCreado"
-  )
-);
+      localStorage.getItem(
+        "laChangueadaJugadorRecienCreado"
+      )
+    );
 
-if (jugadorRecienCreadoId) {
-  setJugadoresSeleccionados((actual) =>
-    actual.includes(jugadorRecienCreadoId)
-      ? actual
-      : [...actual, jugadorRecienCreadoId]
-  );
+    if (jugadorRecienCreadoId) {
+      setJugadoresSeleccionados((actual) =>
+        actual.includes(jugadorRecienCreadoId)
+          ? actual
+          : [...actual, jugadorRecienCreadoId]
+      );
 
-  setJugadorParaScroll(jugadorRecienCreadoId);
+      setJugadorParaScroll(
+        jugadorRecienCreadoId
+      );
 
-  localStorage.removeItem(
-    "laChangueadaJugadorRecienCreado"
-  );
-}
+      localStorage.removeItem(
+        "laChangueadaJugadorRecienCreado"
+      );
+    }
 
+    setBorradorCargado(true);
   }, []);
 
   useEffect(() => {
-  if (jugadorParaScroll === null) return;
+    if (!borradorCargado) return;
 
-  const temporizador = window.setTimeout(() => {
-    const tarjeta = document.getElementById(
-      `jugador-${jugadorParaScroll}`
-    );
+    const borrador: BorradorNuevaFechaCategorias =
+      {
+        canchaId,
+        jugadores: jugadoresSeleccionados,
+        pagosPendientes,
+        busqueda,
+      };
 
-    if (tarjeta) {
-      tarjeta.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    const borradorAnterior =
+      localStorage.getItem(
+        "laChangueadaNuevaFechaCategoriasBorrador"
+      );
 
-      setJugadorParaScroll(null);
+    if (borradorAnterior) {
+      localStorage.setItem(
+        "laChangueadaNuevaFechaCategoriasBorradorBackup",
+        borradorAnterior
+      );
     }
-  }, 100);
 
-  return () => {
-    window.clearTimeout(temporizador);
-  };
-}, [
-  jugadorParaScroll,
-  listaJugadores,
-  jugadoresSeleccionados,
-]);
+    localStorage.setItem(
+      "laChangueadaNuevaFechaCategoriasBorrador",
+      JSON.stringify(borrador)
+    );
+  }, [
+    borradorCargado,
+    canchaId,
+    jugadoresSeleccionados,
+    pagosPendientes,
+    busqueda,
+  ]);
+
+  useEffect(() => {
+    if (jugadorParaScroll === null) return;
+
+    const temporizador = window.setTimeout(() => {
+      const tarjeta = document.getElementById(
+        `jugador-${jugadorParaScroll}`
+      );
+
+      if (tarjeta) {
+        tarjeta.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+
+        setJugadorParaScroll(null);
+      }
+    }, 100);
+
+    return () => {
+      window.clearTimeout(temporizador);
+    };
+  }, [
+    jugadorParaScroll,
+    listaJugadores,
+    jugadoresSeleccionados,
+  ]);
 
   function cambiarJugador(id: number) {
     setJugadoresSeleccionados((actual) => {
@@ -216,7 +297,9 @@ if (jugadorRecienCreadoId) {
   }
 
   function cambiarPagoPendiente(id: number) {
-    if (!jugadoresSeleccionados.includes(id)) return;
+    if (!jugadoresSeleccionados.includes(id)) {
+      return;
+    }
 
     setPagosPendientes((actual) =>
       actual.includes(id)
@@ -239,15 +322,18 @@ if (jugadorRecienCreadoId) {
     );
 
     localStorage.setItem(
-  "laChangueadaOrigenNuevoJugador",
-  window.location.pathname
-);
+      "laChangueadaOrigenNuevoJugador",
+      window.location.pathname
+    );
 
     router.push("/jugadores/nuevo");
   }
 
   function continuar() {
-    if (!cancha || jugadoresSeleccionados.length === 0) {
+    if (
+      !cancha ||
+      jugadoresSeleccionados.length === 0
+    ) {
       return;
     }
 
@@ -271,13 +357,12 @@ if (jugadorRecienCreadoId) {
     router.push("/previa/categorias");
   }
 
-
-const jugadoresFiltrados = listaJugadores
-  .filter((jugador) =>
-    normalizarTexto(jugador.nombre).includes(
-      normalizarTexto(busqueda)
+  const jugadoresFiltrados = listaJugadores
+    .filter((jugador) =>
+      normalizarTexto(jugador.nombre).includes(
+        normalizarTexto(busqueda)
+      )
     )
-  )
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
       if (!a.frecuente && b.frecuente) return 1;
@@ -291,7 +376,8 @@ const jugadoresFiltrados = listaJugadores
     ).length;
 
   const pozoTotal =
-    jugadoresSeleccionados.length * valorChangueada;
+    jugadoresSeleccionados.length *
+    valorChangueada;
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -314,7 +400,9 @@ const jugadoresFiltrados = listaJugadores
 
           <p className="mt-3 text-xl font-bold">
             📅{" "}
-            {new Date().toLocaleDateString("es-AR")}
+            {new Date().toLocaleDateString(
+              "es-AR"
+            )}
           </p>
 
           <div className="mt-4 flex items-center gap-3">
@@ -331,14 +419,16 @@ const jugadoresFiltrados = listaJugadores
               }
               className="flex-1 rounded-lg border px-3 py-2 text-black"
             >
-              {canchas.map((canchaDisponible) => (
-                <option
-                  key={canchaDisponible.id}
-                  value={canchaDisponible.id}
-                >
-                  {canchaDisponible.nombre}
-                </option>
-              ))}
+              {canchas.map(
+                (canchaDisponible) => (
+                  <option
+                    key={canchaDisponible.id}
+                    value={canchaDisponible.id}
+                  >
+                    {canchaDisponible.nombre}
+                  </option>
+                )
+              )}
             </select>
           </div>
 
@@ -367,7 +457,10 @@ const jugadoresFiltrados = listaJugadores
               <span>💰 Pozo total</span>
 
               <span className="font-bold">
-                ${pozoTotal.toLocaleString("es-AR")}
+                $
+                {pozoTotal.toLocaleString(
+                  "es-AR"
+                )}
               </span>
             </div>
 
@@ -379,7 +472,9 @@ const jugadoresFiltrados = listaJugadores
 
           <button
             onClick={continuar}
-            disabled={jugadoresSeleccionados.length === 0}
+            disabled={
+              jugadoresSeleccionados.length === 0
+            }
             className={`mt-6 w-full rounded-xl p-4 text-2xl font-bold text-white ${
               jugadoresSeleccionados.length > 0
                 ? "bg-green-600"
@@ -409,38 +504,48 @@ const jugadoresFiltrados = listaJugadores
       </button>
 
       {jugadoresSeleccionados.length > 0 && (
-  <div className="mb-5 rounded-xl bg-white p-4 text-green-900">
-    <p className="mb-3 text-lg font-bold">
-      👥 Jugadores anotados ({jugadoresSeleccionados.length})
-    </p>
+        <div className="mb-5 rounded-xl bg-white p-4 text-green-900">
+          <p className="mb-3 text-lg font-bold">
+            👥 Jugadores anotados (
+            {jugadoresSeleccionados.length})
+          </p>
 
-    <div className="flex flex-wrap gap-2">
-      {listaJugadores
-        .filter((j) => jugadoresSeleccionados.includes(j.id))
-        .sort((a, b) =>
-          a.nombre.localeCompare(b.nombre)
-        )
-        .map((jugador) => (
-          <span
-            key={jugador.id}
-            className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
-          >
-            {jugador.nombre}
-            {pagosPendientes.includes(jugador.id) && (
-              <span className="ml-2 text-red-600">
-                🔴
-              </span>
-            )}
-          </span>
-        ))}
-    </div>
-  </div>
-)}
+          <div className="flex flex-wrap gap-2">
+            {listaJugadores
+              .filter((jugador) =>
+                jugadoresSeleccionados.includes(
+                  jugador.id
+                )
+              )
+              .sort((a, b) =>
+                a.nombre.localeCompare(b.nombre)
+              )
+              .map((jugador) => (
+                <span
+                  key={jugador.id}
+                  className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
+                >
+                  {jugador.nombre}
+
+                  {pagosPendientes.includes(
+                    jugador.id
+                  ) && (
+                    <span className="ml-2 text-red-600">
+                      🔴
+                    </span>
+                  )}
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {jugadoresFiltrados.map((jugador) => {
           const jugadorAnotado =
-            jugadoresSeleccionados.includes(jugador.id);
+            jugadoresSeleccionados.includes(
+              jugador.id
+            );
 
           const pagoPendiente =
             pagosPendientes.includes(jugador.id);
@@ -453,14 +558,18 @@ const jugadoresFiltrados = listaJugadores
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 text-lg font-bold">
-                  {jugador.frecuente ? "⭐ " : ""}
+                  {jugador.frecuente
+                    ? "⭐ "
+                    : ""}
                   {jugador.nombre}
                 </div>
 
                 <button
                   type="button"
                   onClick={() =>
-                    cambiarPagoPendiente(jugador.id)
+                    cambiarPagoPendiente(
+                      jugador.id
+                    )
                   }
                   disabled={!jugadorAnotado}
                   title={
@@ -488,9 +597,7 @@ const jugadoresFiltrados = listaJugadores
                     : "bg-gray-200 text-gray-700"
                 }`}
               >
-                {jugadorAnotado
-                  ? "OK"
-                  : "OK"}
+                OK
               </button>
             </div>
           );
