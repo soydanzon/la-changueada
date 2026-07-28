@@ -50,6 +50,56 @@ export default function Handicap() {
         .includes(busqueda.toLowerCase())
   );
 
+  async function compartirListado() {
+  const fecha = new Date().toLocaleDateString("es-AR");
+
+  const lineas = [
+    "⚽️ La Changueada 🚩",
+    "",
+    "Listado de Handicap",
+    `Actualizado al ${fecha}`,
+    "",
+  ];
+
+  handicaps.forEach((jugador, index) => {
+    const presentadas = jugador.fechas.length;
+    const tomadas = jugador.fechas.filter(
+      (fecha) => fecha.cuenta
+    ).length;
+
+    lineas.push(
+      `${index + 1}. ${jugador.nombre} (${presentadas}/${tomadas})   ${formatearHandicap(jugador.handicap)}`
+    );
+  });
+
+  const texto = lineas.join("\n");
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Listado de Handicap",
+        text: texto,
+      });
+      return;
+    }
+
+    await navigator.clipboard.writeText(texto);
+
+    alert(
+      "El listado fue copiado. Ya podés pegarlo en WhatsApp."
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.name === "AbortError"
+    ) {
+      return;
+    }
+
+    alert("No se pudo compartir el listado.");
+  }
+}
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
@@ -62,6 +112,14 @@ export default function Handicap() {
           <BotonInicio />
         </div>
       </div>
+
+<button
+  type="button"
+  onClick={compartirListado}
+  className="mb-4 w-full rounded-xl bg-blue-600 p-3 text-xl font-bold text-white"
+>
+  📤 Compartir listado
+</button>
 
       <input
         type="text"

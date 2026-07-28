@@ -223,7 +223,7 @@ export default function Previa() {
       })
     );
 
-    router.push("/nueva-fecha");
+    router.push("/nueva-fecha/edad");
   }
 
   function continuarAScores() {
