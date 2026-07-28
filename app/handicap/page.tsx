@@ -60,17 +60,11 @@ export default function Handicap() {
     `Actualizado al ${fecha}`,
     "",
     "```",
-    "Jugador                        Hcp.",
+    `${"Jugador".padEnd(28)}${"Hcp.".padStart(5)}`,
     "",
   ];
 
   handicaps.forEach((jugador, index) => {
-    const presentadas = jugador.fechas.length;
-
-    const tomadas = jugador.fechas.filter(
-      (fecha) => fecha.cuenta
-    ).length;
-
     const nombreCompleto = `${index + 1}. ${jugador.nombre}`;
 
     const nombre =
@@ -78,14 +72,12 @@ export default function Handicap() {
         ? `${nombreCompleto.slice(0, 23)}…`
         : nombreCompleto;
 
-    const tarjetas = `${presentadas}/${tomadas}`;
-
     const handicap = formatearHandicap(
       jugador.handicap
     );
 
     lineas.push(
-      `${nombre.padEnd(28)})}${handicap.padStart(5)}`
+      `${nombre.padEnd(28)}${handicap.padStart(5)}`
     );
   });
 
