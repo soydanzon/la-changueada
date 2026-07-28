@@ -60,7 +60,7 @@ export default function Handicap() {
     `Actualizado al ${fecha}`,
     "",
     "```",
-    `${"Jugador".padEnd(22)}${"Hcp.".padStart(5)}`,
+    `${"Jugador".padEnd(24)}${"Hcp.".padStart(7)}`,
     "",
   ];
 
