@@ -60,7 +60,7 @@ export default function Handicap() {
     `Actualizado al ${fecha}`,
     "",
     "```",
-    `${"Jugador".padEnd(28)}${"Hcp.".padStart(5)}`,
+    `${"Jugador".padEnd(22)}${"Hcp.".padStart(5)}`,
     "",
   ];
 
@@ -68,8 +68,8 @@ export default function Handicap() {
     const nombreCompleto = `${index + 1}. ${jugador.nombre}`;
 
     const nombre =
-      nombreCompleto.length > 24
-        ? `${nombreCompleto.slice(0, 23)}…`
+      nombreCompleto.length > 22
+        ? `${nombreCompleto.slice(0, 21)}…`
         : nombreCompleto;
 
     const handicap = formatearHandicap(
@@ -77,7 +77,7 @@ export default function Handicap() {
     );
 
     lineas.push(
-      `${nombre.padEnd(28)}${handicap.padStart(5)}`
+      `${nombre.padEnd(22)}${handicap.padStart(5)}`
     );
   });
 
