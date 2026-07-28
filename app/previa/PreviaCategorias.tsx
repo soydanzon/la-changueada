@@ -910,7 +910,7 @@ export default function PreviaCategorias() {
           </span>
         </div>
 
-        <h3 className="mb-2 border-t border-green-200 text-xl font-bold">
+        <h3 className="mb-2 border-t border-green-200 pt-4 text-xl font-bold">
           🏆 Premios
         </h3>
 

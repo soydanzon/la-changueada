@@ -30,30 +30,24 @@ export default function CompartirTablaPremios() {
   }, []);
 
   function generarTexto() {
-    const filas = tabla
-      .map((fila) => {
-        const premios = fila.premios
-          .map((premio, index) =>
-            premio > 0
-              ? `${index + 1}° ${formatearPesos(premio)}`
-              : null
-          )
-          .filter(Boolean)
-          .join(" · ");
+  const filas = tabla
+    .map((fila) => {
+      const premios = fila.premios
+        .filter((premio) => premio > 0)
+        .map((premio) => (premio / 1000).toString())
+        .join(" - ");
 
-        return `${fila.jugadores} jugadores: ${premios}`;
-      })
-      .join("\n");
+      return `${fila.jugadores}: ${premios}`;
+    })
+    .join("\n");
 
-    return `🏆 LA CHANGUEADA
-FOOTGOLF
+  return `⚽ LA CHANGUEADA 🚩
 
-TABLA DE PREMIOS
-
+Tabla de Premios
 Valor por jugador: ${formatearPesos(valorChangueada)}
 
 ${filas}`;
-  }
+}
 
   async function compartirTabla() {
     const texto = generarTexto();
@@ -153,7 +147,7 @@ ${filas}`;
 
       <button
         onClick={compartirTabla}
-        className="mx-auto mt-6 block w-full max-w-3xl rounded-xl bg-white p-4 text-xl font-black text-green-900"
+        className="mx-auto mt-6 block w-full max-w-3xl rounded-xl bg-blue-600 p-4 text-xl font-black text-white"
       >
         📤 Compartir tabla
       </button>

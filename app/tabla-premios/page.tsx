@@ -87,17 +87,19 @@ export default function TablaPremios() {
 
       <a
         href="/tabla-premios/editar"
-        className="mt-6 block w-full rounded-xl bg-white p-4 text-center font-bold text-green-900"
+        className="mt-6 block w-full rounded-xl text-xl bg-white p-4 text-center font-bold text-green-900"
       >
         ✏️ Editar tabla
       </a>
 
-      <a
-  href="/tabla-premios/compartir"
-  className="mt-3 block w-full rounded-xl bg-blue-600 p-4 text-center font-bold text-white"
+      <button
+  onClick={() => {
+    window.location.href = "/tabla-premios/compartir";
+  }}
+  className="mt-3 block w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
 >
   📤 Compartir tabla
-</a>
+</button>
 
     </main>
   );
