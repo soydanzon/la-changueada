@@ -60,7 +60,7 @@ export default function Handicap() {
     `Actualizado al ${fecha}`,
     "",
     "```",
-    "Jugador                   Tarj.  Hcp.",
+    "Jugador                 Tarj.  Hcp.",
     "",
   ];
 
@@ -85,7 +85,7 @@ export default function Handicap() {
     );
 
     lineas.push(
-      `${nombre.padEnd(25)}${tarjetas.padStart(
+      `${nombre.padEnd(23)}${tarjetas.padStart(
         5
       )}${handicap.padStart(7)}`
     );
