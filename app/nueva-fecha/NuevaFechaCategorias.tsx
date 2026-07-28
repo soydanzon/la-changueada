@@ -279,22 +279,33 @@ export default function NuevaFechaCategorias() {
   ]);
 
   function cambiarJugador(id: number) {
-    setJugadoresSeleccionados((actual) => {
-      if (actual.includes(id)) {
-        setPagosPendientes((pendientes) =>
-          pendientes.filter(
-            (jugadorId) => jugadorId !== id
-          )
-        );
+  const posicionActual = window.scrollY;
 
-        return actual.filter(
+  setJugadoresSeleccionados((actual) => {
+    if (actual.includes(id)) {
+      setPagosPendientes((pendientes) =>
+        pendientes.filter(
           (jugadorId) => jugadorId !== id
-        );
-      }
+        )
+      );
 
-      return [...actual, id];
+      return actual.filter(
+        (jugadorId) => jugadorId !== id
+      );
+    }
+
+    return [...actual, id];
+  });
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({
+        top: posicionActual,
+        behavior: "auto",
+      });
     });
-  }
+  });
+}
 
   function cambiarPagoPendiente(id: number) {
     if (!jugadoresSeleccionados.includes(id)) {
