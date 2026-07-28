@@ -77,7 +77,7 @@ export default function Handicap() {
     );
 
     lineas.push(
-      `${nombre.padEnd(22)}${handicap.padStart(5)}`
+      `${nombre.padEnd(24)}${handicap.padStart(5)}`
     );
   });
 
