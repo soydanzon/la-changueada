@@ -54,25 +54,44 @@ export default function Handicap() {
   const fecha = new Date().toLocaleDateString("es-AR");
 
   const lineas = [
-  "⚽️ La Changueada 🚩",
-  "",
-  "Listado de Handicap",
-  `Actualizado al ${fecha}`,
-  "",
-  "Jugador                     Tarj.    Hcp.",
-  "",
-];
+    "⚽️ La Changueada 🚩",
+    "",
+    "Listado de Handicap",
+    `Actualizado al ${fecha}`,
+    "",
+    "```",
+    "Jugador                   Tarj.  Hcp.",
+    "",
+  ];
 
   handicaps.forEach((jugador, index) => {
     const presentadas = jugador.fechas.length;
+
     const tomadas = jugador.fechas.filter(
       (fecha) => fecha.cuenta
     ).length;
 
+    const nombreCompleto = `${index + 1}. ${jugador.nombre}`;
+
+    const nombre =
+      nombreCompleto.length > 24
+        ? `${nombreCompleto.slice(0, 23)}…`
+        : nombreCompleto;
+
+    const tarjetas = `${presentadas}/${tomadas}`;
+
+    const handicap = formatearHandicap(
+      jugador.handicap
+    );
+
     lineas.push(
-      `${index + 1}. ${jugador.nombre} (${presentadas}/${tomadas})   ${formatearHandicap(jugador.handicap)}`
+      `${nombre.padEnd(25)}${tarjetas.padStart(
+        5
+      )}${handicap.padStart(7)}`
     );
   });
+
+  lineas.push("```");
 
   const texto = lineas.join("\n");
 
@@ -82,6 +101,7 @@ export default function Handicap() {
         title: "Listado de Handicap",
         text: texto,
       });
+
       return;
     }
 
@@ -97,6 +117,11 @@ export default function Handicap() {
     ) {
       return;
     }
+
+    console.error(
+      "No se pudo compartir el listado:",
+      error
+    );
 
     alert("No se pudo compartir el listado.");
   }
