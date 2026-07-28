@@ -808,7 +808,7 @@ export default function PreviaCategorias() {
           </span>
         </div>
 
-        <h3 className="mb-2 text-xl font-bold">
+        <h3 className="mb-2 border-t border-green-200 pt-4 text-xl font-bold">
           🏆 Premios
         </h3>
 
@@ -855,40 +855,39 @@ export default function PreviaCategorias() {
               className="flex items-center justify-between gap-3 border-b border-green-100 py-3 last:border-b-0"
             >
               <button
-                type="button"
-                onClick={() =>
-                  abrirHandicap(
-                    jugador.nombre
-                  )
-                }
-                className="min-w-0 text-left"
-              >
-                <p className="truncate font-bold underline decoration-green-700/30 underline-offset-4">
-                  {jugador.nombre}
-                </p>
+  type="button"
+  onClick={() =>
+    abrirHandicap(jugador.nombre)
+  }
+  className="min-w-0 flex-1 text-left"
+>
+  <div className="flex items-baseline gap-2">
+    <span className="truncate text-lg font-bold underline decoration-green-700/30 underline-offset-4">
+      {jugador.nombre}
+    </span>
 
-                <p className="text-sm">
-                  HCP{" "}
-                  {jugador.handicap !== null
-                    ? formatearHandicap(
-                        jugador.handicap
-                      )
-                    : "sin datos"}
-                </p>
-              </button>
+    <span className="shrink-0 text-base font-normal">
+      {jugador.handicap !== null
+        ? formatearHandicap(
+            jugador.handicap
+          )
+        : "s/d"}
+    </span>
+  </div>
+</button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  asignarCategoria(
-                    jugador.id,
-                    "B"
-                  )
-                }
-                className="shrink-0 rounded-lg bg-blue-700 px-3 py-2 text-sm font-bold text-white"
-              >
-                Pasar a B
-              </button>
+<button
+  type="button"
+  onClick={() =>
+    asignarCategoria(
+      jugador.id,
+      "B"
+    )
+  }
+  className="shrink-0 rounded-lg bg-blue-700 px-3 py-2 text-base font-bold text-white"
+>
+  → B
+</button>
             </div>
           ))}
         </div>
