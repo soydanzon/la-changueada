@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import {
   jugadores,
   type Jugador,
@@ -214,6 +216,9 @@ export default function Resultados() {
     Resultado[]
   >([]);
 
+  const router = useRouter();
+
+  
   const [categoriaDos, setCategoriaDos] = useState<
     Resultado[]
   >([]);
@@ -790,13 +795,20 @@ setFechaGuardada(true);
         </div>
       )}
 
-      {!fechaGuardada ? (
-        <button
+      <button
+  onClick={() => router.push("/scores")}
+  className="w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+>
+  ✏️ Modificar scores
+</button>
+      
+      {!fechaGuardada ? (       
+       <button
           type="button"
           onClick={guardarFecha}
-          className="mt-8 w-full rounded-xl bg-green-600 p-5 text-2xl font-bold text-white"
+          className="mt-2 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white"
         >
-          Guardar fecha
+         💾 Guardar fecha
         </button>
       ) : (
         <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
