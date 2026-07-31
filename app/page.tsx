@@ -68,7 +68,7 @@ export default function Home() {
       </div>
 
       <div className="mt-auto pt-4 text-center text-sm tracking-widest text-green-300">
-        - v2.92 -
+        - v3.02 -
       </div>
     </main>
   );

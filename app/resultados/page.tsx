@@ -180,9 +180,7 @@ function obtenerNombreVuelta(
   const fechasDelMismoDia = historial
     .filter(
       (fecha) =>
-        new Date(
-          fecha.id
-        ).toLocaleDateString("es-AR") ===
+        new Date(fecha.id).toLocaleDateString("es-AR") ===
         diaActual
     )
     .sort((a, b) => a.id - b.id);
@@ -197,18 +195,18 @@ function obtenerNombreVuelta(
     ) + 1;
 
   if (posicion === 1) {
-    return "PRIMERA VUELTA";
+    return "Primera vuelta";
   }
 
   if (posicion === 2) {
-    return "SEGUNDA VUELTA";
+    return "Segunda vuelta";
   }
 
   if (posicion === 3) {
-    return "TERCERA VUELTA";
+    return "Tercera vuelta";
   }
 
-  return `${posicion}ª VUELTA`;
+  return `${posicion}ª vuelta`;
 }
 
 export default function Resultados() {
@@ -529,29 +527,54 @@ setFechaGuardada(true);
     );
 
     const crearTextoResultados = (
-      resultados: Resultado[]
-    ) =>
-      resultados
-        .map(
-          (resultado) =>
-            `${medalla(
-              resultado.puesto
-            )} ${
-              resultado.jugador.nombre
-            } - ${formatearScore(
-              resultado.score,
-              canchaFecha?.par
-            )}`
-        )
-        .join("\n");
+  resultados: Resultado[]
+) => {
+  const conPremio = resultados.filter(
+    (r) => r.premio > 0
+  );
 
+  const sinPremio = resultados.filter(
+    (r) => r.premio === 0
+  );
+
+  const lineas: string[] = [];
+
+  conPremio.forEach((resultado) => {
+    lineas.push(
+      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+        resultado.score,
+        canchaFecha?.par
+      )}`
+    );
+
+    lineas.push(
+      `   ${formatearPesos(resultado.premio)}`
+    );
+  });
+
+  if (conPremio.length && sinPremio.length) {
+    lineas.push("");
+  }
+
+  sinPremio.forEach((resultado) => {
+    lineas.push(
+      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+        resultado.score,
+        canchaFecha?.par
+      )}`
+    );
+  });
+
+  return lineas.join("\n");
+};
     const lineas: string[] = [
-      "⚽️ La Changueada 🚩",
-      "",
-      new Date(
-        idFechaGuardada
-      ).toLocaleDateString("es-AR"),
-    ];
+  "⚽️ La Changueada 🚩",
+  "🏆 Resultados",
+  "",
+  new Date(
+    idFechaGuardada
+  ).toLocaleDateString("es-AR"),
+];
 
     if (vuelta) {
       lineas.push(vuelta);
@@ -560,7 +583,7 @@ setFechaGuardada(true);
     if (canchaFecha) {
       lineas.push(
         "",
-        `⛳ ${canchaFecha.nombre} Par ${canchaFecha.par}`
+        `⛳ ${canchaFecha.nombre} (Par ${canchaFecha.par})`
       );
     }
 
@@ -570,8 +593,6 @@ setFechaGuardada(true);
         formato === "categorias"
           ? "🅰️ CATEGORÍA A"
           : "🙎🏻‍♂️ GENERAL",
-        "",
-        "🏆 Resultados",
         "",
         crearTextoResultados(categoriaUno)
       );
@@ -583,8 +604,6 @@ setFechaGuardada(true);
         formato === "categorias"
           ? "🅱️ CATEGORÍA B"
           : "🧓🏻 VIEJITOS",
-        "",
-        "🏆 Resultados",
         "",
         crearTextoResultados(categoriaDos)
       );
@@ -797,7 +816,7 @@ setFechaGuardada(true);
 
       <button
   onClick={() => router.push("/scores")}
-  className="w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+  className="mt-3 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
 >
   ✏️ Modificar scores
 </button>
