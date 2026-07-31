@@ -1,11 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
 export default function ElegirFormatoFecha() {
   const router = useRouter();
+const [confirmandoReset, setConfirmandoReset] =
+  useState(false);
+
+function resetearFecha() {
+  localStorage.removeItem("laChangueadaFechaActual");
+  localStorage.removeItem("laChangueadaScores");
+  localStorage.removeItem("laChangueadaFechaYaGuardada");
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaCategoriasBorrador"
+  );
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaCategoriasBorradorBackup"
+  );
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaBorrador"
+  );
+  localStorage.removeItem(
+    "laChangueadaNuevaFechaBorradorBackup"
+  );
+
+  router.push("/");
+}
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -57,6 +80,41 @@ export default function ElegirFormatoFecha() {
     </button>
   </div>
 </div>
+
+{!confirmandoReset ? (
+  <button
+    type="button"
+    onClick={() => setConfirmandoReset(true)}
+    className="mt-10 w-full rounded-2xl bg-red-700 p-5 text-2xl font-bold text-white"
+  >
+    🗑️ Resetear fecha actual
+  </button>
+) : (
+  <div className="mt-10 rounded-2xl bg-white p-5 text-center text-green-900">
+    <p className="text-xl font-bold">
+      ¿Querés borrar la fecha en curso?
+    </p>
+
+    <div className="mt-5 flex gap-3">
+      <button
+        type="button"
+        onClick={resetearFecha}
+        className="flex-1 rounded-xl bg-red-700 p-4 text-xl font-bold text-white"
+      >
+        ✅ Sí
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setConfirmandoReset(false)}
+        className="flex-1 rounded-xl bg-gray-500 p-4 text-xl font-bold text-white"
+      >
+        ❌ No
+      </button>
+    </div>
+  </div>
+)}
+
     </main>
   );
 }
