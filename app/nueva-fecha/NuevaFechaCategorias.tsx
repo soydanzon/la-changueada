@@ -266,6 +266,8 @@ setBusqueda("");
     canchaId,
     jugadoresSeleccionados,
     pagosPendientes,
+    categoriaA,
+    categoriaB,
     busqueda,
   ]);
 
