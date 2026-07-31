@@ -290,6 +290,19 @@ export default function PreviaCategorias() {
     }
   }, []);
 
+useEffect(() => {
+  if (!fechaActual) return;
+
+  localStorage.setItem(
+    "laChangueadaFechaActual",
+    JSON.stringify({
+      ...fechaActual,
+      categoriaA,
+      categoriaB,
+    })
+  );
+}, [fechaActual, categoriaA, categoriaB]);
+
   const jugadoresSeleccionados = useMemo<
     JugadorConHandicap[]
   >(() => {
@@ -619,15 +632,17 @@ export default function PreviaCategorias() {
     }
 
     localStorage.setItem(
-      "laChangueadaNuevaFechaCategoriasBorrador",
-      JSON.stringify({
-        canchaId: fechaActual.cancha,
-        jugadores: fechaActual.jugadores,
-        pagosPendientes:
-          fechaActual.pagosPendientes ?? [],
-        busqueda: "",
-      })
-    );
+  "laChangueadaNuevaFechaCategoriasBorrador",
+  JSON.stringify({
+    canchaId: fechaActual.cancha,
+    jugadores: fechaActual.jugadores,
+    pagosPendientes:
+      fechaActual.pagosPendientes ?? [],
+    categoriaA,
+    categoriaB,
+    busqueda: "",
+  })
+);
 
     router.push(
       "/nueva-fecha/categorias"

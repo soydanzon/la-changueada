@@ -179,10 +179,6 @@ export default function Scores() {
         })
       );
 
-      localStorage.removeItem(
-        "laChangueadaScores"
-      );
-
       router.push("/nueva-fecha/categorias");
       return;
     }
@@ -197,10 +193,6 @@ export default function Scores() {
           fechaActual.pagosPendientes ?? [],
         busqueda: "",
       })
-    );
-
-    localStorage.removeItem(
-      "laChangueadaScores"
     );
 
     router.push("/nueva-fecha/edad");

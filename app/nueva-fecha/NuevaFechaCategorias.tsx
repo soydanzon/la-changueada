@@ -29,6 +29,8 @@ type BorradorNuevaFechaCategorias = {
   canchaId?: number;
   jugadores?: number[];
   pagosPendientes?: number[];
+  categoriaA?: number[];
+  categoriaB?: number[];
   busqueda?: string;
 };
 
@@ -103,6 +105,12 @@ export default function NuevaFechaCategorias() {
   const [pagosPendientes, setPagosPendientes] =
     useState<number[]>([]);
 
+  const [categoriaA, setCategoriaA] =
+  useState<number[]>([]);
+
+const [categoriaB, setCategoriaB] =
+  useState<number[]>([]);  
+
   const [jugadorParaScroll, setJugadorParaScroll] =
     useState<number | null>(null);
 
@@ -114,7 +122,6 @@ export default function NuevaFechaCategorias() {
     canchas[0];
 
   useEffect(() => {
-    localStorage.removeItem("laChangueadaScores");
 
     localStorage.removeItem(
       "laChangueadaFechaYaGuardada"
@@ -178,8 +185,18 @@ export default function NuevaFechaCategorias() {
       );
 
       setPagosPendientes(
-        borrador.pagosPendientes ?? []
-      );
+  borrador.pagosPendientes ?? []
+);
+
+setCategoriaA(
+  borrador.categoriaA ?? []
+);
+
+setCategoriaB(
+  borrador.categoriaB ?? []
+);
+
+setBusqueda("");
 
       setBusqueda("");
 
@@ -219,13 +236,14 @@ export default function NuevaFechaCategorias() {
   useEffect(() => {
     if (!borradorCargado) return;
 
-    const borrador: BorradorNuevaFechaCategorias =
-      {
-        canchaId,
-        jugadores: jugadoresSeleccionados,
-        pagosPendientes,
-        busqueda,
-      };
+    const borrador: BorradorNuevaFechaCategorias = {
+  canchaId,
+  jugadores: jugadoresSeleccionados,
+  pagosPendientes,
+  categoriaA,
+  categoriaB,
+  busqueda,
+};
 
     const borradorAnterior =
       localStorage.getItem(
@@ -325,11 +343,13 @@ export default function NuevaFechaCategorias() {
     localStorage.setItem(
       "laChangueadaNuevaFechaCategoriasBorrador",
       JSON.stringify({
-        canchaId,
-        jugadores: jugadoresSeleccionados,
-        pagosPendientes,
-        busqueda,
-      })
+  canchaId,
+  jugadores: jugadoresSeleccionados,
+  pagosPendientes,
+  categoriaA,
+  categoriaB,
+  busqueda,
+})
     );
 
     localStorage.setItem(
@@ -354,16 +374,21 @@ export default function NuevaFechaCategorias() {
       );
 
     localStorage.setItem(
-      "laChangueadaFechaActual",
-      JSON.stringify({
-        formato: "categorias",
-        jugadores: jugadoresSeleccionados,
-        categoriaA: [],
-        categoriaB: [],
-        pagosPendientes: pendientesAnotados,
-        cancha: cancha.id,
-      })
-    );
+  "laChangueadaFechaActual",
+  JSON.stringify({
+    formato: "categorias",
+    jugadores: jugadoresSeleccionados,
+    categoriaA: categoriaA.filter((id) =>
+  jugadoresSeleccionados.includes(id)
+),
+
+categoriaB: categoriaB.filter((id) =>
+  jugadoresSeleccionados.includes(id)
+),
+    pagosPendientes: pendientesAnotados,
+    cancha: cancha.id,
+  })
+);
 
     router.push("/previa/categorias");
   }
