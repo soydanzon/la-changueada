@@ -58,8 +58,10 @@ async function compartirHandicap(
       `${formatearScore(fecha.score)}`.padStart(5);
 
     lineas.push(
-      `${izquierda}${derecha}  ${fecha.cuenta ? "✅" : "❌"}`
-    );
+  `${fecha.fecha.padEnd(12)} ${String(
+    fecha.score === 0 ? "Par" : formatearHandicap(fecha.score)
+  ).padStart(4)} ${fecha.cuenta ? "✅" : "❌"}`
+);
   });
 
   const texto =
@@ -163,10 +165,6 @@ const mejoresTarjetas = Math.min(
   <div className="flex flex-1 items-center gap-4">
     <span className="w-24 shrink-0 font-medium">
       {fecha.fecha}
-    </span>
-
-    <span className="w-24 shrink-0 text-sm text-gray-600">
-      {fecha.vuelta ?? ""}
     </span>
 
     <span className="ml-auto font-bold">
