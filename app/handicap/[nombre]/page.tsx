@@ -17,11 +17,72 @@ function formatearNumero(valor: number) {
 }
 
 function formatearHandicap(valor: number) {
-  if (valor === 0) return "E";
+  if (valor === 0) return "0";
 
   const numero = formatearNumero(valor);
 
   return valor > 0 ? `+${numero}` : numero;
+}
+
+function formatearScore(valor: number) {
+  if (valor === 0) return "Par";
+
+  const numero = formatearNumero(valor);
+
+  return valor > 0 ? `+${numero}` : numero;
+}
+
+async function compartirHandicap(
+  jugador: HandicapJugador,
+  nombre: string,
+  mejoresTarjetas: number,
+  ultimasTarjetas: number
+) {
+  const lineas: string[] = [
+    "⚽️ La Changueada 🚩",
+    "",
+    `👤 ${nombre}`,
+    `🧢 Handicap: ${formatearHandicap(jugador.handicap)}`,
+    "",
+    `Mejores ${mejoresTarjetas} de las últimas ${ultimasTarjetas} tarjetas`,
+    "",
+  ];
+
+  [...jugador.fechas]
+  .reverse()
+  .forEach((fecha) => {
+    const izquierda =
+      `${fecha.fecha}  ${fecha.vuelta ?? ""}`.padEnd(34);
+
+    const derecha =
+      `${formatearScore(fecha.score)}`.padStart(5);
+
+    lineas.push(
+      `${izquierda}${derecha}  ${fecha.cuenta ? "✅" : "❌"}`
+    );
+  });
+
+  const texto =
+  "```\n" +
+  lineas.join("\n") +
+  "\n```";
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Hándicap",
+        text: texto,
+      });
+
+      return;
+    }
+
+    await navigator.clipboard.writeText(texto);
+
+    alert(
+      "El hándicap fue copiado. Ya podés pegarlo en WhatsApp."
+    );
+  } catch {}
 }
 
 export default function DetalleHandicap() {
@@ -99,27 +160,42 @@ const mejoresTarjetas = Math.min(
             }`}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <span className="font-medium">
-                  {fecha.fecha}
-                </span>
+  <div className="flex flex-1 items-center gap-4">
+    <span className="w-24 shrink-0 font-medium">
+      {fecha.fecha}
+    </span>
 
-                <span>
-                  ⛳ {fecha.cancha}
-                </span>
+    <span className="min-w-[120px] text-sm text-gray-600">
+      {fecha.vuelta ?? ""}
+    </span>
 
-                <span className="font-bold">
-                  {fecha.golpes} ({formatearHandicap(fecha.score)})
-                </span>
-              </div>
+    <span className="ml-auto font-bold">
+      {fecha.golpes} ({formatearScore(fecha.score)})
+    </span>
+  </div>
 
-              <span className="text-2xl">
-                {fecha.cuenta ? "✅" : "❌"}
-              </span>
-            </div>
+  <span className="ml-4 text-2xl">
+    {fecha.cuenta ? "✅" : "❌"}
+  </span>
+</div>
           </div>
         ))}
       </div>
+    <button
+  type="button"
+  onClick={() =>
+    compartirHandicap(
+      jugador,
+      nombre,
+      mejoresTarjetas,
+      ultimasTarjetas
+    )
+  }
+  className="mt-6 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+>
+  📤 Compartir handicap
+</button>
+    
     </main>
   );
 }

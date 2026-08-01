@@ -85,6 +85,7 @@ export type EstadisticaCancha = {
 export type FechaHandicap = {
   fecha: string;
   cancha: string;
+  vuelta?: string;
   score: number;
   golpes: number;
   cuenta: boolean;
@@ -519,7 +520,7 @@ export function calcularHandicap(
   const historialOrdenado = [
     ...historial,
   ].sort((a, b) => a.id - b.id);
-
+  
   historialOrdenado.forEach((fecha) => {
   if (!fecha.cancha) {
     return;
@@ -573,6 +574,31 @@ export function calcularHandicap(
       const fechasJugador =
         mapa.get(nombre) ?? [];
 
+        const cantidad = historialOrdenado.filter(
+  (f) => f.fecha === fecha.fecha && f.id <= fecha.id
+).length;
+
+let vuelta: string | undefined;
+
+switch (cantidad) {
+  case 1:
+    vuelta = "Primera vuelta";
+    break;
+  case 2:
+    vuelta = "Segunda vuelta";
+    break;
+  case 3:
+    vuelta = "Tercera vuelta";
+    break;
+  case 4:
+    vuelta = "Cuarta vuelta";
+    break;
+  default:
+    if (cantidad > 4) {
+      vuelta = `${cantidad}ª vuelta`;
+    }
+}
+
       fechasJugador.push({
         fecha: fecha.fecha,
 
@@ -580,6 +606,8 @@ export function calcularHandicap(
           obtenerNombreCanchaActual(
             cancha
           ),
+
+          vuelta,
 
         score:
           resultado.score - cancha.par,
