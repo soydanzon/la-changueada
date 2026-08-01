@@ -43,8 +43,8 @@ function resetearFecha() {
         </div>
       </div>
 
-      <div className="space-y-10">
-  <div className="rounded-2xl bg-white p-3 mt-12">
+      <div className="space-y-5">
+  <div className="rounded-2xl bg-white p-3 mt-8">
     <button
       type="button"
       onClick={() =>
