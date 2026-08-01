@@ -165,7 +165,7 @@ const mejoresTarjetas = Math.min(
       {fecha.fecha}
     </span>
 
-    <span className="min-w-[120px] text-sm text-gray-600">
+    <span className="w-28 shrink-0 text-sm text-gray-600">
       {fecha.vuelta ?? ""}
     </span>
 
