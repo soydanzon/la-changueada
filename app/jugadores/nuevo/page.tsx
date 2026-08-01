@@ -118,8 +118,6 @@ if (origen?.includes("/categorias")) {
 }
 
 volverAlOrigen();
-
-    volverAlOrigen();
   }
 
   return (

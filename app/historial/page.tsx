@@ -7,6 +7,7 @@ import {
   obtenerCanchasGuardadas,
   type Cancha,
 } from "../datos/canchas";
+import { obtenerTablaPremios } from "../premios/tablaPremios";
 
 type ResultadoGuardado = {
   jugador: {
@@ -106,6 +107,20 @@ function premiados(
   return resultados.filter(
     (resultado) => resultado.premio > 0
   );
+}
+
+function obtenerResumenPremios(
+  cantidadJugadores: number
+) {
+  const fila = obtenerTablaPremios().find(
+    (f) => f.jugadores === cantidadJugadores
+  );
+
+  return fila
+    ? fila.premios
+        .map((premio) => premio / 1000)
+        .join(" - ")
+    : "";
 }
 
 function obtenerResultadosFecha(
@@ -321,22 +336,54 @@ export default function Historial() {
     const parFecha = fecha.cancha?.par;
 
     function crearTextoResultados(
-      resultados: ResultadoGuardado[]
-    ) {
-      return resultados
-        .map(
-          (resultado) =>
-            `${medalla(
-              resultado.puesto
-            )} ${
-              resultado.jugador.nombre
-            } - ${formatearScore(
-              resultado.score,
-              parFecha
-            )}`
-        )
-        .join("\n");
-    }
+  resultados: ResultadoGuardado[]
+) {
+  const conPremio = resultados.filter(
+    (r) => r.premio > 0
+  );
+
+  const sinPremio = resultados.filter(
+    (r) => r.premio === 0
+  );
+
+  const lineas: string[] = [];
+
+  conPremio.forEach((resultado) => {
+    lineas.push(
+      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+        resultado.score,
+        parFecha
+      )}`
+    );
+
+    lineas.push(
+      `   ${formatearPesos(resultado.premio)}`
+    );
+  });
+
+  if (conPremio.length && sinPremio.length) {
+    lineas.push("");
+  }
+
+  sinPremio.forEach((resultado) => {
+    lineas.push(
+      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+        resultado.score,
+        parFecha
+      )}`
+    );
+  });
+
+  lineas.push("");
+  lineas.push(`${resultados.length} jugadores`);
+  lineas.push(
+    `Premios: ${obtenerResumenPremios(
+      resultados.length
+    )}`
+  );
+
+  return lineas.join("\n");
+}
 
     const vuelta = nombreVuelta(
       fecha,
@@ -565,14 +612,7 @@ export default function Historial() {
 
                             <p className="text-lg font-bold">
                               {tituloUno}
-                            </p>
-
-                            <p>
-                              Jugadores:{" "}
-                              {
-                                resultadosUno.length
-                              }
-                            </p>
+                            </p>                       
 
                             <div className="mt-2 space-y-1">
                               {premiados(
@@ -627,14 +667,14 @@ export default function Historial() {
                               )}
                             </div>
 
-                            <p className="mt-3 font-bold">
-                              Total:{" "}
-                              {formatearPesos(
-                                totalPremios(
-                                  resultadosUno
-                                )
-                              )}
-                            </p>
+                            <p className="mt-3 text-sm text-gray-600">
+  {resultadosUno.length} jugadores
+  <br />
+  Premios:{" "}
+  {obtenerResumenPremios(
+    resultadosUno.length
+  )}
+</p>
 
                             {resultadosDos.length >
                               0 && (
@@ -643,13 +683,6 @@ export default function Historial() {
 
                                 <p className="text-lg font-bold">
                                   {tituloDos}
-                                </p>
-
-                                <p>
-                                  Jugadores:{" "}
-                                  {
-                                    resultadosDos.length
-                                  }
                                 </p>
 
                                 <div className="mt-2 space-y-1">
@@ -707,14 +740,14 @@ export default function Historial() {
                                   )}
                                 </div>
 
-                                <p className="mt-3 font-bold">
-                                  Total:{" "}
-                                  {formatearPesos(
-                                    totalPremios(
-                                      resultadosDos
-                                    )
-                                  )}
-                                </p>
+                                <p className="mt-3 text-sm text-gray-600">
+  {resultadosDos.length} jugadores
+  <br />
+  Premios:{" "}
+  {obtenerResumenPremios(
+    resultadosDos.length
+  )}
+</p>
                               </>
                             )}
 

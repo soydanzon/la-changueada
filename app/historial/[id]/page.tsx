@@ -8,6 +8,7 @@ import {
   obtenerCanchasGuardadas,
   type Cancha,
 } from "../../datos/canchas";
+import { obtenerTablaPremios } from "../../premios/tablaPremios";
 
 type Resultado = {
   jugador: {
@@ -97,6 +98,20 @@ function obtenerResultadosFecha(
     resultadosUno: fecha.general ?? [],
     resultadosDos: fecha.viejitos ?? [],
   };
+}
+
+function obtenerResumenPremios(
+  cantidadJugadores: number
+) {
+  const fila = obtenerTablaPremios().find(
+    (f) => f.jugadores === cantidadJugadores
+  );
+
+  return fila
+    ? fila.premios
+        .map((premio) => premio / 1000)
+        .join(" - ")
+    : "";
 }
 
 function TablaResultados({
@@ -208,6 +223,15 @@ function TablaResultados({
           )}
         </div>
       )}
+    <div className="mt-4 text-sm text-gray-600">
+        <div>{resultados.length} jugadores</div>
+        <div>
+          Premios:{" "}
+          {obtenerResumenPremios(
+            resultados.length
+          )}
+        </div>
+      </div>
     </div>
   );
 }

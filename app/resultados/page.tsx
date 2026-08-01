@@ -132,6 +132,21 @@ function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
 
+function obtenerResumenPremios(resultados: Resultado[]) {
+  const fila = obtenerTablaPremios().find(
+    (f) => f.jugadores === resultados.length
+  );
+
+  return {
+    jugadores: resultados.length,
+    premios: fila
+      ? fila.premios
+          .map((premio) => premio / 1000)
+          .join(" - ")
+      : "",
+  };
+}
+
 function formatearScore(
   score: number,
   par?: number
@@ -681,6 +696,12 @@ setFechaGuardada(true);
       ? "Categoría B"
       : "🧓🏻 Viejitos";
 
+const resumenCategoriaUno =
+  obtenerResumenPremios(categoriaUno);
+
+const resumenCategoriaDos =
+  obtenerResumenPremios(categoriaDos);
+
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="mb-8 flex items-center justify-between">
@@ -736,6 +757,12 @@ setFechaGuardada(true);
             </strong>
           </div>
         ))}
+        <div className="mt-3 text-sm text-gray-600">
+  <div>{resumenCategoriaUno.jugadores} jugadores</div>
+  <div>
+    Premios: {resumenCategoriaUno.premios}
+  </div>
+</div>
       </div>
 
       {categoriaDos.length > 0 && (
@@ -767,6 +794,12 @@ setFechaGuardada(true);
               </strong>
             </div>
           ))}
+          <div className="mt-3 text-sm text-gray-600">
+  <div>{resumenCategoriaDos.jugadores} jugadores</div>
+  <div>
+    Premios: {resumenCategoriaDos.premios}
+  </div>
+</div>
         </div>
       )}
 

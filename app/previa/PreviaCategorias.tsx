@@ -293,12 +293,27 @@ export default function PreviaCategorias() {
 useEffect(() => {
   if (!fechaActual) return;
 
+  const fechaActualizada = {
+    ...fechaActual,
+    categoriaA,
+    categoriaB,
+  };
+
   localStorage.setItem(
     "laChangueadaFechaActual",
+    JSON.stringify(fechaActualizada)
+  );
+
+  localStorage.setItem(
+    "laChangueadaNuevaFechaCategoriasBorrador",
     JSON.stringify({
-      ...fechaActual,
+      canchaId: fechaActual.cancha,
+      jugadores: fechaActual.jugadores,
+      pagosPendientes:
+        fechaActual.pagosPendientes ?? [],
       categoriaA,
       categoriaB,
+      busqueda: "",
     })
   );
 }, [fechaActual, categoriaA, categoriaB]);

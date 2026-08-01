@@ -209,26 +209,28 @@ setBusqueda("");
     }
 
     const jugadorRecienCreadoId = Number(
-      localStorage.getItem(
-        "laChangueadaJugadorRecienCreado"
-      )
+  localStorage.getItem(
+    "laChangueadaJugadorRecienCreado"
+  )
+);
+
+if (jugadorRecienCreadoId) {
+  setTimeout(() => {
+    setJugadoresSeleccionados((actual) =>
+      actual.includes(jugadorRecienCreadoId)
+        ? actual
+        : [...actual, jugadorRecienCreadoId]
     );
 
-    if (jugadorRecienCreadoId) {
-      setJugadoresSeleccionados((actual) =>
-        actual.includes(jugadorRecienCreadoId)
-          ? actual
-          : [...actual, jugadorRecienCreadoId]
-      );
+    setJugadorParaScroll(
+      jugadorRecienCreadoId
+    );
 
-      setJugadorParaScroll(
-        jugadorRecienCreadoId
-      );
-
-      localStorage.removeItem(
-        "laChangueadaJugadorRecienCreado"
-      );
-    }
+    localStorage.removeItem(
+      "laChangueadaJugadorRecienCreado"
+    );
+  }, 0);
+}
 
     setBorradorCargado(true);
   }, []);
