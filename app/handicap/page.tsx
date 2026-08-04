@@ -54,7 +54,6 @@ export default function Handicap() {
   const fecha = new Date().toLocaleDateString("es-AR");
 
   const lineas = [
-  "```",
   "⚽️ La Changueada 🚩",
   "",
   "🧢 Listado de Handicap",
