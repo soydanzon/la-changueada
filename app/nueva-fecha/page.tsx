@@ -51,7 +51,7 @@ export default function ElegirFormatoFecha() {
       </div>
 
       <div className="flex flex-1 flex-col">
-        <div className="my-auto space-y-8 py-10">
+        <div className="flex-1 flex flex-col justify-center space-y-8 -mt-12">
           <div className="rounded-2xl bg-white p-3">
             <button
               type="button"
@@ -60,7 +60,7 @@ export default function ElegirFormatoFecha() {
                   "/nueva-fecha/categorias"
                 )
               }
-              className="min-h-36 w-full rounded-2xl bg-green-600 p-8 text-left text-white"
+              className="min-h-36 w-full rounded-2xl bg-green-600 px-5 py-14 text-left text-white"
             >
               <p className="text-2xl font-black">
                 🅰️ 🅱️ Por categorías
@@ -78,7 +78,7 @@ export default function ElegirFormatoFecha() {
               onClick={() =>
                 router.push("/nueva-fecha/edad")
               }
-              className="min-h-36 w-full rounded-2xl bg-blue-600 p-8 text-left text-white"
+              className="min-h-36 w-full rounded-2xl bg-blue-600 px-5 py-14 text-left text-white"
             >
               <p className="text-2xl font-black">
                 🙎🏻‍♂️ 🧓🏻 Por edad
