@@ -98,7 +98,6 @@ export default function NuevaFecha() {
     canchas.find((c) => c.id === canchaId) ?? canchas[0];
 
   useEffect(() => {
-    localStorage.removeItem("laChangueadaScores");
     localStorage.removeItem(
       "laChangueadaFechaYaGuardada"
     );
@@ -489,19 +488,17 @@ const puedeContinuar = totalJugadores >0;
 
               {premiosGeneral.length > 0 ? (
                 <div className="mt-2 space-y-1">
-                  {premiosGeneral.map(
-                    (premio, indice) => (
-                      <p key={`general-${indice}`}>
-                        {indice + 1}.º —{" "}
-                        <strong>
-                          $
-                          {premio.toLocaleString(
-                            "es-AR"
-                          )}
-                        </strong>
-                      </p>
-                    )
-                  )}
+                  {premiosGeneral.map((premio, indice) =>
+  premio > 0 ? (
+    <p key={`general-${indice}`}>
+      {indice + 1}.º —{" "}
+      <strong>
+        $
+        {premio.toLocaleString("es-AR")}
+      </strong>
+    </p>
+  ) : null
+)}
                 </div>
               ) : (
                 <p className="mt-2 text-gray-500">
@@ -520,19 +517,17 @@ const puedeContinuar = totalJugadores >0;
 
     {premiosViejitos.length > 0 ? (
       <div className="mt-2 space-y-1">
-        {premiosViejitos.map(
-          (premio, indice) => (
-            <p key={`viejitos-${indice}`}>
-              {indice + 1}.º —{" "}
-              <strong>
-                $
-                {premio.toLocaleString(
-                  "es-AR"
-                )}
-              </strong>
-            </p>
-          )
-        )}
+        {premiosViejitos.map((premio, indice) =>
+  premio > 0 ? (
+    <p key={`viejitos-${indice}`}>
+      {indice + 1}.º —{" "}
+      <strong>
+        $
+        {premio.toLocaleString("es-AR")}
+      </strong>
+    </p>
+  ) : null
+)}
       </div>
     ) : (
       <p className="mt-2 text-gray-500">
