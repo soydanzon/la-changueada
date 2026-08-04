@@ -240,13 +240,54 @@ useEffect(() => {
 ]);
 
   function cambiarGeneral(id: number) {
-  setGeneral((actual) =>
-    actual.includes(id)
-      ? actual.filter(
-          (jugadorId) => jugadorId !== id
-        )
-      : [...actual, id]
-  );
+  if (general.includes(id)) {
+    setGeneral((actual) =>
+      actual.filter(
+        (jugadorId) => jugadorId !== id
+      )
+    );
+
+    return;
+  }
+
+  const nuevoGeneral = [...general, id];
+
+  if (nuevoGeneral.length === 14) {
+    const pasarACategorias = window.confirm(
+      "Ya hay 14 jugadores en General.\n\n¿Querés pasar todos los jugadores anotados a una nueva fecha por categorías A y B?"
+    );
+
+    if (pasarACategorias) {
+      const jugadoresMigrados = Array.from(
+        new Set([
+          ...nuevoGeneral,
+          ...viejitos,
+        ])
+      );
+
+      const pendientesMigrados =
+        pagosPendientes.filter((jugadorId) =>
+          jugadoresMigrados.includes(jugadorId)
+        );
+
+      localStorage.setItem(
+        "laChangueadaNuevaFechaCategoriasBorrador",
+        JSON.stringify({
+          canchaId,
+          jugadores: jugadoresMigrados,
+          pagosPendientes: pendientesMigrados,
+          categoriaA: [],
+          categoriaB: [],
+          busqueda: "",
+        })
+      );
+
+      router.push("/nueva-fecha/categorias");
+      return;
+    }
+  }
+
+  setGeneral(nuevoGeneral);
 }
 
 useEffect(() => {
