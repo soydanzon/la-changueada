@@ -85,7 +85,7 @@ function resetearFecha() {
   <button
     type="button"
     onClick={() => setConfirmandoReset(true)}
-    className="mt-60 w-full rounded-2xl bg-green-700 py-3 text-xl font-semibold text-white"
+    className="mt-70 w-full rounded-2xl bg-green-700 py-3 text-xl font-semibold text-white"
   >
     🗑️ Resetear fecha actual
   </button>
