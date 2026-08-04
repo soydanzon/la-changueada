@@ -52,7 +52,7 @@ export default function ElegirFormatoFecha() {
 
       <div className="flex flex-1 flex-col">
         <div className="flex-1 flex flex-col justify-center space-y-8 -mt-12">
-          <div className="rounded-2xl bg-white p-3">
+          <div className="rounded-2xl bg-white p-2">
             <button
               type="button"
               onClick={() =>
@@ -72,7 +72,7 @@ export default function ElegirFormatoFecha() {
             </button>
           </div>
 
-          <div className="rounded-2xl bg-white p-3">
+          <div className="rounded-2xl bg-white p-2">
             <button
               type="button"
               onClick={() =>
