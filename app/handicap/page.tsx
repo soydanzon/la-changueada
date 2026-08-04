@@ -54,15 +54,15 @@ export default function Handicap() {
   const fecha = new Date().toLocaleDateString("es-AR");
 
   const lineas = [
-    "⚽️ La Changueada 🚩",
-    "",
-    "Listado de Handicap",
-    `Actualizado al ${fecha}`,
-    "",
-    "```",
-    `${"Jugador".padEnd(24)}${"Hcp.".padStart(5)}`,
-    "",
-  ];
+  "```",
+  "⚽️ La Changueada 🚩",
+  "",
+  "🧢 Listado de Handicap",
+  `Actualizado al ${fecha}`,
+  "",
+  `${"👤 Jugador".padEnd(24)}${"Hcp".padStart(5)}`,
+  "",
+];
 
   handicaps.forEach((jugador, index) => {
     const nombreCompleto = `${index + 1}. ${jugador.nombre}`;

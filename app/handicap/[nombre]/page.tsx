@@ -65,7 +65,7 @@ async function compartirHandicap(
   });
 
   const texto =
-  "```\n" +
+  "```" +
   lineas.join("\n") +
   "\n```";
 
