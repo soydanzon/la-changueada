@@ -28,7 +28,7 @@ function formatearNumero(valor?: number) {
 
 function formatearRespectoPar(valor: number) {
   if (valor === 0) {
-    return "E";
+    return "Par";
   }
 
   const numero = formatearNumero(valor);
