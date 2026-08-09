@@ -34,8 +34,27 @@ export default function ElegirFormatoFecha() {
       "laChangueadaNuevaFechaBorradorBackup"
     );
 
-    router.push("/");
+        router.push("/");
   }
+
+function abrirNuevaFecha(ruta: string) {
+  const fechaAnteriorGuardada =
+    localStorage.getItem(
+      "laChangueadaFechaYaGuardada"
+    ) === "true";
+
+  if (fechaAnteriorGuardada) {
+    localStorage.removeItem(
+      "laChangueadaScores"
+    );
+
+    localStorage.removeItem(
+      "laChangueadaFechaYaGuardada"
+    );
+  }
+
+  router.push(ruta);
+}  
 
   return (
     <main className="flex min-h-screen flex-col bg-green-900 p-6 text-white">
@@ -56,10 +75,10 @@ export default function ElegirFormatoFecha() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  "/nueva-fecha/categorias"
-                )
-              }
+  abrirNuevaFecha(
+    "/nueva-fecha/categorias"
+  )
+}
               className="min-h-36 w-full rounded-2xl bg-green-600 px-5 py-14 text-left text-white"
             >
               <p className="text-2xl font-black">
@@ -76,8 +95,8 @@ export default function ElegirFormatoFecha() {
             <button
               type="button"
               onClick={() =>
-                router.push("/nueva-fecha/edad")
-              }
+  abrirNuevaFecha("/nueva-fecha/edad")
+}
               className="min-h-36 w-full rounded-2xl bg-blue-600 px-5 py-14 text-left text-white"
             >
               <p className="text-2xl font-black">
