@@ -15,32 +15,10 @@ export default function NuevoJugador() {
   const [mensaje, setMensaje] = useState("");
   const router = useRouter();
 
-  function volverAlOrigen() {
+ function volverAlOrigen() {
   const origen = localStorage.getItem(
     "laChangueadaOrigenNuevoJugador"
   );
-
-  const vieneDeCategorias = localStorage.getItem(
-    "laChangueadaNuevaFechaCategoriasBorrador"
-  );
-
-  const vieneDeEdad = localStorage.getItem(
-    "laChangueadaNuevaFechaBorrador"
-  );
-
-  localStorage.removeItem(
-    "laChangueadaOrigenNuevoJugador"
-  );
-
-  if (vieneDeCategorias) {
-    router.push("/nueva-fecha/categorias");
-    return;
-  }
-
-  if (vieneDeEdad) {
-    router.push("/nueva-fecha/edad");
-    return;
-  }
 
   if (origen) {
     const rutaCorrecta = origen.startsWith("/")
@@ -106,7 +84,10 @@ const origen = localStorage.getItem(
   "laChangueadaOrigenNuevoJugador"
 );
 
-if (origen?.includes("/categorias")) {
+if (
+  origen?.includes("/categorias") ||
+  origen?.includes("/edad")
+) {
   localStorage.setItem(
     "laChangueadaJugadorRecienCreado",
     String(nuevoJugador.id)
