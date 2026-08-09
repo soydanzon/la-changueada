@@ -118,6 +118,7 @@ function obtenerResumenPremios(
 
   return fila
     ? fila.premios
+        .filter((premio) => premio > 0)
         .map((premio) => premio / 1000)
         .join(" - ")
     : "";
@@ -618,9 +619,9 @@ export default function Historial() {
                               {premiados(
                                 resultadosUno
                               ).map(
-                                (resultado) => (
+                                (resultado, indice) => (
                                   <div
-                                    key={`${fecha.id}-${claveUno}-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                    key={`${fecha.id}-${claveUno}-${indice}`}
                                     className="flex justify-between gap-4"
                                   >
                                     <span>
@@ -690,10 +691,10 @@ export default function Historial() {
                                     resultadosDos
                                   ).map(
                                     (
-                                      resultado
+                                      resultado, indice
                                     ) => (
                                       <div
-                                        key={`${fecha.id}-${claveDos}-${resultado.jugador.nombre}-${resultado.puesto}`}
+                                        key={`${fecha.id}-${claveDos}-${indice}`}
                                         className="flex justify-between gap-4"
                                       >
                                         <span>
