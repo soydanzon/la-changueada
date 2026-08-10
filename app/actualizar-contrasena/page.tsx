@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useState,
+} from "react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+
 import { createClient } from "../lib/supabase/client";
 
 export default function ActualizarContrasena() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [password, setPassword] =
     useState("");
@@ -19,8 +27,57 @@ export default function ActualizarContrasena() {
   const [cargando, setCargando] =
     useState(false);
 
+  const [sesionLista, setSesionLista] =
+    useState(false);
+
+  useEffect(() => {
+    async function prepararSesion() {
+      const supabase = createClient();
+
+      const code =
+        searchParams.get("code");
+
+      if (code) {
+        const { error } =
+          await supabase.auth.exchangeCodeForSession(
+            code
+          );
+
+        if (error) {
+          setMensaje(
+            "⚠️ El enlace venció o ya fue utilizado. Pedí uno nuevo."
+          );
+          return;
+        }
+      }
+
+      const {
+        data: { session },
+      } =
+        await supabase.auth.getSession();
+
+      if (!session) {
+        setMensaje(
+          "⚠️ No hay una sesión válida. Pedí un nuevo mail de recuperación."
+        );
+        return;
+      }
+
+      setSesionLista(true);
+    }
+
+    prepararSesion();
+  }, [searchParams]);
+
   async function guardarContrasena() {
     setMensaje("");
+
+    if (!sesionLista) {
+      setMensaje(
+        "⚠️ Esperá a que se valide el enlace."
+      );
+      return;
+    }
 
     if (!password || !confirmacion) {
       setMensaje(
@@ -49,7 +106,7 @@ export default function ActualizarContrasena() {
 
     if (error) {
       setMensaje(
-        `Error: ${error.message}`
+        `⚠️ No se pudo guardar: ${error.message}`
       );
       return;
     }
@@ -60,7 +117,7 @@ export default function ActualizarContrasena() {
 
     window.setTimeout(() => {
       router.push("/login");
-    }, 1000);
+    }, 1200);
   }
 
   return (
@@ -90,7 +147,8 @@ export default function ActualizarContrasena() {
                 evento.target.value
               )
             }
-            className="w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
+            disabled={!sesionLista}
+            className="w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none disabled:bg-gray-100"
           />
 
           <input
@@ -102,7 +160,8 @@ export default function ActualizarContrasena() {
                 evento.target.value
               )
             }
-            className="mt-4 w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
+            disabled={!sesionLista}
+            className="mt-4 w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none disabled:bg-gray-100"
           />
 
           {mensaje && (
@@ -114,12 +173,17 @@ export default function ActualizarContrasena() {
           <button
             type="button"
             onClick={guardarContrasena}
-            disabled={cargando}
+            disabled={
+              cargando ||
+              !sesionLista
+            }
             className="mt-5 w-full rounded-xl bg-green-900 p-4 text-xl font-bold text-green-100 disabled:bg-gray-400"
           >
             {cargando
               ? "Guardando..."
-              : "Guardar contraseña"}
+              : sesionLista
+                ? "Guardar contraseña"
+                : "Validando enlace..."}
           </button>
         </div>
       </div>

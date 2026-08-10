@@ -34,7 +34,7 @@ export default function Login() {
 
     if (error) {
       setError(
-        "Email o contraseña incorrectos."
+        "⚠️  Email o contraseña incorrectos"
       );
       return;
     }
@@ -97,7 +97,7 @@ export default function Login() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-4">
+        <div className="rounded-2xl bg-green-700 p-4">
           <input
             type="email"
             placeholder="Email"
@@ -105,7 +105,7 @@ export default function Login() {
             onChange={(evento) =>
               setEmail(evento.target.value)
             }
-            className="w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
+            className="w-full bg-white rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
           />
 
           <input
@@ -117,11 +117,11 @@ export default function Login() {
                 evento.target.value
               )
             }
-            className="mt-4 w-full rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
+            className="mt-4 w-full bg-white rounded-xl border border-gray-300 p-4 text-lg text-black outline-none"
           />
 
           {error && (
-            <p className="mt-4 text-center font-bold text-red-600">
+            <p className="mt-4 text-center font-bold text-yellow-300">
               {error}
             </p>
           )}
@@ -151,7 +151,7 @@ export default function Login() {
             type="button"
             onClick={recuperarContrasena}
             disabled={cargando}
-            className="mt-4 w-full text-center font-bold text-green-900 underline underline-offset-4 disabled:text-gray-400"
+            className="mt-4 w-full text-center font-bold text-gray-200 underline underline-offset-4 disabled:text-gray-400"
           >
             Olvidé mi contraseña
           </button>
