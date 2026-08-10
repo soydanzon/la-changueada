@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
 import {
@@ -223,8 +226,10 @@ function TablaResultados({
           )}
         </div>
       )}
-    <div className="mt-4 text-sm text-gray-600">
+
+      <div className="mt-4 text-sm text-gray-600">
         <div>{resultados.length} jugadores</div>
+
         <div>
           Premios:{" "}
           {obtenerResumenPremios(
@@ -238,6 +243,7 @@ function TablaResultados({
 
 export default function DetalleFecha() {
   const params = useParams();
+  const router = useRouter();
 
   const [fecha, setFecha] =
     useState<FechaGuardada | null>(null);
@@ -305,6 +311,16 @@ export default function DetalleFecha() {
     return (
       canchaActual?.nombre ??
       fecha.cancha.nombre
+    );
+  }
+
+  function editarFecha() {
+    if (!fecha) {
+      return;
+    }
+
+    router.push(
+      `/historial/${fecha.id}/editar`
     );
   }
 
@@ -376,6 +392,13 @@ export default function DetalleFecha() {
         </section>
       )}
 
+      <button
+        type="button"
+        onClick={editarFecha}
+        className="mt-6 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+      >
+        ✏️ Editar fecha
+      </button>
     </main>
   );
 }
