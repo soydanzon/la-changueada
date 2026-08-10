@@ -97,19 +97,48 @@ export default function ActualizarContrasena() {
 
     const supabase = createClient();
 
-    const { error } =
-      await supabase.auth.updateUser({
+    try {
+  const resultado =
+    await Promise.race([
+      supabase.auth.updateUser({
         password,
-      });
+      }),
 
-    setCargando(false);
+      new Promise<never>(
+        (_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error("TIMEOUT")
+            );
+          }, 15000);
+        }
+      ),
+    ]);
 
-    if (error) {
-      setMensaje(
-        `⚠️ No se pudo guardar: ${error.message}`
-      );
-      return;
-    }
+  if (resultado.error) {
+    setMensaje(
+      `⚠️ No se pudo guardar: ${resultado.error.message}`
+    );
+    return;
+  }
+} catch (error) {
+  if (
+    error instanceof Error &&
+    error.message === "TIMEOUT"
+  ) {
+    setMensaje(
+      "⚠️ Supabase no respondió al guardar la contraseña."
+    );
+  } else {
+    setMensaje(
+      "⚠️ Ocurrió un error al guardar la contraseña."
+    );
+  }
+
+  return;
+} finally {
+  setCargando(false);
+}
 
     setMensaje(
       "✅ Contraseña guardada"
