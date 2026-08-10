@@ -209,75 +209,130 @@ export default function PreviaCategorias() {
         }
       }
 
-      const categoriasYaGuardadas =
-        fecha.categoriaA.length > 0 ||
-        fecha.categoriaB.length > 0;
+      const jugadoresSeleccionados =
+  jugadoresDisponibles
+    .filter((jugador) =>
+      fecha.jugadores.includes(
+        jugador.id
+      )
+    )
+    .map((jugador) => ({
+      ...jugador,
+      handicap:
+        mapaHandicaps.get(
+          jugador.nombre
+        ) ?? null,
+    }));
 
-      if (categoriasYaGuardadas) {
-        setCategoriaA(fecha.categoriaA);
-        setCategoriaB(fecha.categoriaB);
-      } else {
-        const jugadoresSeleccionados =
-          jugadoresDisponibles
-            .filter((jugador) =>
-              fecha.jugadores.includes(
-                jugador.id
-              )
-            )
-            .map((jugador) => ({
-              ...jugador,
-              handicap:
-                mapaHandicaps.get(
-                  jugador.nombre
-                ) ?? null,
-            }));
-
-        const jugadoresConHandicap =
-          jugadoresSeleccionados
-            .filter(
-              (
-                jugador
-              ): jugador is Jugador & {
-                handicap: number;
-              } =>
-                jugador.handicap !== null
-            )
-            .sort((a, b) => {
-              if (
-                a.handicap !== b.handicap
-              ) {
-                return (
-                  a.handicap - b.handicap
-                );
-              }
-
-              return a.nombre.localeCompare(
-                b.nombre,
-                "es",
-                {
-                  sensitivity: "base",
-                }
-              );
-            });
-
-        const cantidadCategoriaA =
-          Math.ceil(
-            jugadoresConHandicap.length /
-              2
-          );
-
-        setCategoriaA(
-          jugadoresConHandicap
-            .slice(0, cantidadCategoriaA)
-            .map((jugador) => jugador.id)
-        );
-
-        setCategoriaB(
-          jugadoresConHandicap
-            .slice(cantidadCategoriaA)
-            .map((jugador) => jugador.id)
-        );
+const jugadoresConHandicap =
+  jugadoresSeleccionados
+    .filter(
+      (
+        jugador
+      ): jugador is Jugador & {
+        handicap: number;
+      } =>
+        jugador.handicap !== null
+    )
+    .sort((a, b) => {
+      if (a.handicap !== b.handicap) {
+        return a.handicap - b.handicap;
       }
+
+      return a.nombre.localeCompare(
+        b.nombre,
+        "es",
+        {
+          sensitivity: "base",
+        }
+      );
+    });
+
+const jugadoresYaAsignados = new Set([
+  ...fecha.categoriaA,
+  ...fecha.categoriaB,
+]);
+
+const jugadoresNuevosConHandicap =
+  jugadoresConHandicap.filter(
+    (jugador) =>
+      !jugadoresYaAsignados.has(jugador.id)
+  );
+
+if (
+  fecha.categoriaA.length > 0 ||
+  fecha.categoriaB.length > 0
+) {
+  const nuevaCategoriaA = [
+    ...fecha.categoriaA,
+  ];
+
+  const nuevaCategoriaB = [
+    ...fecha.categoriaB,
+  ];
+
+  jugadoresNuevosConHandicap.forEach(
+    (jugador) => {
+      const handicapsA = jugadoresConHandicap
+        .filter((j) =>
+          nuevaCategoriaA.includes(j.id)
+        )
+        .map((j) => j.handicap);
+
+      const handicapsB = jugadoresConHandicap
+        .filter((j) =>
+          nuevaCategoriaB.includes(j.id)
+        )
+        .map((j) => j.handicap);
+
+      const peorHandicapA =
+        handicapsA.length > 0
+          ? Math.max(...handicapsA)
+          : null;
+
+      const mejorHandicapB =
+        handicapsB.length > 0
+          ? Math.min(...handicapsB)
+          : null;
+
+      if (
+        mejorHandicapB !== null &&
+        jugador.handicap <
+          mejorHandicapB
+      ) {
+        nuevaCategoriaA.push(jugador.id);
+      } else if (
+        peorHandicapA !== null &&
+        jugador.handicap <=
+          peorHandicapA
+      ) {
+        nuevaCategoriaA.push(jugador.id);
+      } else {
+        nuevaCategoriaB.push(jugador.id);
+      }
+    }
+  );
+
+  setCategoriaA(nuevaCategoriaA);
+  setCategoriaB(nuevaCategoriaB);
+} else {
+  const cantidadCategoriaA =
+    Math.ceil(
+      jugadoresConHandicap.length / 2
+    );
+
+  setCategoriaA(
+    jugadoresConHandicap
+      .slice(0, cantidadCategoriaA)
+      .map((jugador) => jugador.id)
+  );
+
+  setCategoriaB(
+    jugadoresConHandicap
+      .slice(cantidadCategoriaA)
+      .map((jugador) => jugador.id)
+  );
+}
     } catch (error) {
       console.error(
         "No se pudo cargar la fecha actual:",
