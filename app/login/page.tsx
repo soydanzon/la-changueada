@@ -43,34 +43,47 @@ export default function Login() {
   }
 
   async function recuperarContrasena() {
-    setError("");
-    setMensaje("");
+  setError("");
+  setMensaje("");
 
-    if (!email) {
-      setError(
-        "Escribí tu email primero."
-      );
-      return;
-    }
+  if (!email) {
+    setError(
+      "Escribí tu email primero."
+    );
+    return;
+  }
 
-    setCargando(true);
+  setCargando(true);
 
+  try {
     const supabase = createClient();
 
-    const { error } =
-      await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo:
-            "https://la-changueada.vercel.app/actualizar-contrasena",
-        }
-      );
+    const resultado =
+      await Promise.race([
+        supabase.auth.resetPasswordForEmail(
+          email,
+          {
+            redirectTo:
+              "https://la-changueada.vercel.app/actualizar-contrasena",
+          }
+        ),
 
-    setCargando(false);
+        new Promise<never>(
+          (_, reject) => {
+            setTimeout(() => {
+              reject(
+                new Error(
+                  "TIMEOUT"
+                )
+              );
+            }, 15000);
+          }
+        ),
+      ]);
 
-    if (error) {
+    if (resultado.error) {
       setError(
-        "No se pudo enviar el mail de recuperación."
+        `⚠️ ${resultado.error.message}`
       );
       return;
     }
@@ -78,7 +91,23 @@ export default function Login() {
     setMensaje(
       "📩 Te enviamos un mail para cambiar la contraseña."
     );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "TIMEOUT"
+    ) {
+      setError(
+        "⚠️ Supabase no respondió después de 15 segundos."
+      );
+    } else {
+      setError(
+        "⚠️ Ocurrió un error al pedir la recuperación."
+      );
+    }
+  } finally {
+    setCargando(false);
   }
+}
 
   return (
     <main className="min-h-screen bg-green-950 px-6 py-10 text-white">
