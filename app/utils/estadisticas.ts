@@ -69,8 +69,9 @@ export type EstadisticaCancha = {
   par: number;
 
   jugadas: number;
-  victorias: number;
-  podios: number;
+jugadasValidas: number;
+victorias: number;
+podios: number;
 
   sumaScores: number;
   promedioGolpes: number;
@@ -429,73 +430,79 @@ export function calcularEstadisticasPorCancha(
       return;
     }
 
-    const score = resultadosJugador[0].score;
+const score = resultadosJugador[0].score;
 
-    const respectoPar =
-      score - fecha.cancha.par;
-
-    const actual =
-      mapa.get(fecha.cancha.id) ?? {
-        canchaId: fecha.cancha.id,
-        cancha:
-          obtenerNombreCanchaActual(
-            fecha.cancha
-          ),
-        par: fecha.cancha.par,
-
-        jugadas: 0,
-        victorias: 0,
-        podios: 0,
-
-        sumaScores: 0,
-        promedioGolpes: 0,
-
-        sumaRespectoPar: 0,
-        promedioRespectoPar: 0,
-
-        mejorVuelta: 999,
-        mejorVueltaGolpes: 999,
-      };
-
-    actual.jugadas += 1;
-
-    actual.victorias +=
-      resultadosJugador.filter(
-        (resultado) =>
-          resultado.puesto === 1
-      ).length;
-
-    actual.podios +=
-      resultadosJugador.filter(
-        (resultado) =>
-          resultado.puesto <= 3
-      ).length;
-
-    actual.sumaScores += score;
-
-    actual.promedioGolpes =
-      actual.sumaScores / actual.jugadas;
-
-    actual.sumaRespectoPar +=
-      respectoPar;
-
-    actual.promedioRespectoPar =
-      actual.sumaRespectoPar /
-      actual.jugadas;
-
-    if (
-      respectoPar < actual.mejorVuelta
-    ) {
-      actual.mejorVuelta = respectoPar;
-      actual.mejorVueltaGolpes = score;
-    }
-
-    actual.cancha =
+const actual =
+  mapa.get(fecha.cancha.id) ?? {
+    canchaId: fecha.cancha.id,
+    cancha:
       obtenerNombreCanchaActual(
         fecha.cancha
-      );
+      ),
+    par: fecha.cancha.par,
 
-    mapa.set(fecha.cancha.id, actual);
+    jugadas: 0,
+    jugadasValidas: 0,
+    victorias: 0,
+    podios: 0,
+
+    sumaScores: 0,
+    promedioGolpes: 0,
+
+    sumaRespectoPar: 0,
+    promedioRespectoPar: 0,
+
+    mejorVuelta: 999,
+    mejorVueltaGolpes: 999,
+  };
+
+actual.jugadas += 1;
+
+actual.victorias +=
+  resultadosJugador.filter(
+    (resultado) =>
+      resultado.puesto === 1
+  ).length;
+
+actual.podios +=
+  resultadosJugador.filter(
+    (resultado) =>
+      resultado.puesto <= 3
+  ).length;
+
+if (!esLP(score)) {
+  const respectoPar =
+    score - fecha.cancha.par;
+
+  actual.jugadasValidas += 1;
+
+  actual.sumaScores += score;
+
+  actual.promedioGolpes =
+    actual.sumaScores /
+    actual.jugadasValidas;
+
+  actual.sumaRespectoPar +=
+    respectoPar;
+
+  actual.promedioRespectoPar =
+    actual.sumaRespectoPar /
+    actual.jugadasValidas;
+
+  if (
+    respectoPar < actual.mejorVuelta
+  ) {
+    actual.mejorVuelta = respectoPar;
+    actual.mejorVueltaGolpes = score;
+  }
+}
+
+actual.cancha =
+  obtenerNombreCanchaActual(
+    fecha.cancha
+  );
+
+mapa.set(fecha.cancha.id, actual);
   });
 
   return Array.from(mapa.values())
