@@ -98,6 +98,11 @@ export type HandicapJugador = {
 };
 
 const VALOR_CHANGUEADA = 10000;
+const SCORE_LP = 120;
+
+function esLP(score: number) {
+  return score === SCORE_LP;
+}
 
 type CanchaActual = {
   id: number;
@@ -249,10 +254,9 @@ export function calcularEstadisticas(
 
       actual.jugadas += 1;
 
-      actual.sumaScores += score;
-
-      actual.promedioGolpes =
-        actual.sumaScores / actual.jugadas;
+if (!esLP(score)) {
+  actual.sumaScores += score;
+}
 
       actual.aportado +=
         VALOR_CHANGUEADA *
@@ -339,26 +343,30 @@ export function calcularEstadisticas(
         actual.podiosCategoriaA +
         actual.podiosCategoriaB;
 
-      if (fecha.cancha) {
-        const respectoPar =
-          score - fecha.cancha.par;
+      if (fecha.cancha && !esLP(score)) {
+  const respectoPar =
+    score - fecha.cancha.par;
 
-        actual.jugadasConPar += 1;
+  actual.jugadasConPar += 1;
 
-        actual.sumaRespectoPar +=
-          respectoPar;
+  actual.sumaRespectoPar +=
+    respectoPar;
 
-        actual.promedio =
-          actual.sumaRespectoPar /
-          actual.jugadasConPar;
+  actual.promedio =
+    actual.sumaRespectoPar /
+    actual.jugadasConPar;
 
-        if (
-          respectoPar < actual.mejorScore
-        ) {
-          actual.mejorScore = respectoPar;
-          actual.mejorScoreGolpes = score;
-        }
-      }
+  actual.promedioGolpes =
+    actual.sumaScores /
+    actual.jugadasConPar;
+
+  if (
+    respectoPar < actual.mejorScore
+  ) {
+    actual.mejorScore = respectoPar;
+    actual.mejorScoreGolpes = score;
+  }
+}
 
       actual.balance =
         actual.ganado - actual.aportado;
