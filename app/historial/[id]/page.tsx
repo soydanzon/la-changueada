@@ -112,6 +112,7 @@ function obtenerResumenPremios(
 
   return fila
     ? fila.premios
+        .filter((premio) => premio > 0)
         .map((premio) => premio / 1000)
         .join(" - ")
     : "";
@@ -139,7 +140,7 @@ function TablaResultados({
           {premiados.map(
             (resultado, index) => (
               <div
-                key={`${resultado.jugador.nombre}-${resultado.puesto}`}
+                key={index}
                 className={
                   index <
                   premiados.length - 1
@@ -192,7 +193,7 @@ function TablaResultados({
           {noPremiados.map(
             (resultado, index) => (
               <div
-                key={`${resultado.jugador.nombre}-${resultado.puesto}`}
+                key={index}
                 className={`flex items-start justify-between gap-4 py-2 ${
                   index <
                   noPremiados.length - 1

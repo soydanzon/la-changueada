@@ -156,7 +156,7 @@ export default function Login() {
           )}
 
           {mensaje && (
-            <p className="mt-4 text-center font-bold text-green-800">
+            <p className="mt-4 text-center font-bold text-green-300">
               {mensaje}
             </p>
           )}

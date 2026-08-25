@@ -141,7 +141,8 @@ function obtenerResumenPremios(resultados: Resultado[]) {
     jugadores: resultados.length,
     premios: fila
       ? fila.premios
-          .map((premio) => premio / 1000)
+      .filter((premio) => premio > 0)    
+      .map((premio) => premio / 1000)
           .join(" - ")
       : "",
   };
