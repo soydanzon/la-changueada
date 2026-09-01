@@ -165,11 +165,13 @@ function TablaResultados({
                   </div>
 
                   <span className="shrink-0 text-right font-bold">
-                    {formatearScore(
-                      resultado.score,
-                      par
-                    )}
-                  </span>
+  {resultado.score === 120
+    ? "LP"
+    : formatearScore(
+        resultado.score,
+        par
+      )}
+</span>
                 </div>
 
                 <p className="mt-1 pl-11 font-bold text-green-700">
@@ -217,11 +219,13 @@ function TablaResultados({
                 </div>
 
                 <span className="shrink-0 text-right font-semibold">
-                  {formatearScore(
-                    resultado.score,
-                    par
-                  )}
-                </span>
+  {resultado.score === 120
+    ? "LP"
+    : formatearScore(
+        resultado.score,
+        par
+      )}
+</span>
               </div>
             )
           )}

@@ -51,17 +51,15 @@ async function compartirHandicap(
   [...jugador.fechas]
   .reverse()
   .forEach((fecha) => {
-    const izquierda =
-      `${fecha.fecha}  ${fecha.vuelta ?? ""}`.padEnd(34);
-
-    const derecha =
-      `${formatearScore(fecha.score)}`.padStart(5);
+    const scoreTexto = fecha.lp
+      ? "LP"
+      : fecha.score === 0
+        ? "Par"
+        : formatearHandicap(fecha.score);
 
     lineas.push(
-  `${fecha.fecha.padEnd(12)} ${String(
-    fecha.score === 0 ? "Par" : formatearHandicap(fecha.score)
-  ).padStart(4)} ${fecha.cuenta ? "✅" : "❌"}`
-);
+      `${fecha.fecha.padEnd(12)} ${String(scoreTexto).padStart(4)} ${fecha.cuenta ? "✅" : "❌"}`
+    );
   });
 
   const texto =
@@ -168,8 +166,10 @@ const mejoresTarjetas = Math.min(
     </span>
 
     <span className="ml-auto font-bold">
-      {fecha.golpes} ({formatearScore(fecha.score)})
-    </span>
+  {fecha.lp
+    ? "LP"
+    : `${fecha.golpes} (${formatearScore(fecha.score)})`}
+</span>
   </div>
 
   <span className="ml-4 text-2xl">

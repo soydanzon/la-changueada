@@ -556,12 +556,17 @@ setFechaGuardada(true);
   const lineas: string[] = [];
 
   conPremio.forEach((resultado) => {
-    lineas.push(
-      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
-        resultado.score,
-        canchaFecha?.par
-      )}`
-    );
+  const scoreTexto =
+    resultado.score === 120
+      ? "LP"
+      : formatearScore(
+          resultado.score,
+          canchaFecha?.par
+        );
+
+  lineas.push(
+    `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${scoreTexto}`
+  );
 
     lineas.push(
       `   ${formatearPesos(resultado.premio)}`
@@ -573,13 +578,18 @@ setFechaGuardada(true);
   }
 
   sinPremio.forEach((resultado) => {
-    lineas.push(
-      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
-        resultado.score,
-        canchaFecha?.par
-      )}`
-    );
-  });
+  const scoreTexto =
+    resultado.score === 120
+      ? "LP"
+      : formatearScore(
+          resultado.score,
+          canchaFecha?.par
+        );
+
+  lineas.push(
+    `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${scoreTexto}`
+  );
+});
 
   return lineas.join("\n");
 };
@@ -746,7 +756,7 @@ const resumenCategoriaDos =
             <span>
               {resultado.puesto}.{" "}
               {resultado.jugador.nombre} -{" "}
-              {resultado.score}
+              {resultado.score === 120 ? "LP" : resultado.score}
             </span>
 
             <strong>
@@ -783,7 +793,7 @@ const resumenCategoriaDos =
               <span>
                 {resultado.puesto}.{" "}
                 {resultado.jugador.nombre} -{" "}
-                {resultado.score}
+                {resultado.score === 120 ? "LP" : resultado.score}
               </span>
 
               <strong>
