@@ -89,6 +89,7 @@ export type FechaHandicap = {
   vuelta?: string;
   score: number;
   golpes: number;
+  lp: boolean;
   cuenta: boolean;
 };
 
@@ -615,20 +616,22 @@ switch (cantidad) {
 }
 
       fechasJugador.push({
-        fecha: fecha.fecha,
+  fecha: fecha.fecha,
 
-        cancha:
-          obtenerNombreCanchaActual(
-            cancha
-          ),
+  cancha:
+    obtenerNombreCanchaActual(
+      cancha
+    ),
 
-          vuelta,
+  vuelta,
 
-        score:
-          resultado.score - cancha.par,
+  score:
+    resultado.score - cancha.par,
 
-        golpes: resultado.score,
-      });
+  golpes: resultado.score,
+
+  lp: esLP(resultado.score),
+});
 
       mapa.set(nombre, fechasJugador);
     });
@@ -649,22 +652,24 @@ switch (cantidad) {
           );
 
         const indicesQueCuentan =
-          ultimas16
-            .map((fecha, index) => ({
-              index,
-              score: fecha.score,
-            }))
-            .sort(
-              (a, b) =>
-                a.score - b.score
-            )
-            .slice(
-              0,
-              cantidadQueCuenta
-            )
-            .map(
-              (fecha) => fecha.index
-            );
+  ultimas16
+    .map((fecha, index) => ({
+      index,
+      score: fecha.score,
+      lp: fecha.lp,
+    }))
+    .filter((fecha) => !fecha.lp)
+    .sort(
+      (a, b) =>
+        a.score - b.score
+    )
+    .slice(
+      0,
+      cantidadQueCuenta
+    )
+    .map(
+      (fecha) => fecha.index
+    );
 
         const fechas = ultimas16.map(
           (fecha, index) => ({
