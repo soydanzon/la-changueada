@@ -249,74 +249,23 @@ const jugadoresConHandicap =
       );
     });
 
-const jugadoresYaAsignados = new Set([
+const jugadoresActuales = new Set(
+  fecha.jugadores
+);
+
+const jugadoresAsignadosAntes = new Set([
   ...fecha.categoriaA,
   ...fecha.categoriaB,
 ]);
 
-const jugadoresNuevosConHandicap =
-  jugadoresConHandicap.filter(
-    (jugador) =>
-      !jugadoresYaAsignados.has(jugador.id)
+const cambioLaNomina =
+  jugadoresActuales.size !==
+    jugadoresAsignadosAntes.size ||
+  [...jugadoresActuales].some(
+    (id) => !jugadoresAsignadosAntes.has(id)
   );
 
-if (
-  fecha.categoriaA.length > 0 ||
-  fecha.categoriaB.length > 0
-) {
-  const nuevaCategoriaA = [
-    ...fecha.categoriaA,
-  ];
-
-  const nuevaCategoriaB = [
-    ...fecha.categoriaB,
-  ];
-
-  jugadoresNuevosConHandicap.forEach(
-    (jugador) => {
-      const handicapsA = jugadoresConHandicap
-        .filter((j) =>
-          nuevaCategoriaA.includes(j.id)
-        )
-        .map((j) => j.handicap);
-
-      const handicapsB = jugadoresConHandicap
-        .filter((j) =>
-          nuevaCategoriaB.includes(j.id)
-        )
-        .map((j) => j.handicap);
-
-      const peorHandicapA =
-        handicapsA.length > 0
-          ? Math.max(...handicapsA)
-          : null;
-
-      const mejorHandicapB =
-        handicapsB.length > 0
-          ? Math.min(...handicapsB)
-          : null;
-
-      if (
-        mejorHandicapB !== null &&
-        jugador.handicap <
-          mejorHandicapB
-      ) {
-        nuevaCategoriaA.push(jugador.id);
-      } else if (
-        peorHandicapA !== null &&
-        jugador.handicap <=
-          peorHandicapA
-      ) {
-        nuevaCategoriaA.push(jugador.id);
-      } else {
-        nuevaCategoriaB.push(jugador.id);
-      }
-    }
-  );
-
-  setCategoriaA(nuevaCategoriaA);
-  setCategoriaB(nuevaCategoriaB);
-} else {
+if (cambioLaNomina) {
   const cantidadCategoriaA =
     Math.floor(
       jugadoresConHandicap.length / 2
@@ -333,6 +282,9 @@ if (
       .slice(cantidadCategoriaA)
       .map((jugador) => jugador.id)
   );
+} else {
+  setCategoriaA(fecha.categoriaA);
+  setCategoriaB(fecha.categoriaB);
 }
     } catch (error) {
       console.error(
