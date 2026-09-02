@@ -1,5 +1,7 @@
 "use client";
 
+import { obtenerPremiosCategorias } from "../premios/tablaPremiosCategorias";
+
 import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
@@ -119,6 +121,61 @@ function calcularPremios(
           puesto: i + 1,
           premio:
             premioBase + (index === 0 ? resto : 0),
+        });
+      });
+
+    i += cantidad;
+  }
+
+  return finales;
+}
+
+function calcularPremiosCategorias(
+  resultados: ResultadoBase[],
+  premios: number[]
+): Resultado[] {
+  const finales: Resultado[] = [];
+  let i = 0;
+
+  while (i < resultados.length) {
+    const scoreActual = resultados[i].score;
+
+    let cantidad = 1;
+
+    while (
+      i + cantidad < resultados.length &&
+      resultados[i + cantidad].score === scoreActual
+    ) {
+      cantidad += 1;
+    }
+
+    const premiosInvolucrados = premios.slice(
+      i,
+      i + cantidad
+    );
+
+    const totalPremios =
+      premiosInvolucrados.reduce(
+        (suma, premio) => suma + premio,
+        0
+      );
+
+    const premioBase = Math.floor(
+      totalPremios / cantidad
+    );
+
+    const resto =
+      totalPremios - premioBase * cantidad;
+
+    resultados
+      .slice(i, i + cantidad)
+      .forEach((resultado, index) => {
+        finales.push({
+          ...resultado,
+          puesto: i + 1,
+          premio:
+            premioBase +
+            (index === 0 ? resto : 0),
         });
       });
 
@@ -384,13 +441,35 @@ export default function Resultados() {
         }))
         .sort((a, b) => a.score - b.score);
 
-      setCategoriaUno(
-        calcularPremios(resultadosCategoriaUno)
-      );
+      if (datos.formato === "categorias") {
+  const premiosCategorias =
+    obtenerPremiosCategorias(
+      resultadosCategoriaUno.length +
+        resultadosCategoriaDos.length
+    );
 
-      setCategoriaDos(
-        calcularPremios(resultadosCategoriaDos)
-      );
+  setCategoriaUno(
+    calcularPremiosCategorias(
+      resultadosCategoriaUno,
+      premiosCategorias.a
+    )
+  );
+
+  setCategoriaDos(
+    calcularPremiosCategorias(
+      resultadosCategoriaDos,
+      premiosCategorias.b
+    )
+  );
+} else {
+  setCategoriaUno(
+    calcularPremios(resultadosCategoriaUno)
+  );
+
+  setCategoriaDos(
+    calcularPremios(resultadosCategoriaDos)
+  );
+}
     } catch (error) {
       console.error(
         "No se pudieron calcular los resultados:",
@@ -707,11 +786,35 @@ setFechaGuardada(true);
       ? "Categoría B"
       : "🧓🏻 Viejitos";
 
+const premiosCategoriasResumen =
+  formato === "categorias"
+    ? obtenerPremiosCategorias(
+        categoriaUno.length +
+          categoriaDos.length
+      )
+    : null;
+
 const resumenCategoriaUno =
-  obtenerResumenPremios(categoriaUno);
+  formato === "categorias"
+    ? {
+        jugadores: categoriaUno.length,
+        premios:
+          premiosCategoriasResumen?.a
+            .map((premio) => premio / 1000)
+            .join(" - ") ?? "",
+      }
+    : obtenerResumenPremios(categoriaUno);
 
 const resumenCategoriaDos =
-  obtenerResumenPremios(categoriaDos);
+  formato === "categorias"
+    ? {
+        jugadores: categoriaDos.length,
+        premios:
+          premiosCategoriasResumen?.b
+            .map((premio) => premio / 1000)
+            .join(" - ") ?? "",
+      }
+    : obtenerResumenPremios(categoriaDos);
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">

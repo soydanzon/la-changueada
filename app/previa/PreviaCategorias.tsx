@@ -1,5 +1,6 @@
 "use client";
 
+import { obtenerPremiosCategorias } from "../premios/tablaPremiosCategorias";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -474,23 +475,16 @@ useEffect(() => {
       categoriaB,
     ]);
 
-  const premiosA = useMemo(
-    () =>
-      obtenerPremios(
-        tablaPremios,
-        jugadoresA.length
-      ),
-    [tablaPremios, jugadoresA.length]
-  );
+  const premiosCategorias = useMemo(
+  () =>
+    obtenerPremiosCategorias(
+      jugadoresA.length + jugadoresB.length
+    ),
+  [jugadoresA.length, jugadoresB.length]
+);
 
-  const premiosB = useMemo(
-    () =>
-      obtenerPremios(
-        tablaPremios,
-        jugadoresB.length
-      ),
-    [tablaPremios, jugadoresB.length]
-  );
+const premiosA = premiosCategorias.a;
+const premiosB = premiosCategorias.b;
 
   const premiosVisiblesA = useMemo(
     () => obtenerPremiosVisibles(premiosA),
@@ -502,11 +496,9 @@ useEffect(() => {
     [premiosB]
   );
 
-  const pozoA =
-    jugadoresA.length * valorChangueada;
-
-  const pozoB =
-    jugadoresB.length * valorChangueada;
+  const pozoTotal =
+  (jugadoresA.length + jugadoresB.length) *
+  valorChangueada;
 
   function asignarCategoria(
     jugadorId: number,
@@ -622,18 +614,18 @@ useEffect(() => {
   }
 
   lineas.push(
-    "",
-    `⛳ ${cancha?.nombre ?? "Cancha"} Par ${
-      cancha?.par ?? "-"
-    }`,
-    "",
-    "🅰️ CATEGORÍA A",
-    "",
-    `💰 Pozo: ${formatearDinero(pozoA)}`,
-    "",
-    "🏆 Premios",
-    crearTextoPremios(premiosVisiblesA)
-  );
+  "",
+  `⛳ ${cancha?.nombre ?? "Cancha"} Par ${
+    cancha?.par ?? "-"
+  }`,
+  "",
+  `💰 Pozo total: ${formatearDinero(pozoTotal)}`,
+  "",
+  "🅰️ CATEGORÍA A",
+  "",
+  "🏆 Premios",
+  crearTextoPremios(premiosVisiblesA)
+);
 
   if (jugadoresA.length > 0) {
     lineas.push(
@@ -645,14 +637,12 @@ useEffect(() => {
   }
 
   lineas.push(
-    "",
-    "🅱️ CATEGORÍA B",
-    "",
-    `💰 Pozo: ${formatearDinero(pozoB)}`,
-    "",
-    "🏆 Premios",
-    crearTextoPremios(premiosVisiblesB)
-  );
+  "",
+  "🅱️ CATEGORÍA B",
+  "",
+  "🏆 Premios",
+  crearTextoPremios(premiosVisiblesB)
+);
 
   if (jugadoresB.length > 0) {
     lineas.push(
@@ -806,9 +796,15 @@ useEffect(() => {
           )}
         </p>
 
-        <p className="mt-3 font-bold">
-          🅰️ 🅱️ Por categorías
-        </p>
+        <div className="mt-3 flex items-center justify-between">
+  <span className="font-bold">
+    🅰️ 🅱️ Por categorías
+  </span>
+
+  <span className="font-bold">
+    💰 Pozo total: {formatearDinero(pozoTotal)}
+  </span>
+</div>
       </div>
 
       {jugadoresSinCategoria.length >
@@ -885,17 +881,9 @@ useEffect(() => {
           </span>
         </div>
 
-        <div className="mb-4 flex justify-between gap-4">
-          <span>💰 Pozo</span>
-
-          <span className="font-bold">
-            {formatearDinero(pozoA)}
-          </span>
-        </div>
-
         <h3 className="mb-2 border-t border-green-200 pt-4 text-xl font-bold">
-          🏆 Premios
-        </h3>
+  🏆 Premios
+</h3>
 
         {premiosVisiblesA.length > 0 ? (
           <div className="mb-4">
@@ -987,17 +975,9 @@ useEffect(() => {
           </span>
         </div>
 
-        <div className="mb-4 flex justify-between gap-4">
-          <span>💰 Pozo</span>
-
-          <span className="font-bold">
-            {formatearDinero(pozoB)}
-          </span>
-        </div>
-
         <h3 className="mb-2 border-t border-green-200 pt-4 text-xl font-bold">
-          🏆 Premios
-        </h3>
+  🏆 Premios
+</h3>
 
         {premiosVisiblesB.length > 0 ? (
           <div className="mb-4">
