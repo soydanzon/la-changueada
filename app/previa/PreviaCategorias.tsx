@@ -317,7 +317,7 @@ if (
   setCategoriaB(nuevaCategoriaB);
 } else {
   const cantidadCategoriaA =
-    Math.ceil(
+    Math.floor(
       jugadoresConHandicap.length / 2
     );
 
