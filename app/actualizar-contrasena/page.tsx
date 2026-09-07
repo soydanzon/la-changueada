@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useEffect,
   useState,
 } from "react";
@@ -11,7 +12,7 @@ import {
 
 import { createClient } from "../lib/supabase/client";
 
-export default function ActualizarContrasena() {
+function ActualizarContrasenaContenido() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -98,47 +99,47 @@ export default function ActualizarContrasena() {
     const supabase = createClient();
 
     try {
-  const resultado =
-    await Promise.race([
-      supabase.auth.updateUser({
-        password,
-      }),
+      const resultado =
+        await Promise.race([
+          supabase.auth.updateUser({
+            password,
+          }),
 
-      new Promise<never>(
-        (_, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error("TIMEOUT")
-            );
-          }, 15000);
-        }
-      ),
-    ]);
+          new Promise<never>(
+            (_, reject) => {
+              setTimeout(() => {
+                reject(
+                  new Error("TIMEOUT")
+                );
+              }, 15000);
+            }
+          ),
+        ]);
 
-  if (resultado.error) {
-    setMensaje(
-      `⚠️ No se pudo guardar: ${resultado.error.message}`
-    );
-    return;
-  }
-} catch (error) {
-  if (
-    error instanceof Error &&
-    error.message === "TIMEOUT"
-  ) {
-    setMensaje(
-      "⚠️ Supabase no respondió al guardar la contraseña."
-    );
-  } else {
-    setMensaje(
-      "⚠️ Ocurrió un error al guardar la contraseña."
-    );
-  }
+      if (resultado.error) {
+        setMensaje(
+          `⚠️ No se pudo guardar: ${resultado.error.message}`
+        );
+        return;
+      }
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "TIMEOUT"
+      ) {
+        setMensaje(
+          "⚠️ Supabase no respondió al guardar la contraseña."
+        );
+      } else {
+        setMensaje(
+          "⚠️ Ocurrió un error al guardar la contraseña."
+        );
+      }
 
-  return;
-} finally {
-  setCargando(false);
-}
+      return;
+    } finally {
+      setCargando(false);
+    }
 
     setMensaje(
       "✅ Contraseña guardada"
@@ -217,5 +218,21 @@ export default function ActualizarContrasena() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ActualizarContrasena() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-green-950 px-6 py-10 text-white">
+          <div className="mx-auto max-w-md text-center">
+            Validando enlace...
+          </div>
+        </main>
+      }
+    >
+      <ActualizarContrasenaContenido />
+    </Suspense>
   );
 }
