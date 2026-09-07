@@ -72,11 +72,18 @@ export default function Configuracion() {
       </button>
 
       <a
-        href="/tabla-premios"
-        className="mt-8 block text-xl rounded-xl bg-yellow-200 px-5 py-4 text-center font-bold text-green-900"
-      >
-        🏆 Tabla de premios
-      </a>
+  href="/tabla-premios"
+  className="mt-8 block text-xl rounded-xl bg-yellow-200 px-5 py-4 text-center font-bold text-green-900"
+>
+  🙎🏻‍♂️🧓🏻 Tabla de premios General
+</a>
+
+<a
+  href="/tabla-premios-categorias"
+  className="mt-4 block text-xl rounded-xl bg-yellow-200 px-5 py-4 text-center font-bold text-green-900"
+>
+  🅰️🅱️ Tabla de premios 55-45
+</a>
 
       <a
         href="/canchas"

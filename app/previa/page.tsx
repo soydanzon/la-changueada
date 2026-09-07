@@ -1,5 +1,7 @@
 "use client";
 
+import BotonInicio from "../components/BotonInicio";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -427,9 +429,23 @@ async function compartirPrevia() {
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
-      <h1 className="mb-8 text-3xl font-bold">
-        🚀 Previa
-      </h1>
+      <div className="mb-8 flex items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">
+          🚀 Previa
+        </h1>
+
+        <div className="flex gap-2">
+          <button
+            onClick={modificarFecha}
+            className="rounded-xl bg-white px-4 py-2 font-bold text-green-950"
+            aria-label="Volver"
+          >
+            ←
+          </button>
+
+          <BotonInicio />
+        </div>
+      </div>
 
       <div className="mb-4 rounded-xl bg-white p-3 text-green-900">
         <p className="text-xl">
