@@ -17,6 +17,7 @@ const CLAVES_RESPALDO = [
   "laChangueadaCanchas",
   "laChangueadaValor",
   "laChangueadaTablaPremios",
+  "laChangueadaTablaPremiosCategorias55_45",
 ];
 
 function leerCantidad(
@@ -219,7 +220,7 @@ export default function RespaldoPage() {
 
         <p className="mt-2">
           Guarda jugadores, fechas, canchas, valor de la
-          Changueada y tabla de premios.
+          Changueada y tablas de premios.
         </p>
 
         <button
