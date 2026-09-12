@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
-import {
-  obtenerCanchasGuardadas,
-  type Cancha,
-} from "../datos/canchas";
+import { createClient } from "../lib/supabase/client";
 import { obtenerTablaPremios } from "../premios/tablaPremios";
 
 type ResultadoGuardado = {
@@ -40,6 +37,24 @@ type FechaGuardada = {
 type GrupoHistorial = {
   titulo: string;
   fechas: FechaGuardada[];
+};
+
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  fecha_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
 };
 
 function formatearPesos(valor: number) {
@@ -91,16 +106,6 @@ function medalla(puesto: number) {
   return `${puesto}.`;
 }
 
-function totalPremios(
-  resultados: ResultadoGuardado[]
-) {
-  return resultados.reduce(
-    (total, resultado) =>
-      total + resultado.premio,
-    0
-  );
-}
-
 function premiados(
   resultados: ResultadoGuardado[]
 ) {
@@ -139,14 +144,10 @@ function obtenerResultadosFecha(
         "🅱️ CATEGORÍA B",
 
       resultadosUno:
-        fecha.categoriaA ??
-        fecha.general ??
-        [],
+        fecha.categoriaA ?? [],
 
       resultadosDos:
-        fecha.categoriaB ??
-        fecha.viejitos ??
-        [],
+        fecha.categoriaB ?? [],
 
       claveUno: "categoria-a",
       claveDos: "categoria-b",
@@ -263,37 +264,193 @@ export default function Historial() {
   const [mesesAbiertos, setMesesAbiertos] =
     useState<string[]>([]);
 
-  const [canchas, setCanchas] =
-    useState<Cancha[]>([]);
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [mensaje, setMensaje] =
+    useState("");
+
+  const [esAdmin, setEsAdmin] =
+    useState(false);
+
+  const [eliminando, setEliminando] =
+    useState<number | null>(null);
 
   useEffect(() => {
-    setCanchas(obtenerCanchasGuardadas());
+    async function cargarHistorial() {
+      const supabase = createClient();
 
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-    if (!datos) {
-      return;
-    }
+        if (session) {
+          const { data: perfil } =
+            await supabase
+              .from("perfiles")
+              .select("rol")
+              .eq("id", session.user.id)
+              .maybeSingle();
 
-    try {
-      const fechas: FechaGuardada[] =
-        JSON.parse(datos);
+          setEsAdmin(
+            perfil?.rol === "admin"
+          );
+        }
 
-      setHistorial(fechas);
+        const [
+          resultadoFechas,
+          resultadoResultados,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par"
+            )
+            .order("id", {
+              ascending: false,
+            }),
 
-      const grupos =
-        agruparPorMes(fechas);
-
-      if (grupos.length > 0) {
-        setMesesAbiertos([
-          grupos[0].titulo,
+          supabase
+            .from("resultados")
+            .select(
+              "fecha_id, jugador_nombre, categoria, score, puesto, premio"
+            )
+            .order("puesto", {
+              ascending: true,
+            }),
         ]);
+
+        if (resultadoFechas.error) {
+          throw resultadoFechas.error;
+        }
+
+        if (resultadoResultados.error) {
+          throw resultadoResultados.error;
+        }
+
+        const fechasSupabase =
+          (resultadoFechas.data ??
+            []) as FechaSupabase[];
+
+        const resultadosSupabase =
+          (resultadoResultados.data ??
+            []) as ResultadoSupabase[];
+
+        const fechasConvertidas =
+          fechasSupabase.map((fecha) => {
+            const resultadosFecha =
+              resultadosSupabase.filter(
+                (resultado) =>
+                  Number(
+                    resultado.fecha_id
+                  ) === Number(fecha.id)
+              );
+
+            function convertirResultados(
+              categoria: string
+            ): ResultadoGuardado[] {
+              return resultadosFecha
+                .filter(
+                  (resultado) =>
+                    resultado.categoria ===
+                    categoria
+                )
+                .map((resultado) => ({
+                  jugador: {
+                    nombre:
+                      resultado.jugador_nombre,
+                  },
+                  score: Number(
+                    resultado.score
+                  ),
+                  puesto: Number(
+                    resultado.puesto
+                  ),
+                  premio: Number(
+                    resultado.premio
+                  ),
+                }));
+            }
+
+            const formato =
+              fecha.formato === "categorias"
+                ? "categorias"
+                : "edad";
+
+            const fechaConvertida:
+              FechaGuardada = {
+              id: Number(fecha.id),
+              fecha: fecha.fecha,
+              formato,
+              cancha:
+                fecha.cancha_id !== null &&
+                fecha.cancha_nombre &&
+                fecha.par !== null
+                  ? {
+                      id: Number(
+                        fecha.cancha_id
+                      ),
+                      nombre:
+                        fecha.cancha_nombre,
+                      par: Number(fecha.par),
+                    }
+                  : null,
+            };
+
+            if (
+              formato === "categorias"
+            ) {
+              fechaConvertida.categoriaA =
+                convertirResultados(
+                  "categoriaA"
+                );
+
+              fechaConvertida.categoriaB =
+                convertirResultados(
+                  "categoriaB"
+                );
+            } else {
+              fechaConvertida.general =
+                convertirResultados(
+                  "general"
+                );
+
+              fechaConvertida.viejitos =
+                convertirResultados(
+                  "viejitos"
+                );
+            }
+
+            return fechaConvertida;
+          });
+
+        setHistorial(fechasConvertidas);
+
+        const grupos = agruparPorMes(
+          fechasConvertidas
+        );
+
+        if (grupos.length > 0) {
+          setMesesAbiertos([
+            grupos[0].titulo,
+          ]);
+        }
+      } catch (error) {
+        console.error(
+          "No se pudo cargar el historial:",
+          error
+        );
+
+        setMensaje(
+          "⚠️ No se pudo cargar el historial desde Supabase."
+        );
+      } finally {
+        setCargando(false);
       }
-    } catch {
-      setHistorial([]);
     }
+
+    cargarHistorial();
   }, []);
 
   function cambiarMes(titulo: string) {
@@ -309,19 +466,7 @@ export default function Historial() {
   function obtenerNombreCancha(
     fecha: FechaGuardada
   ) {
-    if (!fecha.cancha) {
-      return "";
-    }
-
-    const canchaActual = canchas.find(
-      (cancha) =>
-        cancha.id === fecha.cancha?.id
-    );
-
-    return (
-      canchaActual?.nombre ??
-      fecha.cancha.nombre
-    );
+    return fecha.cancha?.nombre ?? "";
   }
 
   async function compartirResultados(
@@ -337,54 +482,61 @@ export default function Historial() {
     const parFecha = fecha.cancha?.par;
 
     function crearTextoResultados(
-  resultados: ResultadoGuardado[]
-) {
-  const conPremio = resultados.filter(
-    (r) => r.premio > 0
-  );
+      resultados: ResultadoGuardado[]
+    ) {
+      const conPremio = resultados.filter(
+        (r) => r.premio > 0
+      );
 
-  const sinPremio = resultados.filter(
-    (r) => r.premio === 0
-  );
+      const sinPremio = resultados.filter(
+        (r) => r.premio === 0
+      );
 
-  const lineas: string[] = [];
+      const lineas: string[] = [];
 
-  conPremio.forEach((resultado) => {
-    lineas.push(
-      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
-        resultado.score,
-        parFecha
-      )}`
-    );
+      conPremio.forEach((resultado) => {
+        lineas.push(
+          `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+            resultado.score,
+            parFecha
+          )}`
+        );
 
-    lineas.push(
-      `   ${formatearPesos(resultado.premio)}`
-    );
-  });
+        lineas.push(
+          `   ${formatearPesos(
+            resultado.premio
+          )}`
+        );
+      });
 
-  if (conPremio.length && sinPremio.length) {
-    lineas.push("");
-  }
+      if (
+        conPremio.length &&
+        sinPremio.length
+      ) {
+        lineas.push("");
+      }
 
-  sinPremio.forEach((resultado) => {
-    lineas.push(
-      `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
-        resultado.score,
-        parFecha
-      )}`
-    );
-  });
+      sinPremio.forEach((resultado) => {
+        lineas.push(
+          `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${formatearScore(
+            resultado.score,
+            parFecha
+          )}`
+        );
+      });
 
-  lineas.push("");
-  lineas.push(`${resultados.length} jugadores`);
-  lineas.push(
-    `Premios: ${obtenerResumenPremios(
-      resultados.length
-    )}`
-  );
+      lineas.push("");
+      lineas.push(
+        `${resultados.length} jugadores`
+      );
+      lineas.push(
+        `Premios: ${obtenerResumenPremios(
+          resultados.length
+        )}`
+      );
 
-  return lineas.join("\n");
-}
+      return lineas.join("\n");
+    }
 
     const vuelta = nombreVuelta(
       fecha,
@@ -475,9 +627,13 @@ export default function Historial() {
     }
   }
 
-  function eliminarFecha(
+  async function eliminarFecha(
     fecha: FechaGuardada
   ) {
+    if (!esAdmin) {
+      return;
+    }
+
     const confirmar = window.confirm(
       `¿Eliminar la fecha del ${fecha.fecha}?`
     );
@@ -486,17 +642,81 @@ export default function Historial() {
       return;
     }
 
-    const nuevoHistorial =
-      historial.filter(
-        (item) => item.id !== fecha.id
+    setEliminando(fecha.id);
+    setMensaje("");
+
+    const supabase = createClient();
+
+    try {
+      const { error: errorResultados } =
+        await supabase
+          .from("resultados")
+          .delete()
+          .eq("fecha_id", fecha.id);
+
+      if (errorResultados) {
+        throw errorResultados;
+      }
+
+      const { error: errorFecha } =
+        await supabase
+          .from("fechas")
+          .delete()
+          .eq("id", fecha.id);
+
+      if (errorFecha) {
+        throw errorFecha;
+      }
+
+      const nuevoHistorial =
+        historial.filter(
+          (item) =>
+            item.id !== fecha.id
+        );
+
+      setHistorial(nuevoHistorial);
+
+      const datosLocales =
+        localStorage.getItem(
+          "laChangueadaHistorial"
+        );
+
+      if (datosLocales) {
+        try {
+          const historialLocal:
+            FechaGuardada[] =
+            JSON.parse(datosLocales);
+
+          localStorage.setItem(
+            "laChangueadaHistorial",
+            JSON.stringify(
+              historialLocal.filter(
+                (item) =>
+                  item.id !== fecha.id
+              )
+            )
+          );
+        } catch {
+          // La fecha ya fue eliminada
+          // correctamente de Supabase.
+        }
+      }
+
+      setMensaje(
+        "✅ Fecha eliminada correctamente."
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo eliminar la fecha:",
+        error
       );
 
-    localStorage.setItem(
-      "laChangueadaHistorial",
-      JSON.stringify(nuevoHistorial)
-    );
-
-    setHistorial(nuevoHistorial);
+      setMensaje(
+        "⚠️ No se pudo eliminar la fecha."
+      );
+    } finally {
+      setEliminando(null);
+    }
   }
 
   const grupos =
@@ -515,7 +735,17 @@ export default function Historial() {
         </div>
       </div>
 
-      {historial.length === 0 ? (
+      {mensaje && (
+        <p className="mb-6 rounded-xl bg-white p-4 text-center font-bold text-green-900">
+          {mensaje}
+        </p>
+      )}
+
+      {cargando ? (
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          Cargando historial...
+        </div>
+      ) : historial.length === 0 ? (
         <div className="rounded-xl bg-white p-5 text-green-900">
           No hay fechas guardadas.
         </div>
@@ -613,13 +843,16 @@ export default function Historial() {
 
                             <p className="text-lg font-bold">
                               {tituloUno}
-                            </p>                       
+                            </p>
 
                             <div className="mt-2 space-y-1">
                               {premiados(
                                 resultadosUno
                               ).map(
-                                (resultado, indice) => (
+                                (
+                                  resultado,
+                                  indice
+                                ) => (
                                   <div
                                     key={`${fecha.id}-${claveUno}-${indice}`}
                                     className="flex justify-between gap-4"
@@ -669,13 +902,16 @@ export default function Historial() {
                             </div>
 
                             <p className="mt-3 text-sm text-gray-600">
-  {resultadosUno.length} jugadores
-  <br />
-  Premios:{" "}
-  {obtenerResumenPremios(
-    resultadosUno.length
-  )}
-</p>
+                              {
+                                resultadosUno.length
+                              }{" "}
+                              jugadores
+                              <br />
+                              Premios:{" "}
+                              {obtenerResumenPremios(
+                                resultadosUno.length
+                              )}
+                            </p>
 
                             {resultadosDos.length >
                               0 && (
@@ -691,7 +927,8 @@ export default function Historial() {
                                     resultadosDos
                                   ).map(
                                     (
-                                      resultado, indice
+                                      resultado,
+                                      indice
                                     ) => (
                                       <div
                                         key={`${fecha.id}-${claveDos}-${indice}`}
@@ -742,62 +979,85 @@ export default function Historial() {
                                 </div>
 
                                 <p className="mt-3 text-sm text-gray-600">
-  {resultadosDos.length} jugadores
-  <br />
-  Premios:{" "}
-  {obtenerResumenPremios(
-    resultadosDos.length
-  )}
-</p>
+                                  {
+                                    resultadosDos.length
+                                  }{" "}
+                                  jugadores
+                                  <br />
+                                  Premios:{" "}
+                                  {obtenerResumenPremios(
+                                    resultadosDos.length
+                                  )}
+                                </p>
                               </>
                             )}
 
                             <div className="mt-5 flex gap-3">
-  <button
-    type="button"
-    onClick={() =>
-      verDetalle(fecha.id)
-    }
-    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-green-700 py-3 font-bold text-white"
-  >
-    <span className="text-2xl leading-none">
-      📝
-    </span>
-    <span className="text-base leading-none">
-      Fecha
-    </span>
-  </button>
+                              {esAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    verDetalle(
+                                      fecha.id
+                                    )
+                                  }
+                                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-green-700 py-3 font-bold text-white"
+                                >
+                                  <span className="text-2xl leading-none">
+                                    📝
+                                  </span>
 
-  <button
-    type="button"
-    onClick={() =>
-      compartirResultados(fecha)
-    }
-    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-blue-600 py-3 font-bold text-white"
-  >
-    <span className="text-2xl leading-none">
-      📤
-    </span>
-    <span className="text-base leading-none">
-      Compartir
-    </span>
-  </button>
+                                  <span className="text-base leading-none">
+                                    Fecha
+                                  </span>
+                                </button>
+                              )}
 
-  <button
-    type="button"
-    onClick={() =>
-      eliminarFecha(fecha)
-    }
-    className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-red-600 py-3 font-bold text-white"
-  >
-    <span className="text-2xl leading-none">
-      🗑️
-    </span>
-    <span className="text-base leading-none">
-      Eliminar
-    </span>
-  </button>
-</div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  compartirResultados(
+                                    fecha
+                                  )
+                                }
+                                className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-blue-600 py-3 font-bold text-white"
+                              >
+                                <span className="text-2xl leading-none">
+                                  📤
+                                </span>
+
+                                <span className="text-base leading-none">
+                                  Compartir
+                                </span>
+                              </button>
+
+                              {esAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    eliminarFecha(
+                                      fecha
+                                    )
+                                  }
+                                  disabled={
+                                    eliminando ===
+                                    fecha.id
+                                  }
+                                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-red-600 py-3 font-bold text-white disabled:bg-gray-400"
+                                >
+                                  <span className="text-2xl leading-none">
+                                    🗑️
+                                  </span>
+
+                                  <span className="text-base leading-none">
+                                    {eliminando ===
+                                    fecha.id
+                                      ? "Eliminando..."
+                                      : "Eliminar"}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       }
