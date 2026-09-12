@@ -169,7 +169,7 @@ export default function Home() {
           ) : (
             <a
               href="/login"
-              className="block pt-4 text-center text-sm font-bold text-green-300 underline underline-offset-4"
+              className="block pt-4 text-center mt-6 text-sm font-bold text-green-300 underline underline-offset-4"
             >
               🔐 Acceso administrador
             </a>
