@@ -144,12 +144,12 @@ export default function MigracionPage() {
         fecha.formato === "categorias"
           ? [
               {
-                categoria: "A",
+                categoria: "categoriaA",
                 resultados:
                   fecha.categoriaA ?? [],
               },
               {
-                categoria: "B",
+                categoria: "categoriaB",
                 resultados:
                   fecha.categoriaB ?? [],
               },
