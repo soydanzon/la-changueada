@@ -993,25 +993,21 @@ export default function Historial() {
                             )}
 
                             <div className="mt-5 flex gap-3">
-                              {esAdmin && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    verDetalle(
-                                      fecha.id
-                                    )
-                                  }
-                                  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-green-700 py-3 font-bold text-white"
-                                >
-                                  <span className="text-2xl leading-none">
-                                    📝
-                                  </span>
+                              <button
+  type="button"
+  onClick={() =>
+    verDetalle(fecha.id)
+  }
+  className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-green-700 py-3 font-bold text-white"
+>
+  <span className="text-2xl leading-none">
+    👁️
+  </span>
 
-                                  <span className="text-base leading-none">
-                                    Fecha
-                                  </span>
-                                </button>
-                              )}
+  <span className="text-base leading-none">
+    Ver fecha
+  </span>
+</button>
 
                               <button
                                 type="button"

@@ -7,10 +7,7 @@ import {
 } from "next/navigation";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
-import {
-  obtenerCanchasGuardadas,
-  type Cancha,
-} from "../../datos/canchas";
+import { createClient } from "../../lib/supabase/client";
 import { obtenerTablaPremios } from "../../premios/tablaPremios";
 
 type Resultado = {
@@ -39,6 +36,23 @@ type FechaGuardada = {
 
   categoriaA?: Resultado[];
   categoriaB?: Resultado[];
+};
+
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
 };
 
 function formatearPesos(valor: number) {
@@ -81,23 +95,16 @@ function obtenerResultadosFecha(
     return {
       tituloUno: "🅰️ Categoría A",
       tituloDos: "🅱️ Categoría B",
-
       resultadosUno:
-        fecha.categoriaA ??
-        fecha.general ??
-        [],
-
+        fecha.categoriaA ?? [],
       resultadosDos:
-        fecha.categoriaB ??
-        fecha.viejitos ??
-        [],
+        fecha.categoriaB ?? [],
     };
   }
 
   return {
     tituloUno: "🙎🏻‍♂️ General",
     tituloDos: "🧓🏻 Viejitos",
-
     resultadosUno: fecha.general ?? [],
     resultadosDos: fecha.viejitos ?? [],
   };
@@ -165,13 +172,13 @@ function TablaResultados({
                   </div>
 
                   <span className="shrink-0 text-right font-bold">
-  {resultado.score === 120
-    ? "LP"
-    : formatearScore(
-        resultado.score,
-        par
-      )}
-</span>
+                    {resultado.score === 120
+                      ? "LP"
+                      : formatearScore(
+                          resultado.score,
+                          par
+                        )}
+                  </span>
                 </div>
 
                 <p className="mt-1 pl-11 font-bold text-green-700">
@@ -219,13 +226,13 @@ function TablaResultados({
                 </div>
 
                 <span className="shrink-0 text-right font-semibold">
-  {resultado.score === 120
-    ? "LP"
-    : formatearScore(
-        resultado.score,
-        par
-      )}
-</span>
+                  {resultado.score === 120
+                    ? "LP"
+                    : formatearScore(
+                        resultado.score,
+                        par
+                      )}
+                </span>
               </div>
             )
           )}
@@ -233,7 +240,9 @@ function TablaResultados({
       )}
 
       <div className="mt-4 text-sm text-gray-600">
-        <div>{resultados.length} jugadores</div>
+        <div>
+          {resultados.length} jugadores
+        </div>
 
         <div>
           Premios:{" "}
@@ -253,74 +262,209 @@ export default function DetalleFecha() {
   const [fecha, setFecha] =
     useState<FechaGuardada | null>(null);
 
-  const [canchas, setCanchas] =
-    useState<Cancha[]>([]);
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [mensaje, setMensaje] =
+    useState("");
+
+  const [esAdmin, setEsAdmin] =
+    useState(false);
 
   const [esSegundaVuelta, setEsSegundaVuelta] =
     useState(false);
 
   useEffect(() => {
-    setCanchas(obtenerCanchasGuardadas());
-
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
-
-    if (!datos) {
-      return;
-    }
-
-    try {
-      const historial: FechaGuardada[] =
-        JSON.parse(datos);
-
+    async function cargarFecha() {
+      const supabase = createClient();
       const idFecha = Number(params.id);
 
-      const encontrada = historial.find(
-        (fechaGuardada) =>
-          fechaGuardada.id === idFecha
-      );
+      if (!Number.isFinite(idFecha)) {
+        setMensaje(
+          "⚠️ La fecha solicitada no es válida."
+        );
+        setCargando(false);
+        return;
+      }
 
-      if (encontrada) {
-        setFecha(encontrada);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
 
-        const fechasDelMismoDia =
-          historial.filter(
-            (fechaGuardada) =>
-              fechaGuardada.fecha ===
-              encontrada.fecha
+        if (session) {
+          const { data: perfil } =
+            await supabase
+              .from("perfiles")
+              .select("rol")
+              .eq("id", session.user.id)
+              .maybeSingle();
+
+          setEsAdmin(
+            perfil?.rol === "admin"
+          );
+        }
+
+        const [
+          resultadoFecha,
+          resultadoResultados,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par"
+            )
+            .eq("id", idFecha)
+            .maybeSingle(),
+
+          supabase
+            .from("resultados")
+            .select(
+              "jugador_nombre, categoria, score, puesto, premio"
+            )
+            .eq("fecha_id", idFecha)
+            .order("puesto", {
+              ascending: true,
+            }),
+        ]);
+
+        if (resultadoFecha.error) {
+          throw resultadoFecha.error;
+        }
+
+        if (resultadoResultados.error) {
+          throw resultadoResultados.error;
+        }
+
+        if (!resultadoFecha.data) {
+          setMensaje(
+            "⚠️ No se encontró esta fecha."
+          );
+          return;
+        }
+
+        const fechaSupabase =
+          resultadoFecha.data as FechaSupabase;
+
+        const resultadosSupabase =
+          (resultadoResultados.data ??
+            []) as ResultadoSupabase[];
+
+        function convertirResultados(
+          categoria: string
+        ): Resultado[] {
+          return resultadosSupabase
+            .filter(
+              (resultado) =>
+                resultado.categoria ===
+                categoria
+            )
+            .map((resultado) => ({
+              jugador: {
+                nombre:
+                  resultado.jugador_nombre,
+              },
+              score: Number(
+                resultado.score
+              ),
+              puesto: Number(
+                resultado.puesto
+              ),
+              premio: Number(
+                resultado.premio
+              ),
+            }));
+        }
+
+        const formato =
+          fechaSupabase.formato ===
+          "categorias"
+            ? "categorias"
+            : "edad";
+
+        const fechaConvertida:
+          FechaGuardada = {
+          id: Number(fechaSupabase.id),
+          fecha: fechaSupabase.fecha,
+          formato,
+          cancha:
+            fechaSupabase.cancha_id !==
+              null &&
+            fechaSupabase.cancha_nombre &&
+            fechaSupabase.par !== null
+              ? {
+                  id: Number(
+                    fechaSupabase.cancha_id
+                  ),
+                  nombre:
+                    fechaSupabase.cancha_nombre,
+                  par: Number(
+                    fechaSupabase.par
+                  ),
+                }
+              : null,
+        };
+
+        if (formato === "categorias") {
+          fechaConvertida.categoriaA =
+            convertirResultados(
+              "categoriaA"
+            );
+
+          fechaConvertida.categoriaB =
+            convertirResultados(
+              "categoriaB"
+            );
+        } else {
+          fechaConvertida.general =
+            convertirResultados("general");
+
+          fechaConvertida.viejitos =
+            convertirResultados(
+              "viejitos"
+            );
+        }
+
+        setFecha(fechaConvertida);
+
+        const { data: fechasMismoDia } =
+          await supabase
+            .from("fechas")
+            .select("id")
+            .eq(
+              "fecha",
+              fechaSupabase.fecha
+            )
+            .order("id", {
+              ascending: true,
+            });
+
+        const posicion =
+          (fechasMismoDia ?? []).findIndex(
+            (item: { id:number }) =>
+              Number(item.id) === idFecha
           );
 
-        const posicion = fechasDelMismoDia.findIndex(
-          (fechaGuardada) =>
-            fechaGuardada.id === idFecha
+        setEsSegundaVuelta(posicion > 0);
+      } catch (error) {
+        console.error(
+          "No se pudo cargar la fecha:",
+          error
         );
 
-        setEsSegundaVuelta(posicion > 0);
+        setMensaje(
+          "⚠️ No se pudo cargar la fecha desde Supabase."
+        );
+      } finally {
+        setCargando(false);
       }
-    } catch {
-      setFecha(null);
     }
+
+    cargarFecha();
   }, [params.id]);
 
-  function obtenerNombreCancha() {
-    if (!fecha?.cancha) {
-      return "";
-    }
-
-    const canchaActual = canchas.find(
-      (cancha) =>
-        cancha.id === fecha.cancha?.id
-    );
-
-    return (
-      canchaActual?.nombre ??
-      fecha.cancha.nombre
-    );
-  }
-
   function editarFecha() {
-    if (!fecha) {
+    if (!fecha || !esAdmin) {
       return;
     }
 
@@ -329,10 +473,23 @@ export default function DetalleFecha() {
     );
   }
 
+  if (cargando) {
+    return (
+      <main className="min-h-screen bg-green-900 p-6 text-white">
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          Cargando fecha...
+        </div>
+      </main>
+    );
+  }
+
   if (!fecha) {
     return (
       <main className="min-h-screen bg-green-900 p-6 text-white">
-        Cargando...
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          {mensaje ||
+            "⚠️ No se encontró esta fecha."}
+        </div>
       </main>
     );
   }
@@ -347,9 +504,17 @@ export default function DetalleFecha() {
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between gap-4 bg-green-900 px-6 py-4">
-        <h1 className="text-3xl font-bold">
-          {fecha.fecha}
-        </h1>
+        <div>
+          <h1 className="text-3xl font-bold">
+            {fecha.fecha}
+          </h1>
+
+          {esSegundaVuelta && (
+            <p className="mt-1 font-bold text-green-200">
+              Segunda vuelta
+            </p>
+          )}
+        </div>
 
         <div className="flex gap-2">
           <BotonVolver />
@@ -361,7 +526,7 @@ export default function DetalleFecha() {
         <div className="rounded-xl bg-white p-5 text-green-900">
           <p className="text-xl">
             <span className="font-bold">
-              ⛳ {obtenerNombreCancha()}
+              ⛳ {fecha.cancha.nombre}
             </span>
 
             <span className="ml-5 font-normal">
@@ -397,13 +562,15 @@ export default function DetalleFecha() {
         </section>
       )}
 
-      <button
-        type="button"
-        onClick={editarFecha}
-        className="mt-6 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
-      >
-        ✏️ Editar fecha
-      </button>
+      {esAdmin && (
+        <button
+          type="button"
+          onClick={editarFecha}
+          className="mt-6 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+        >
+          ✏️ Editar fecha
+        </button>
+      )}
     </main>
   );
 }
