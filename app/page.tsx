@@ -162,7 +162,7 @@ export default function Home() {
             <button
               type="button"
               onClick={cerrarSesion}
-              className="w-full rounded-2xl border border-green-300 py-4 text-lg font-bold text-green-100"
+              className="w-full rounded-2xl bg-green-700 py-4 text-lg font-bold text-white"
             >
               Cerrar sesión
             </button>
@@ -171,7 +171,7 @@ export default function Home() {
               href="/login"
               className="block pt-4 text-center text-sm font-bold text-green-300 underline underline-offset-4"
             >
-              Acceso administrador
+              🔐 Acceso administrador
             </a>
           )}
         </div>
