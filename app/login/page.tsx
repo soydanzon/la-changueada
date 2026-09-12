@@ -169,7 +169,7 @@ export default function Login() {
               !email ||
               !password
             }
-            className="mt-5 w-full rounded-xl bg-green-900 p-4 text-xl font-bold text-green-100 disabled:bg-gray-400 disabled:text-white"
+            className="mt-5 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white disabled:bg-gray-400 disabled:text-white"
           >
             {cargando
               ? "Procesando..."
