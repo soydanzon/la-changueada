@@ -5,10 +5,13 @@ import {
   useState,
 } from "react";
 
+import { createClient } from "../lib/supabase/client";
+
 type Jugador = {
   id: number;
   nombre: string;
   frecuente?: boolean;
+  activo?: boolean;
 };
 
 type Cancha = {
@@ -39,6 +42,9 @@ type Fecha = {
     par: number;
   } | null;
 
+  pagosPendientes?: number[];
+  pagosCompletados?: number[];
+
   general?: Resultado[];
   viejitos?: Resultado[];
 
@@ -60,6 +66,44 @@ type Resumen = {
   resultados: number;
 };
 
+type DatosMigracion = {
+  jugadores: Array<{
+    id: number;
+    nombre: string;
+    frecuente: boolean;
+    activo: boolean;
+  }>;
+
+  canchas: Array<{
+    id: number;
+    nombre: string;
+    par: number;
+    activa: boolean;
+  }>;
+
+  fechas: Array<{
+    id: number;
+    fecha: string;
+    formato: "edad" | "categorias";
+    cancha_id: number | null;
+    cancha_nombre: string | null;
+    par: number | null;
+    pagos_pendientes: number[];
+    pagos_completados: number[];
+  }>;
+
+  resultados: Array<{
+    id: number;
+    fecha_id: number;
+    jugador_id: number;
+    jugador_nombre: string;
+    categoria: string;
+    score: number;
+    puesto: number;
+    premio: number;
+  }>;
+};
+
 export default function MigracionPage() {
   const inputArchivo =
     useRef<HTMLInputElement>(null);
@@ -70,37 +114,97 @@ export default function MigracionPage() {
   const [resumen, setResumen] =
     useState<Resumen | null>(null);
 
+  const [
+    datosMigracion,
+    setDatosMigracion,
+  ] =
+    useState<DatosMigracion | null>(
+      null
+    );
+
   const [mensaje, setMensaje] =
     useState("");
 
-  function contarResultados(
+  const [migrando, setMigrando] =
+    useState(false);
+
+  const [
+    migracionCompleta,
+    setMigracionCompleta,
+  ] =
+    useState(false);
+
+  function prepararResultados(
     fechas: Fecha[]
   ) {
-    return fechas.reduce(
-      (total, fecha) => {
-        if (
-          fecha.formato ===
-          "categorias"
-        ) {
-          return (
-            total +
-            (fecha.categoriaA?.length ??
-              0) +
-            (fecha.categoriaB?.length ??
-              0)
-          );
-        }
+    return fechas.flatMap((fecha) => {
+      let indice = 0;
 
-        return (
-          total +
-          (fecha.general?.length ??
-            0) +
-          (fecha.viejitos?.length ??
-            0)
-        );
-      },
-      0
-    );
+      const listas =
+        fecha.formato === "categorias"
+          ? [
+              {
+                categoria: "A",
+                resultados:
+                  fecha.categoriaA ?? [],
+              },
+              {
+                categoria: "B",
+                resultados:
+                  fecha.categoriaB ?? [],
+              },
+            ]
+          : [
+              {
+                categoria: "general",
+                resultados:
+                  fecha.general ?? [],
+              },
+              {
+                categoria: "viejitos",
+                resultados:
+                  fecha.viejitos ?? [],
+              },
+            ];
+
+      return listas.flatMap(
+        ({
+          categoria,
+          resultados,
+        }) =>
+          resultados.map(
+            (resultado) => {
+              indice += 1;
+
+              return {
+                id:
+                  fecha.id * 1000 +
+                  indice,
+
+                fecha_id: fecha.id,
+
+                jugador_id:
+                  resultado.jugador.id,
+
+                jugador_nombre:
+                  resultado.jugador
+                    .nombre,
+
+                categoria,
+
+                score:
+                  resultado.score,
+
+                puesto:
+                  resultado.puesto,
+
+                premio:
+                  resultado.premio,
+              };
+            }
+          )
+      );
+    });
   }
 
   async function leerArchivo(
@@ -115,6 +219,9 @@ export default function MigracionPage() {
 
     setMensaje("");
     setResumen(null);
+    setDatosMigracion(null);
+    setMigracionCompleta(false);
+
     setArchivoNombre(
       archivo.name
     );
@@ -129,7 +236,9 @@ export default function MigracionPage() {
       if (
         respaldo.app !==
           "La Changueada" ||
-        !respaldo.datos
+        !respaldo.datos ||
+        typeof respaldo.datos !==
+          "object"
       ) {
         throw new Error(
           "Respaldo inválido"
@@ -163,32 +272,207 @@ export default function MigracionPage() {
             )
           : [];
 
-      setResumen({
+      if (
+        !Array.isArray(jugadores) ||
+        !Array.isArray(canchas) ||
+        !Array.isArray(fechas)
+      ) {
+        throw new Error(
+          "Contenido inválido"
+        );
+      }
+
+      const jugadoresPreparados =
+        jugadores.map((jugador) => ({
+          id: jugador.id,
+          nombre: jugador.nombre,
+          frecuente:
+            jugador.frecuente ??
+            false,
+          activo:
+            jugador.activo ?? true,
+        }));
+
+      const canchasPreparadas =
+        canchas.map((cancha) => ({
+          id: cancha.id,
+          nombre: cancha.nombre,
+          par: cancha.par,
+          activa:
+            cancha.activa ?? true,
+        }));
+
+      const fechasPreparadas =
+        fechas.map((fecha) => ({
+          id: fecha.id,
+          fecha: fecha.fecha,
+
+          formato:
+            fecha.formato ??
+            "edad",
+
+          cancha_id:
+            fecha.cancha?.id ??
+            null,
+
+          cancha_nombre:
+            fecha.cancha?.nombre ??
+            null,
+
+          par:
+            fecha.cancha?.par ??
+            null,
+
+          pagos_pendientes:
+            fecha.pagosPendientes ??
+            [],
+
+          pagos_completados:
+            fecha.pagosCompletados ??
+            [],
+        }));
+
+      const resultadosPreparados =
+        prepararResultados(fechas);
+
+      const datos: DatosMigracion = {
         jugadores:
-          jugadores.length,
+          jugadoresPreparados,
 
         canchas:
-          canchas.length,
+          canchasPreparadas,
 
         fechas:
-          fechas.length,
+          fechasPreparadas,
 
         resultados:
-          contarResultados(fechas),
+          resultadosPreparados,
+      };
+
+      setDatosMigracion(datos);
+
+      setResumen({
+        jugadores:
+          jugadoresPreparados.length,
+
+        canchas:
+          canchasPreparadas.length,
+
+        fechas:
+          fechasPreparadas.length,
+
+        resultados:
+          resultadosPreparados.length,
       });
 
       setMensaje(
         "✅ Respaldo leído correctamente."
       );
-    } catch {
+    } catch (error) {
+      console.error(
+        "No se pudo preparar el respaldo:",
+        error
+      );
+
       setArchivoNombre("");
       setResumen(null);
+      setDatosMigracion(null);
 
       setMensaje(
         "⚠️ No se pudo leer el respaldo."
       );
     } finally {
       evento.target.value = "";
+    }
+  }
+
+  async function migrarDatos() {
+    if (
+      !datosMigracion ||
+      !resumen ||
+      migrando ||
+      migracionCompleta
+    ) {
+      return;
+    }
+
+    const confirmar =
+      window.confirm(
+        `Se subirán a Supabase:\n\n` +
+          `${resumen.jugadores} jugadores\n` +
+          `${resumen.canchas} canchas\n` +
+          `${resumen.fechas} fechas\n` +
+          `${resumen.resultados} resultados\n\n` +
+          `¿Querés comenzar la migración?`
+      );
+
+    if (!confirmar) {
+      return;
+    }
+
+    setMigrando(true);
+
+    setMensaje(
+      "⏳ Subiendo datos a Supabase..."
+    );
+
+    try {
+      const supabase =
+        createClient();
+
+      const { data, error } =
+        await supabase.rpc(
+          "migrar_datos_iniciales",
+          {
+            p_jugadores:
+              datosMigracion.jugadores,
+
+            p_canchas:
+              datosMigracion.canchas,
+
+            p_fechas:
+              datosMigracion.fechas,
+
+            p_resultados:
+              datosMigracion.resultados,
+          }
+        );
+
+      if (error) {
+        throw new Error(
+          error.message
+        );
+      }
+
+      const resultado =
+        data as Resumen;
+
+      setResumen(resultado);
+      setMigracionCompleta(true);
+
+      setMensaje(
+        `✅ Migración completa: ` +
+          `${resultado.jugadores} jugadores, ` +
+          `${resultado.canchas} canchas, ` +
+          `${resultado.fechas} fechas y ` +
+          `${resultado.resultados} resultados.`
+      );
+    } catch (error) {
+      console.error(
+        "No se pudo migrar:",
+        error
+      );
+
+      const detalle =
+        error instanceof Error
+          ? error.message
+          : "Error desconocido";
+
+      setMensaje(
+        `⚠️ No se pudo completar la migración: ${detalle}`
+      );
+    } finally {
+      setMigrando(false);
     }
   }
 
@@ -205,8 +489,7 @@ export default function MigracionPage() {
 
         <p className="mt-2">
           Primero vamos a revisar el
-          contenido. Todavía no se subirá
-          nada a la nube.
+          contenido antes de subirlo.
         </p>
 
         <input
@@ -222,7 +505,8 @@ export default function MigracionPage() {
           onClick={() =>
             inputArchivo.current?.click()
           }
-          className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white"
+          disabled={migrando}
+          className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white disabled:bg-gray-400"
         >
           📂 Elegir respaldo
         </button>
@@ -249,6 +533,7 @@ export default function MigracionPage() {
           <div className="space-y-3 text-xl">
             <div className="flex justify-between">
               <span>Jugadores</span>
+
               <strong>
                 {resumen.jugadores}
               </strong>
@@ -256,6 +541,7 @@ export default function MigracionPage() {
 
             <div className="flex justify-between">
               <span>Canchas</span>
+
               <strong>
                 {resumen.canchas}
               </strong>
@@ -263,6 +549,7 @@ export default function MigracionPage() {
 
             <div className="flex justify-between">
               <span>Fechas</span>
+
               <strong>
                 {resumen.fechas}
               </strong>
@@ -270,16 +557,39 @@ export default function MigracionPage() {
 
             <div className="flex justify-between">
               <span>Resultados</span>
+
               <strong>
                 {resumen.resultados}
               </strong>
             </div>
           </div>
 
-          <div className="mt-5 rounded-xl bg-yellow-100 p-4 text-yellow-900">
-            Todavía no se subió ningún
-            dato a Supabase.
-          </div>
+          {!migracionCompleta ? (
+            <>
+              <div className="mt-5 rounded-xl bg-yellow-100 p-4 text-yellow-900">
+                Revisá las cantidades antes
+                de comenzar. La migración
+                solo funcionará si las
+                tablas están vacías.
+              </div>
+
+              <button
+                type="button"
+                onClick={migrarDatos}
+                disabled={migrando}
+                className="mt-5 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white disabled:bg-gray-400"
+              >
+                {migrando
+                  ? "Migrando..."
+                  : "☁️ Subir datos a Supabase"}
+              </button>
+            </>
+          ) : (
+            <div className="mt-5 rounded-xl bg-green-100 p-4 font-bold text-green-900">
+              ✅ Los datos fueron subidos
+              correctamente.
+            </div>
+          )}
         </div>
       )}
 
