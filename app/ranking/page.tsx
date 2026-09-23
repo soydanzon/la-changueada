@@ -5,9 +5,11 @@ import {
   calcularEstadisticas,
   type EstadisticaJugador,
   type FechaGuardada,
+  type Resultado,
 } from "../utils/estadisticas";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import { createClient } from "../lib/supabase/client";
 
 type EstadisticaConPresencias =
   EstadisticaJugador & {
@@ -27,6 +29,24 @@ type RankingSeleccionado = {
   titulo: string;
   jugadores: EstadisticaConPresencias[];
   tipo: TipoRanking;
+};
+
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  fecha_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
 };
 
 function formatearPesos(valor: number) {
@@ -180,6 +200,12 @@ export default function Ranking() {
       EstadisticaConPresencias[]
     >([]);
 
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [mensaje, setMensaje] =
+    useState("");
+
   const [
     rankingSeleccionado,
     setRankingSeleccionado,
@@ -189,125 +215,294 @@ export default function Ranking() {
     );
 
   useEffect(() => {
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+    async function cargarRanking() {
+      const supabase = createClient();
 
-    if (!datos) {
-      return;
-    }
+      try {
+        const [
+          resultadoFechas,
+          resultadoResultados,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par"
+            )
+            .order("id", {
+              ascending: true,
+            }),
 
-    try {
-      const historial: FechaGuardada[] =
-        JSON.parse(datos);
+          supabase
+            .from("resultados")
+            .select(
+              "fecha_id, jugador_nombre, categoria, score, puesto, premio"
+            )
+            .order("fecha_id", {
+              ascending: true,
+            })
+            .order("puesto", {
+              ascending: true,
+            }),
+        ]);
 
-      const presenciasPorJugador =
-        new Map<string, number>();
-
-      historial.forEach((fecha) => {
-        const jugadoresDeLaFecha =
-          new Set<string>();
-
-        if (fecha.formato === "categorias") {
-          const categoriaA =
-            fecha.categoriaA ?? [];
-
-          const categoriaB =
-            fecha.categoriaB ?? [];
-
-          categoriaA.forEach(
-            (resultado) => {
-              jugadoresDeLaFecha.add(
-                resultado.jugador.nombre
-              );
-            }
-          );
-
-          categoriaB.forEach(
-            (resultado) => {
-              jugadoresDeLaFecha.add(
-                resultado.jugador.nombre
-              );
-            }
-          );
-        } else {
-          const general =
-            fecha.general ?? [];
-
-          const viejitos =
-            fecha.viejitos ?? [];
-
-          general.forEach((resultado) => {
-            jugadoresDeLaFecha.add(
-              resultado.jugador.nombre
-            );
-          });
-
-          viejitos.forEach(
-            (resultado) => {
-              jugadoresDeLaFecha.add(
-                resultado.jugador.nombre
-              );
-            }
-          );
+        if (resultadoFechas.error) {
+          throw resultadoFechas.error;
         }
 
-        jugadoresDeLaFecha.forEach(
-          (nombre) => {
-            presenciasPorJugador.set(
-              nombre,
-              (presenciasPorJugador.get(
-                nombre
-              ) ?? 0) + 1
+        if (resultadoResultados.error) {
+          throw resultadoResultados.error;
+        }
+
+        const fechasSupabase =
+          (resultadoFechas.data ??
+            []) as FechaSupabase[];
+
+        const resultadosSupabase =
+          (resultadoResultados.data ??
+            []) as ResultadoSupabase[];
+
+        const historial: FechaGuardada[] =
+          fechasSupabase.map(
+            (fechaSupabase) => {
+              const resultadosFecha =
+                resultadosSupabase.filter(
+                  (resultado) =>
+                    Number(
+                      resultado.fecha_id
+                    ) ===
+                    Number(
+                      fechaSupabase.id
+                    )
+                );
+
+              function convertirResultados(
+                categoria: string
+              ): Resultado[] {
+                return resultadosFecha
+                  .filter(
+                    (resultado) =>
+                      resultado.categoria ===
+                      categoria
+                  )
+                  .map((resultado) => ({
+                    jugador: {
+                      nombre:
+                        resultado.jugador_nombre,
+                    },
+
+                    score: Number(
+                      resultado.score
+                    ),
+
+                    puesto: Number(
+                      resultado.puesto
+                    ),
+
+                    premio: Number(
+                      resultado.premio
+                    ),
+                  }));
+              }
+
+              const formato:
+                | "edad"
+                | "categorias" =
+                fechaSupabase.formato ===
+                "categorias"
+                  ? "categorias"
+                  : "edad";
+
+              const general =
+                formato === "edad"
+                  ? convertirResultados(
+                      "general"
+                    )
+                  : [];
+
+              const viejitos =
+                formato === "edad"
+                  ? convertirResultados(
+                      "viejitos"
+                    )
+                  : [];
+
+              const categoriaA =
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaA"
+                    )
+                  : [];
+
+              const categoriaB =
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaB"
+                    )
+                  : [];
+
+              return {
+                id: Number(
+                  fechaSupabase.id
+                ),
+
+                fecha:
+                  fechaSupabase.fecha,
+
+                formato,
+
+                cancha:
+                  fechaSupabase.cancha_id !==
+                    null &&
+                  fechaSupabase.cancha_nombre &&
+                  fechaSupabase.par !== null
+                    ? {
+                        id: Number(
+                          fechaSupabase.cancha_id
+                        ),
+
+                        nombre:
+                          fechaSupabase.cancha_nombre,
+
+                        par: Number(
+                          fechaSupabase.par
+                        ),
+                      }
+                    : null,
+
+                general,
+                viejitos,
+                categoriaA,
+                categoriaB,
+              };
+            }
+          );
+
+        const presenciasPorJugador =
+          new Map<string, number>();
+
+        historial.forEach((fecha) => {
+          const jugadoresDeLaFecha =
+            new Set<string>();
+
+          if (
+            fecha.formato ===
+            "categorias"
+          ) {
+            const categoriaA =
+              fecha.categoriaA ?? [];
+
+            const categoriaB =
+              fecha.categoriaB ?? [];
+
+            categoriaA.forEach(
+              (resultado) => {
+                jugadoresDeLaFecha.add(
+                  resultado.jugador.nombre
+                );
+              }
+            );
+
+            categoriaB.forEach(
+              (resultado) => {
+                jugadoresDeLaFecha.add(
+                  resultado.jugador.nombre
+                );
+              }
+            );
+          } else {
+            fecha.general.forEach(
+              (resultado) => {
+                jugadoresDeLaFecha.add(
+                  resultado.jugador.nombre
+                );
+              }
+            );
+
+            fecha.viejitos.forEach(
+              (resultado) => {
+                jugadoresDeLaFecha.add(
+                  resultado.jugador.nombre
+                );
+              }
             );
           }
-        );
-      });
 
-      const estadisticasCalculadas =
-        calcularEstadisticas(historial).map(
-          (jugador) => ({
+          jugadoresDeLaFecha.forEach(
+            (nombre) => {
+              presenciasPorJugador.set(
+                nombre,
+                (presenciasPorJugador.get(
+                  nombre
+                ) ?? 0) + 1
+              );
+            }
+          );
+        });
+
+        const estadisticasCalculadas =
+          calcularEstadisticas(
+            historial
+          ).map((jugador) => ({
             ...jugador,
+
             presencias:
               presenciasPorJugador.get(
                 jugador.nombre
               ) ?? 0,
-          })
+          }));
+
+        setEstadisticas(
+          estadisticasCalculadas
+        );
+      } catch (error) {
+        console.error(
+          "No se pudo cargar el ranking:",
+          error
         );
 
-      setEstadisticas(
-        estadisticasCalculadas
-      );
-    } catch {
-      setEstadisticas([]);
+        setEstadisticas([]);
+
+        setMensaje(
+          "⚠️ No se pudo cargar el ranking desde Supabase."
+        );
+      } finally {
+        setCargando(false);
+      }
     }
+
+    cargarRanking();
   }, []);
 
   useEffect(() => {
-  if (!rankingSeleccionado) {
-    return;
-  }
+    if (!rankingSeleccionado) {
+      return;
+    }
 
-  const scrollY = window.scrollY;
+    const scrollY = window.scrollY;
 
-  document.body.style.position = "fixed";
-  document.body.style.top = `-${scrollY}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.width = "100%";
-  document.body.style.overflow = "hidden";
+    document.body.style.position =
+      "fixed";
 
-  return () => {
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.left = "";
-    document.body.style.right = "";
-    document.body.style.width = "";
-    document.body.style.overflow = "";
+    document.body.style.top =
+      `-${scrollY}px`;
 
-    window.scrollTo(0, scrollY);
-  };
-}, [rankingSeleccionado]);
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+    document.body.style.overflow =
+      "hidden";
+
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+
+      window.scrollTo(0, scrollY);
+    };
+  }, [rankingSeleccionado]);
 
   const porPresencias = [
     ...estadisticas,
@@ -386,98 +581,114 @@ export default function Ranking() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        <RankingBloque
-          titulo="🙋🏻‍♂️ Más presencias"
-          jugadores={porPresencias}
-          tipo="presencias"
-          alAbrir={() =>
-            abrirRanking(
-              "🙋🏻‍♂️ Más presencias",
-              porPresencias,
-              "presencias"
-            )
-          }
-        />
+      {mensaje && (
+        <p className="mb-6 rounded-xl bg-white p-4 text-center font-bold text-green-900">
+          {mensaje}
+        </p>
+      )}
 
-        <RankingBloque
-          titulo="🏆 Más victorias"
-          jugadores={porVictorias}
-          tipo="victorias"
-          alAbrir={() =>
-            abrirRanking(
-              "🏆 Más victorias",
-              porVictorias,
-              "victorias"
-            )
-          }
-        />
+      {cargando ? (
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          Cargando ranking...
+        </div>
+      ) : estadisticas.length === 0 ? (
+        <div className="rounded-xl bg-white p-5 text-green-900">
+          No hay resultados guardados.
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <RankingBloque
+            titulo="🙋🏻‍♂️ Más presencias"
+            jugadores={porPresencias}
+            tipo="presencias"
+            alAbrir={() =>
+              abrirRanking(
+                "🙋🏻‍♂️ Más presencias",
+                porPresencias,
+                "presencias"
+              )
+            }
+          />
 
-        <RankingBloque
-          titulo="🥇🥈🥉 Más podios"
-          jugadores={porPodios}
-          tipo="podios"
-          alAbrir={() =>
-            abrirRanking(
-              "🥇🥈🥉 Más podios",
-              porPodios,
-              "podios"
-            )
-          }
-        />
+          <RankingBloque
+            titulo="🏆 Más victorias"
+            jugadores={porVictorias}
+            tipo="victorias"
+            alAbrir={() =>
+              abrirRanking(
+                "🏆 Más victorias",
+                porVictorias,
+                "victorias"
+              )
+            }
+          />
 
-        <RankingBloque
-          titulo="🎯 Mejor promedio"
-          jugadores={porPromedio}
-          tipo="promedio"
-          alAbrir={() =>
-            abrirRanking(
-              "🎯 Mejor promedio",
-              porPromedio,
-              "promedio"
-            )
-          }
-        />
+          <RankingBloque
+            titulo="🥇🥈🥉 Más podios"
+            jugadores={porPodios}
+            tipo="podios"
+            alAbrir={() =>
+              abrirRanking(
+                "🥇🥈🥉 Más podios",
+                porPodios,
+                "podios"
+              )
+            }
+          />
 
-        <RankingBloque
-          titulo="⭐ Mejor score"
-          jugadores={porMejorScore}
-          tipo="mejorScore"
-          alAbrir={() =>
-            abrirRanking(
-              "⭐ Mejor score",
-              porMejorScore,
-              "mejorScore"
-            )
-          }
-        />
+          <RankingBloque
+            titulo="🎯 Mejor promedio"
+            jugadores={porPromedio}
+            tipo="promedio"
+            alAbrir={() =>
+              abrirRanking(
+                "🎯 Mejor promedio",
+                porPromedio,
+                "promedio"
+              )
+            }
+          />
 
-        <RankingBloque
-          titulo="💰 Más dinero ganado"
-          jugadores={porGanado}
-          tipo="ganado"
-          alAbrir={() =>
-            abrirRanking(
-              "💰 Más dinero ganado",
-              porGanado,
-              "ganado"
-            )
-          }
-        />
+          <RankingBloque
+            titulo="⭐ Mejor score"
+            jugadores={porMejorScore}
+            tipo="mejorScore"
+            alAbrir={() =>
+              abrirRanking(
+                "⭐ Mejor score",
+                porMejorScore,
+                "mejorScore"
+              )
+            }
+          />
 
-        <RankingBloque
-          titulo="📈 Mejor balance"
-          jugadores={porBalance}
-          tipo="balance"
-          alAbrir={() =>
-            abrirRanking(
-              "📈 Mejor balance",
-              porBalance,
-              "balance"
-            )
-          }
-        />
-      </div>
+          <RankingBloque
+            titulo="💰 Más dinero ganado"
+            jugadores={porGanado}
+            tipo="ganado"
+            alAbrir={() =>
+              abrirRanking(
+                "💰 Más dinero ganado",
+                porGanado,
+                "ganado"
+              )
+            }
+          />
+
+          <RankingBloque
+            titulo="📈 Mejor balance"
+            jugadores={porBalance}
+            tipo="balance"
+            alAbrir={() =>
+              abrirRanking(
+                "📈 Mejor balance",
+                porBalance,
+                "balance"
+              )
+            }
+          />
+        </div>
+      )}
 
       {rankingSeleccionado && (
         <ModalRanking
