@@ -8,10 +8,11 @@ import {
   type EstadisticaCancha,
   type EstadisticaJugador,
   type FechaGuardada,
+  type Resultado,
 } from "../../../utils/estadisticas";
 import BotonInicio from "../../../components/BotonInicio";
 import BotonVolver from "../../../components/BotonVolver";
-
+import { createClient } from "../../../lib/supabase/client"; 
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
@@ -67,40 +68,269 @@ export default function CompartirPerfil() {
     useState("");
 
   useEffect(() => {
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+    async function cargarEstadisticas() {
+      const supabase = createClient();
 
-    if (!datos) {
-      return;
-    }
+      try {
+        const [
+          respuestaFechas,
+          respuestaResultados,
+          respuestaJugadores,
+          respuestaCanchas,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id"
+            )
+            .order("id", {
+              ascending: true,
+            }),
 
-    try {
-      const historial: FechaGuardada[] =
-        JSON.parse(datos);
+          supabase
+            .from("resultados")
+            .select(
+              "fecha_id, jugador_id, categoria, score, puesto, premio"
+            ),
 
-      const estadisticas =
-        calcularEstadisticas(historial);
+          supabase
+            .from("jugadores")
+            .select("id, nombre"),
 
-      const jugador = estadisticas.find(
-        (estadistica) =>
-          estadistica.nombre === nombre
-      );
+          supabase
+            .from("canchas")
+            .select("id, nombre, par"),
+        ]);
 
-      if (jugador) {
-        setResumen(jugador);
+        if (respuestaFechas.error) {
+          throw respuestaFechas.error;
+        }
+
+        if (respuestaResultados.error) {
+          throw respuestaResultados.error;
+        }
+
+        if (respuestaJugadores.error) {
+          throw respuestaJugadores.error;
+        }
+
+        if (respuestaCanchas.error) {
+          throw respuestaCanchas.error;
+        }
+
+        const jugadoresPorId = new Map<
+          number,
+          string
+        >();
+
+        respuestaJugadores.data?.forEach(
+          (jugador: {
+            id: number;
+            nombre: string;
+          }) => {
+            jugadoresPorId.set(
+              Number(jugador.id),
+              jugador.nombre
+            );
+          }
+        );
+
+        const canchasPorId = new Map<
+          number,
+          {
+            id: number;
+            nombre: string;
+            par: number;
+          }
+        >();
+
+        respuestaCanchas.data?.forEach(
+          (cancha: {
+            id: number;
+            nombre: string;
+            par: number;
+          }) => {
+            canchasPorId.set(
+              Number(cancha.id),
+              {
+                id: Number(cancha.id),
+                nombre: cancha.nombre,
+                par: Number(cancha.par),
+              }
+            );
+          }
+        );
+
+        const historial: FechaGuardada[] =
+          (respuestaFechas.data ?? []).map(
+            (fecha: {
+              id: number;
+              fecha: string;
+              formato: string | null;
+              cancha_id: number | null;
+            }) => {
+              const general: Resultado[] =
+                [];
+
+              const viejitos: Resultado[] =
+                [];
+
+              const categoriaA: Resultado[] =
+                [];
+
+              const categoriaB: Resultado[] =
+                [];
+
+              (
+                respuestaResultados.data ?? []
+              )
+                .filter(
+                  (resultado: {
+                    fecha_id: number;
+                    jugador_id: number;
+                    categoria: string;
+                    score: number;
+                    puesto: number;
+                    premio: number;
+                  }) =>
+                    Number(
+                      resultado.fecha_id
+                    ) === Number(fecha.id)
+                )
+                .forEach((resultado: {
+                  fecha_id: number;
+                  jugador_id: number;
+                  categoria: string;
+                  score: number;
+                  puesto: number;
+                  premio: number;
+                }) => {
+                  const nombreJugador =
+                    jugadoresPorId.get(
+                      Number(
+                        resultado.jugador_id
+                      )
+                    );
+
+                  if (!nombreJugador) {
+                    return;
+                  }
+
+                  const resultadoConvertido: Resultado =
+                    {
+                      jugador: {
+                        nombre:
+                          nombreJugador,
+                      },
+
+                      score: Number(
+                        resultado.score
+                      ),
+
+                      puesto: Number(
+                        resultado.puesto
+                      ),
+
+                      premio: Number(
+                        resultado.premio
+                      ),
+                    };
+
+                  if (
+                    resultado.categoria ===
+                    "general"
+                  ) {
+                    general.push(
+                      resultadoConvertido
+                    );
+                  }
+
+                  if (
+                    resultado.categoria ===
+                    "viejitos"
+                  ) {
+                    viejitos.push(
+                      resultadoConvertido
+                    );
+                  }
+
+                  if (
+                    resultado.categoria ===
+                    "categoriaA"
+                  ) {
+                    categoriaA.push(
+                      resultadoConvertido
+                    );
+                  }
+
+                  if (
+                    resultado.categoria ===
+                    "categoriaB"
+                  ) {
+                    categoriaB.push(
+                      resultadoConvertido
+                    );
+                  }
+                });
+
+              const cancha =
+                fecha.cancha_id === null
+                  ? null
+                  : canchasPorId.get(
+                      Number(
+                        fecha.cancha_id
+                      )
+                    ) ?? null;
+
+              return {
+                id: Number(fecha.id),
+                fecha: fecha.fecha,
+
+                formato:
+                  fecha.formato ===
+                  "categorias"
+                    ? "categorias"
+                    : "edad",
+
+                cancha,
+                general,
+                viejitos,
+                categoriaA,
+                categoriaB,
+              };
+            }
+          );
+
+        const estadisticas =
+          calcularEstadisticas(historial);
+
+        const jugador =
+          estadisticas.find(
+            (estadistica) =>
+              estadistica.nombre ===
+              nombre
+          );
+
+        setResumen(jugador ?? null);
+
+        setEstadisticasCancha(
+          calcularEstadisticasPorCancha(
+            historial,
+            nombre
+          )
+        );
+      } catch (error) {
+        console.error(
+          "No se pudo cargar el perfil:",
+          error
+        );
+
+        setResumen(null);
+        setEstadisticasCancha([]);
       }
-
-      setEstadisticasCancha(
-        calcularEstadisticasPorCancha(
-          historial,
-          nombre
-        )
-      );
-    } catch {
-      setResumen(null);
-      setEstadisticasCancha([]);
     }
+
+    cargarEstadisticas();
   }, [nombre]);
 
   function generarDetalleVictorias() {

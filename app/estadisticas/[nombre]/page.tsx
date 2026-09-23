@@ -8,16 +8,39 @@ import {
   type EstadisticaCancha,
   type EstadisticaJugador,
   type FechaGuardada,
+  type Resultado,
 } from "../../utils/estadisticas";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
+import { createClient } from "../../lib/supabase/client";
+
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  fecha_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
+};
 
 function formatearPesos(valor: number) {
   return `$${valor.toLocaleString("es-AR")}`;
 }
 
 function formatearNumero(valor?: number) {
-  if (valor === undefined || Number.isNaN(valor)) {
+  if (
+    valor === undefined ||
+    Number.isNaN(valor)
+  ) {
     return "-";
   }
 
@@ -33,7 +56,9 @@ function formatearRespectoPar(valor: number) {
 
   const numero = formatearNumero(valor);
 
-  return valor > 0 ? `+${numero}` : numero;
+  return valor > 0
+    ? `+${numero}`
+    : numero;
 }
 
 export default function PerfilJugador() {
@@ -44,54 +69,245 @@ export default function PerfilJugador() {
   );
 
   const [resumen, setResumen] =
-    useState<EstadisticaJugador | null>(null);
+    useState<EstadisticaJugador | null>(
+      null
+    );
 
   const [
     estadisticasCancha,
     setEstadisticasCancha,
   ] = useState<EstadisticaCancha[]>([]);
 
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [mensaje, setMensaje] =
+    useState("");
+
   useEffect(() => {
-    const datos = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+    async function cargarPerfil() {
+      const supabase = createClient();
 
-    if (!datos) {
-      return;
-    }
+      try {
+        const [
+          resultadoFechas,
+          resultadoResultados,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par"
+            )
+            .order("id", {
+              ascending: true,
+            }),
 
-    try {
-      const fechas: FechaGuardada[] =
-        JSON.parse(datos);
+          supabase
+            .from("resultados")
+            .select(
+              "fecha_id, jugador_nombre, categoria, score, puesto, premio"
+            )
+            .order("fecha_id", {
+              ascending: true,
+            })
+            .order("puesto", {
+              ascending: true,
+            }),
+        ]);
 
-      const estadisticas =
-        calcularEstadisticas(fechas);
+        if (resultadoFechas.error) {
+          throw resultadoFechas.error;
+        }
 
-      const jugador = estadisticas.find(
-        (estadistica) =>
-          estadistica.nombre === nombre
-      );
+        if (resultadoResultados.error) {
+          throw resultadoResultados.error;
+        }
 
-      if (jugador) {
+        const fechasSupabase =
+          (resultadoFechas.data ??
+            []) as FechaSupabase[];
+
+        const resultadosSupabase =
+          (resultadoResultados.data ??
+            []) as ResultadoSupabase[];
+
+        const historial: FechaGuardada[] =
+          fechasSupabase.map(
+            (fechaSupabase) => {
+              const resultadosFecha =
+                resultadosSupabase.filter(
+                  (resultado) =>
+                    Number(
+                      resultado.fecha_id
+                    ) ===
+                    Number(
+                      fechaSupabase.id
+                    )
+                );
+
+              function convertirResultados(
+                categoria: string
+              ): Resultado[] {
+                return resultadosFecha
+                  .filter(
+                    (resultado) =>
+                      resultado.categoria ===
+                      categoria
+                  )
+                  .map((resultado) => ({
+                    jugador: {
+                      nombre:
+                        resultado.jugador_nombre,
+                    },
+
+                    score: Number(
+                      resultado.score
+                    ),
+
+                    puesto: Number(
+                      resultado.puesto
+                    ),
+
+                    premio: Number(
+                      resultado.premio
+                    ),
+                  }));
+              }
+
+              const formato:
+                | "edad"
+                | "categorias" =
+                fechaSupabase.formato ===
+                "categorias"
+                  ? "categorias"
+                  : "edad";
+
+              const general =
+                formato === "edad"
+                  ? convertirResultados(
+                      "general"
+                    )
+                  : [];
+
+              const viejitos =
+                formato === "edad"
+                  ? convertirResultados(
+                      "viejitos"
+                    )
+                  : [];
+
+              const categoriaA =
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaA"
+                    )
+                  : [];
+
+              const categoriaB =
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaB"
+                    )
+                  : [];
+
+              return {
+                id: Number(
+                  fechaSupabase.id
+                ),
+
+                fecha:
+                  fechaSupabase.fecha,
+
+                formato,
+
+                cancha:
+                  fechaSupabase.cancha_id !==
+                    null &&
+                  fechaSupabase.cancha_nombre &&
+                  fechaSupabase.par !== null
+                    ? {
+                        id: Number(
+                          fechaSupabase.cancha_id
+                        ),
+
+                        nombre:
+                          fechaSupabase.cancha_nombre,
+
+                        par: Number(
+                          fechaSupabase.par
+                        ),
+                      }
+                    : null,
+
+                general,
+                viejitos,
+                categoriaA,
+                categoriaB,
+              };
+            }
+          );
+
+        const estadisticas =
+          calcularEstadisticas(historial);
+
+        const jugador = estadisticas.find(
+          (estadistica) =>
+            estadistica.nombre === nombre
+        );
+
+        if (!jugador) {
+          setMensaje(
+            "⚠️ No se encontró este jugador."
+          );
+
+          return;
+        }
+
         setResumen(jugador);
-      }
 
-      setEstadisticasCancha(
-        calcularEstadisticasPorCancha(
-          fechas,
-          nombre
-        )
-      );
-    } catch {
-      setResumen(null);
-      setEstadisticasCancha([]);
+        setEstadisticasCancha(
+          calcularEstadisticasPorCancha(
+            historial,
+            nombre
+          )
+        );
+      } catch (error) {
+        console.error(
+          "No se pudo cargar el perfil:",
+          error
+        );
+
+        setResumen(null);
+        setEstadisticasCancha([]);
+
+        setMensaje(
+          "⚠️ No se pudo cargar el perfil desde Supabase."
+        );
+      } finally {
+        setCargando(false);
+      }
     }
+
+    cargarPerfil();
   }, [nombre]);
+
+  if (cargando) {
+    return (
+      <main className="min-h-screen bg-green-900 p-6 text-white">
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          Cargando estadísticas...
+        </div>
+      </main>
+    );
+  }
 
   if (!resumen) {
     return (
       <main className="min-h-screen bg-green-900 p-6 text-white">
-        Cargando...
+        <div className="rounded-xl bg-white p-5 text-center font-bold text-green-900">
+          {mensaje ||
+            "⚠️ No se encontró este jugador."}
+        </div>
       </main>
     );
   }
@@ -168,7 +384,9 @@ export default function PerfilJugador() {
               <div className="flex items-center justify-between">
                 <span>🅰️ Categoría A</span>
                 <span>
-                  {resumen.victoriasCategoriaA}
+                  {
+                    resumen.victoriasCategoriaA
+                  }
                 </span>
               </div>
             )}
@@ -177,7 +395,9 @@ export default function PerfilJugador() {
               <div className="flex items-center justify-between">
                 <span>🅱️ Categoría B</span>
                 <span>
-                  {resumen.victoriasCategoriaB}
+                  {
+                    resumen.victoriasCategoriaB
+                  }
                 </span>
               </div>
             )}
@@ -213,7 +433,9 @@ export default function PerfilJugador() {
               <div className="flex items-center justify-between">
                 <span>🅰️ Categoría A</span>
                 <span>
-                  {resumen.podiosCategoriaA}
+                  {
+                    resumen.podiosCategoriaA
+                  }
                 </span>
               </div>
             )}
@@ -222,7 +444,9 @@ export default function PerfilJugador() {
               <div className="flex items-center justify-between">
                 <span>🅱️ Categoría B</span>
                 <span>
-                  {resumen.podiosCategoriaB}
+                  {
+                    resumen.podiosCategoriaB
+                  }
                 </span>
               </div>
             )}
@@ -250,13 +474,17 @@ export default function PerfilJugador() {
               resumen.mejorScore
             )}{" "}
             <span className="text-base font-normal">
-              ({resumen.mejorScoreGolpes} golpes)
+              (
+              {resumen.mejorScoreGolpes}{" "}
+              golpes)
             </span>
           </p>
 
           <p className="text-lg font-bold">
             💸 Aportado:{" "}
-            {formatearPesos(resumen.aportado)}
+            {formatearPesos(
+              resumen.aportado
+            )}
           </p>
 
           <p className="text-lg font-bold">
@@ -266,7 +494,9 @@ export default function PerfilJugador() {
 
           <p className="text-lg font-bold">
             📈 Balance:{" "}
-            {formatearPesos(resumen.balance)}
+            {formatearPesos(
+              resumen.balance
+            )}
           </p>
         </div>
 
