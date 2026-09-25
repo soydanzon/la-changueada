@@ -1,29 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { jugadores, type Jugador } from "../datos/jugadores";
+import {
+  useEffect,
+  useState,
+} from "react";
+import { type Jugador } from "../datos/jugadores";
+import { createClient } from "../lib/supabase/client";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
 export default function Jugadores() {
-  const [listaJugadores, setListaJugadores] = useState<Jugador[]>([]);
+  const [listaJugadores, setListaJugadores] =
+    useState<Jugador[]>([]);
+
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [mensaje, setMensaje] =
+    useState("");
 
   useEffect(() => {
-    const guardados = localStorage.getItem("laChangueadaJugadores");
+    async function cargarJugadores() {
+      const supabase = createClient();
 
-    if (guardados) {
-      setListaJugadores(JSON.parse(guardados));
-    } else {
-      setListaJugadores(jugadores);
+      const { data, error } = await supabase
+        .from("jugadores")
+        .select("id, nombre, frecuente")
+        .order("nombre");
+
+      if (error) {
+        console.error(
+          "No se pudieron cargar los jugadores:",
+          error
+        );
+
+        setMensaje(
+          "⚠️ No se pudieron cargar los jugadores."
+        );
+
+        setCargando(false);
+        return;
+      }
+
+      const jugadoresNube: Jugador[] = (
+        data ?? []
+      ).map(
+  (jugador: {
+    id: number;
+    nombre: string;
+    frecuente: boolean | null;
+  }) => ({
+        id: Number(jugador.id),
+        nombre: jugador.nombre,
+        frecuente: Boolean(
+          jugador.frecuente
+        ),
+      })
+    );
+
+      setListaJugadores(jugadoresNube);
 
       localStorage.setItem(
         "laChangueadaJugadores",
-        JSON.stringify(jugadores)
+        JSON.stringify(jugadoresNube)
       );
+
+      setCargando(false);
     }
+
+    cargarJugadores();
   }, []);
 
-  function guardarLista(nuevaLista: Jugador[]) {
+  function actualizarListaLocal(
+    nuevaLista: Jugador[]
+  ) {
     setListaJugadores(nuevaLista);
 
     localStorage.setItem(
@@ -32,44 +82,177 @@ export default function Jugadores() {
     );
   }
 
-  function editarJugador(jugador: Jugador) {
+  async function editarJugador(
+    jugador: Jugador
+  ) {
     const nuevoNombre = prompt(
       "Editar nombre del jugador",
       jugador.nombre
     );
 
-    if (!nuevoNombre) return;
+    if (!nuevoNombre?.trim()) {
+      return;
+    }
 
-    const nuevaLista = listaJugadores.map((j) =>
-      j.id === jugador.id
-        ? { ...j, nombre: nuevoNombre.trim() }
-        : j
+    const nombreLimpio =
+      nuevoNombre.trim();
+
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("jugadores")
+      .update({
+        nombre: nombreLimpio,
+      })
+      .eq("id", jugador.id);
+
+    if (error) {
+      console.error(
+        "No se pudo editar el jugador:",
+        error
+      );
+
+      alert(
+        "No se pudo editar el jugador."
+      );
+
+      return;
+    }
+
+    actualizarListaLocal(
+      listaJugadores.map((actual) =>
+        actual.id === jugador.id
+          ? {
+              ...actual,
+              nombre: nombreLimpio,
+            }
+          : actual
+      )
     );
-
-    guardarLista(nuevaLista);
   }
 
-  function cambiarFrecuente(jugador: Jugador) {
-    const nuevaLista = listaJugadores.map((j) =>
-      j.id === jugador.id
-        ? { ...j, frecuente: !j.frecuente }
-        : j
-    );
+  async function cambiarFrecuente(
+    jugador: Jugador
+  ) {
+    const nuevoEstado =
+      !jugador.frecuente;
 
-    guardarLista(nuevaLista);
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("jugadores")
+      .update({
+        frecuente: nuevoEstado,
+      })
+      .eq("id", jugador.id);
+
+    if (error) {
+      console.error(
+        "No se pudo modificar el jugador:",
+        error
+      );
+
+      alert(
+        "No se pudo modificar el jugador."
+      );
+
+      return;
+    }
+
+    actualizarListaLocal(
+      listaJugadores.map((actual) =>
+        actual.id === jugador.id
+          ? {
+              ...actual,
+              frecuente: nuevoEstado,
+            }
+          : actual
+      )
+    );
   }
 
-  function eliminarJugador(jugador: Jugador) {
-    if (!confirm(`¿Eliminar a ${jugador.nombre}?`)) return;
+  async function eliminarJugador(
+    jugador: Jugador
+  ) {
+    const confirmar = confirm(
+      `¿Eliminar a ${jugador.nombre}?`
+    );
 
-    guardarLista(
-      listaJugadores.filter((j) => j.id !== jugador.id)
+    if (!confirmar) {
+      return;
+    }
+
+    const supabase = createClient();
+
+    const {
+      count,
+      error: errorConsulta,
+    } = await supabase
+      .from("resultados")
+      .select("id", {
+        count: "exact",
+        head: true,
+      })
+      .eq("jugador_id", jugador.id);
+
+    if (errorConsulta) {
+      console.error(
+        "No se pudo revisar el historial:",
+        errorConsulta
+      );
+
+      alert(
+        "No se pudo revisar el historial del jugador."
+      );
+
+      return;
+    }
+
+    if ((count ?? 0) > 0) {
+      alert(
+        "Este jugador tiene resultados históricos y no puede eliminarse. Podés quitarle la estrella de frecuente."
+      );
+
+      return;
+    }
+
+    const { error } = await supabase
+      .from("jugadores")
+      .delete()
+      .eq("id", jugador.id);
+
+    if (error) {
+      console.error(
+        "No se pudo eliminar el jugador:",
+        error
+      );
+
+      alert(
+        "No se pudo eliminar el jugador."
+      );
+
+      return;
+    }
+
+    actualizarListaLocal(
+      listaJugadores.filter(
+        (actual) =>
+          actual.id !== jugador.id
+      )
     );
   }
 
-  const jugadoresOrdenados = [...listaJugadores].sort((a, b) =>
-  a.nombre.localeCompare(b.nombre)
-);
+  const jugadoresOrdenados = [
+    ...listaJugadores,
+  ].sort((a, b) =>
+    a.nombre.localeCompare(
+      b.nombre,
+      "es",
+      {
+        sensitivity: "base",
+      }
+    )
+  );
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -91,42 +274,73 @@ export default function Jugadores() {
         + Agregar jugador
       </a>
 
-      <div className="mt-8 space-y-3">
-        {jugadoresOrdenados.map((jugador) => (
-          <div
-  key={jugador.id}
-  className="rounded-lg bg-white p-4 text-green-900"
->
-  <div className="text-xl font-bold">
-    {jugador.frecuente ? "⭐ " : ""}
-    {jugador.nombre}
-  </div>
+      {cargando && (
+        <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
+          Cargando jugadores...
+        </div>
+      )}
 
-  <div className="mt-3 flex justify-end gap-3">
-    <button
-      onClick={() => cambiarFrecuente(jugador)}
-      className="h-12 w-12 rounded-lg bg-yellow-500 text-xl text-white"
-    >
-      ⭐
-    </button>
+      {mensaje && (
+        <div className="mt-8 rounded-xl bg-white p-5 font-bold text-green-900">
+          {mensaje}
+        </div>
+      )}
 
-    <button
-      onClick={() => editarJugador(jugador)}
-      className="h-12 w-12 rounded-lg bg-yellow-300 text-xl text-black"
-    >
-      ✏️
-    </button>
+      {!cargando && !mensaje && (
+        <div className="mt-8 space-y-3">
+          {jugadoresOrdenados.map(
+            (jugador) => (
+              <div
+                key={jugador.id}
+                className="rounded-lg bg-white p-4 text-green-900"
+              >
+                <div className="text-xl font-bold">
+                  {jugador.frecuente
+                    ? "⭐ "
+                    : ""}
+                  {jugador.nombre}
+                </div>
 
-    <button
-      onClick={() => eliminarJugador(jugador)}
-      className="h-12 w-12 rounded-lg bg-red-600 text-xl text-white"
-    >
-      🗑️
-    </button>
-  </div>
-</div>
-        ))}
-      </div>
+                <div className="mt-3 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      cambiarFrecuente(
+                        jugador
+                      )
+                    }
+                    className="h-12 w-12 rounded-lg bg-yellow-500 text-xl text-white"
+                  >
+                    ⭐
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      editarJugador(jugador)
+                    }
+                    className="h-12 w-12 rounded-lg bg-yellow-300 text-xl text-black"
+                  >
+                    ✏️
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      eliminarJugador(
+                        jugador
+                      )
+                    }
+                    className="h-12 w-12 rounded-lg bg-red-600 text-xl text-white"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      )}
     </main>
   );
 }
