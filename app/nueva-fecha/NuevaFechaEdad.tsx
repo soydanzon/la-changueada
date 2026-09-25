@@ -242,6 +242,78 @@ setBorradorCargado(true);
   }, []);
 
 useEffect(() => {
+  async function cargarCanchasNube() {
+    const supabase = createClient();
+
+    const { data, error } =
+      await supabase
+        .from("canchas")
+        .select(
+          "id, nombre, par, activa"
+        )
+        .order("id");
+
+    if (error) {
+      console.error(
+        "No se pudieron cargar las canchas:",
+        error
+      );
+
+      setCanchas([]);
+
+      alert(
+        "No se pudieron cargar las canchas."
+      );
+
+      return;
+    }
+
+    const canchasNube: Cancha[] = (
+      data ?? []
+    ).map(
+      (cancha: {
+        id: number;
+        nombre: string;
+        par: number;
+        activa: boolean | null;
+      }) => ({
+        id: Number(cancha.id),
+        nombre: cancha.nombre,
+        par: Number(cancha.par),
+        activa: Boolean(
+          cancha.activa
+        ),
+      })
+    );
+
+    const canchasActivas =
+      canchasNube.filter(
+        (cancha) =>
+          cancha.activa
+      );
+
+    setCanchas(canchasActivas);
+
+    setCanchaId((actual) =>
+      canchasActivas.some(
+        (cancha) =>
+          cancha.id === actual
+      )
+        ? actual
+        : canchasActivas[0]?.id ??
+          0
+    );
+
+    localStorage.setItem(
+      "laChangueadaCanchas",
+      JSON.stringify(canchasNube)
+    );
+  }
+
+  cargarCanchasNube();
+}, []);
+
+useEffect(() => {
   if (!borradorCargado) return;
 
   const claveBorrador =

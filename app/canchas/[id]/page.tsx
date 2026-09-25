@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import {
-  obtenerCanchasGuardadas,
-  type Cancha,
-} from "../../datos/canchas";
+  useEffect,
+  useState,
+} from "react";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
+import { type Cancha } from "../../datos/canchas";
+import { createClient } from "../../lib/supabase/client";
 import BotonInicio from "../../components/BotonInicio";
 import BotonVolver from "../../components/BotonVolver";
 
@@ -13,45 +17,152 @@ export default function EditarCancha() {
   const params = useParams();
   const router = useRouter();
 
-  const [nombre, setNombre] = useState("");
-  const [par, setPar] = useState("");
-  const [mensaje, setMensaje] = useState("");
+  const [nombre, setNombre] =
+    useState("");
+
+  const [par, setPar] =
+    useState("");
+
+  const [mensaje, setMensaje] =
+    useState("");
+
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [guardando, setGuardando] =
+    useState(false);
 
   useEffect(() => {
-    const canchas = obtenerCanchasGuardadas();
+    async function cargarCancha() {
+      const idCancha = Number(
+        params.id
+      );
 
-    const cancha = canchas.find(
-      (c) => c.id === Number(params.id)
-    );
+      const supabase = createClient();
 
-    if (!cancha) return;
+      const { data, error } =
+        await supabase
+          .from("canchas")
+          .select(
+            "id, nombre, par, activa"
+          )
+          .eq("id", idCancha)
+          .single();
 
-    setNombre(cancha.nombre);
-    setPar(String(cancha.par));
+      if (error || !data) {
+        console.error(
+          "No se pudo cargar la cancha:",
+          error
+        );
+
+        setMensaje(
+          "⚠️ No se pudo cargar la cancha."
+        );
+
+        setCargando(false);
+        return;
+      }
+
+      setNombre(data.nombre);
+      setPar(String(data.par));
+      setCargando(false);
+    }
+
+    cargarCancha();
   }, [params.id]);
 
-  function guardar() {
-    if (!nombre.trim() || !par) {
-      setMensaje("⚠️ Completá nombre y par.");
+  async function guardar() {
+    if (
+      !nombre.trim() ||
+      !par
+    ) {
+      setMensaje(
+        "⚠️ Completá nombre y par."
+      );
       return;
     }
 
-    const canchas = obtenerCanchasGuardadas();
+    const parNumero = Number(par);
 
-    const nuevasCanchas: Cancha[] = canchas.map((cancha) =>
-      cancha.id === Number(params.id)
-        ? {
-            ...cancha,
-            nombre: nombre.trim(),
-            par: Number(par),
-          }
-        : cancha
+    if (
+      !Number.isFinite(parNumero) ||
+      parNumero <= 0
+    ) {
+      setMensaje(
+        "⚠️ Escribí un par válido."
+      );
+      return;
+    }
+
+    setGuardando(true);
+    setMensaje("");
+
+    const idCancha = Number(
+      params.id
     );
 
-    localStorage.setItem(
-      "laChangueadaCanchas",
-      JSON.stringify(nuevasCanchas)
-    );
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("canchas")
+      .update({
+        nombre: nombre.trim(),
+        par: parNumero,
+      })
+      .eq("id", idCancha);
+
+    if (error) {
+      console.error(
+        "No se pudo editar la cancha:",
+        error
+      );
+
+      setMensaje(
+        "⚠️ No se pudieron guardar los cambios."
+      );
+
+      setGuardando(false);
+      return;
+    }
+
+    const {
+      data: canchasActualizadas,
+      error: errorActualizacion,
+    } = await supabase
+      .from("canchas")
+      .select(
+        "id, nombre, par, activa"
+      )
+      .order("nombre");
+
+    if (
+      !errorActualizacion &&
+      canchasActualizadas
+    ) {
+      const copiaLocal: Cancha[] =
+        canchasActualizadas.map(
+          (cancha: {
+            id: number;
+            nombre: string;
+            par: number;
+            activa:
+              | boolean
+              | null;
+          }) => ({
+            id: Number(cancha.id),
+            nombre: cancha.nombre,
+            par: Number(cancha.par),
+            activa: Boolean(
+              cancha.activa
+            ),
+          })
+        );
+
+      localStorage.setItem(
+        "laChangueadaCanchas",
+        JSON.stringify(copiaLocal)
+      );
+    }
 
     router.push("/canchas");
   }
@@ -69,41 +180,59 @@ export default function EditarCancha() {
         </div>
       </div>
 
-      <label className="font-bold">
-        Nombre
-      </label>
+      {cargando ? (
+        <div className="rounded-xl bg-white p-5 text-green-950">
+          Cargando cancha...
+        </div>
+      ) : (
+        <>
+          <label className="font-bold">
+            Nombre
+          </label>
 
-      <input
-        type="text"
-        value={nombre}
-        onChange={(e) => {
-          setNombre(e.target.value);
-          setMensaje("");
-        }}
-        className="mt-2 mb-6 w-full rounded-xl bg-white p-4 text-xl text-black"
-      />
+          <input
+            type="text"
+            value={nombre}
+            disabled={guardando}
+            onChange={(evento) => {
+              setNombre(
+                evento.target.value
+              );
+              setMensaje("");
+            }}
+            className="mb-6 mt-2 w-full rounded-xl bg-white p-4 text-xl text-black disabled:bg-gray-200"
+          />
 
-      <label className="font-bold">
-        E Par
-      </label>
+          <label className="font-bold">
+            Par
+          </label>
 
-      <input
-        type="number"
-        inputMode="numeric"
-        value={par}
-        onChange={(e) => {
-          setPar(e.target.value);
-          setMensaje("");
-        }}
-        className="mt-2 w-full rounded-xl bg-white p-4 text-xl text-black"
-      />
+          <input
+            type="number"
+            inputMode="numeric"
+            value={par}
+            disabled={guardando}
+            onChange={(evento) => {
+              setPar(
+                evento.target.value
+              );
+              setMensaje("");
+            }}
+            className="mt-2 w-full rounded-xl bg-white p-4 text-xl text-black disabled:bg-gray-200"
+          />
 
-      <button
-        onClick={guardar}
-        className="mt-8 w-full rounded-2xl bg-white p-4 font-black text-green-950"
-      >
-        💾 Guardar cambios
-      </button>
+          <button
+            type="button"
+            disabled={guardando}
+            onClick={guardar}
+            className="mt-8 w-full rounded-2xl bg-white p-4 font-black text-green-950 disabled:bg-gray-300"
+          >
+            {guardando
+              ? "☁️ Guardando..."
+              : "💾 Guardar cambios"}
+          </button>
+        </>
+      )}
 
       {mensaje && (
         <p className="mt-4 text-xl">
