@@ -67,13 +67,128 @@ export default function NuevaFecha() {
       "laChangueadaFechaYaGuardada"
     );
 
-    const valorGuardado = localStorage.getItem(
-      "laChangueadaValor"
-    );
+    async function cargarConfiguracionNube() {
+      const tablaLocal =
+        obtenerTablaPremios();
 
-    if (valorGuardado) {
-      setValorChangueada(Number(valorGuardado));
+      const valorLocal =
+        localStorage.getItem(
+          "laChangueadaValor"
+        );
+
+      const supabase =
+        createClient();
+
+      try {
+        const { data, error } =
+          await supabase
+            .from("configuracion")
+            .select(
+              "clave, valor"
+            )
+            .in("clave", [
+              "valorChangueada",
+              "tablaPremiosGeneral",
+            ]);
+
+        if (error) {
+          throw error;
+        }
+
+        const configuracionValor =
+          data?.find(
+            (fila: {
+              clave: string;
+              valor: unknown;
+            }) =>
+              fila.clave ===
+              "valorChangueada"
+          );
+
+        const configuracionTabla =
+          data?.find(
+            (fila: {
+              clave: string;
+              valor: unknown;
+            }) =>
+              fila.clave ===
+              "tablaPremiosGeneral"
+          );
+
+        const valorNube =
+          Number(
+            configuracionValor?.valor
+          );
+
+        if (
+          Number.isFinite(
+            valorNube
+          ) &&
+          valorNube > 0
+        ) {
+          setValorChangueada(
+            valorNube
+          );
+
+          localStorage.setItem(
+            "laChangueadaValor",
+            String(valorNube)
+          );
+        } else if (
+          valorLocal
+        ) {
+          setValorChangueada(
+            Number(valorLocal)
+          );
+        }
+
+        if (
+          configuracionTabla &&
+          Array.isArray(
+            configuracionTabla.valor
+          )
+        ) {
+          const tablaNube =
+            configuracionTabla.valor as unknown as FilaPremios[];
+
+          setTablaPremios(
+            tablaNube
+          );
+
+          localStorage.setItem(
+            "laChangueadaTablaPremios",
+            JSON.stringify(
+              tablaNube
+            )
+          );
+        } else {
+          setTablaPremios(
+            tablaLocal
+          );
+        }
+      } catch (error) {
+        console.error(
+          "No se pudo cargar la configuración:",
+          error
+        );
+
+        if (valorLocal) {
+          setValorChangueada(
+            Number(valorLocal)
+          );
+        }
+
+        setTablaPremios(
+          tablaLocal
+        );
+      } finally {
+        setTablaPremiosCargada(
+          true
+        );
+      }
     }
+
+    cargarConfiguracionNube();
 
 
     async function cargarJugadoresNube() {
@@ -190,8 +305,6 @@ if (jugadorRecienCreadoId) {
   );
 }
 
-    setTablaPremios(obtenerTablaPremios());
-setTablaPremiosCargada(true);
 setBorradorCargado(true);
 
   }, []);

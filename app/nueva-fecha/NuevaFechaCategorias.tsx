@@ -91,13 +91,109 @@ const [categoriaB, setCategoriaB] =
       "laChangueadaFechaYaGuardada"
     );
 
-    const valorGuardado = localStorage.getItem(
-      "laChangueadaValor"
-    );
+    async function cargarConfiguracionNube() {
+      const valorLocal =
+        localStorage.getItem(
+          "laChangueadaValor"
+        );
 
-    if (valorGuardado) {
-      setValorChangueada(Number(valorGuardado));
+      const supabase =
+        createClient();
+
+      try {
+        const { data, error } =
+          await supabase
+            .from("configuracion")
+            .select(
+              "clave, valor"
+            )
+            .in("clave", [
+              "valorChangueada",
+              "tablaPremiosCategorias55_45",
+            ]);
+
+        if (error) {
+          throw error;
+        }
+
+        const configuracionValor =
+          data?.find(
+            (fila: {
+              clave: string;
+              valor: unknown;
+            }) =>
+              fila.clave ===
+              "valorChangueada"
+          );
+
+        const configuracionTabla =
+          data?.find(
+            (fila: {
+              clave: string;
+              valor: unknown;
+            }) =>
+              fila.clave ===
+              "tablaPremiosCategorias55_45"
+          );
+
+        const valorNube =
+          Number(
+            configuracionValor?.valor
+          );
+
+        if (
+          Number.isFinite(
+            valorNube
+          ) &&
+          valorNube > 0
+        ) {
+          setValorChangueada(
+            valorNube
+          );
+
+          localStorage.setItem(
+            "laChangueadaValor",
+            String(valorNube)
+          );
+        } else if (
+          valorLocal
+        ) {
+          setValorChangueada(
+            Number(valorLocal)
+          );
+        }
+
+        if (
+          configuracionTabla &&
+          configuracionTabla.valor &&
+          typeof configuracionTabla.valor ===
+            "object" &&
+          !Array.isArray(
+            configuracionTabla.valor
+          )
+        ) {
+          localStorage.setItem(
+            "laChangueadaTablaPremiosCategorias55_45",
+            JSON.stringify(
+              configuracionTabla.valor
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "No se pudo cargar la configuración:",
+          error
+        );
+
+        if (valorLocal) {
+          setValorChangueada(
+            Number(valorLocal)
+          );
+        }
+      }
     }
+
+    cargarConfiguracionNube();
 
     const canchaInicial = 0;
 
