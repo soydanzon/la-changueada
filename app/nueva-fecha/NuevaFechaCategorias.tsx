@@ -11,19 +11,11 @@ import {
 } from "../datos/jugadores";
 
 import {
-  obtenerCanchasGuardadas,
   type Cancha,
 } from "../datos/canchas";
 
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
-
-type FechaHistorial = {
-  cancha?: {
-    id?: number;
-    nombre?: string;
-  } | null;
-};
 
 type BorradorNuevaFechaCategorias = {
   canchaId?: number;
@@ -33,34 +25,6 @@ type BorradorNuevaFechaCategorias = {
   categoriaB?: number[];
   busqueda?: string;
 };
-
-function ordenarCanchasPorUso(canchas: Cancha[]) {
-  const datos = localStorage.getItem(
-    "laChangueadaHistorial"
-  );
-
-  if (!datos) return canchas;
-
-  const historial: FechaHistorial[] =
-    JSON.parse(datos);
-
-  function usos(cancha: Cancha) {
-    return historial.filter(
-      (fecha) =>
-        fecha.cancha?.id === cancha.id ||
-        fecha.cancha?.nombre === cancha.nombre
-    ).length;
-  }
-
-  return [...canchas].sort((a, b) => {
-    const usosA = usos(a);
-    const usosB = usos(b);
-
-    if (usosB !== usosA) return usosB - usosA;
-
-    return a.nombre.localeCompare(b.nombre);
-  });
-}
 
 function recuperarBorrador(
   clave: string
@@ -135,20 +99,7 @@ const [categoriaB, setCategoriaB] =
       setValorChangueada(Number(valorGuardado));
     }
 
-    const canchasGuardadas =
-      obtenerCanchasGuardadas().filter(
-        (canchaGuardada) => canchaGuardada.activa
-      );
-
-    const canchasOrdenadas =
-      ordenarCanchasPorUso(canchasGuardadas);
-
-    setCanchas(canchasOrdenadas);
-
-    const canchaInicial =
-      canchasOrdenadas[0]?.id ?? 0;
-
-    setCanchaId(canchaInicial);
+    const canchaInicial = 0;
 
     async function cargarJugadoresNube() {
       const supabase = createClient();
@@ -279,18 +230,25 @@ if (jugadorRecienCreadoId) {
     async function cargarCanchasNube() {
       const supabase = createClient();
 
-      const { data, error } =
-        await supabase
+      const [
+        resultadoCanchas,
+        resultadoFechas,
+      ] = await Promise.all([
+        supabase
           .from("canchas")
           .select(
             "id, nombre, par, activa"
-          )
-          .order("id");
+          ),
 
-      if (error) {
+        supabase
+          .from("fechas")
+          .select("cancha_id"),
+      ]);
+
+      if (resultadoCanchas.error) {
         console.error(
           "No se pudieron cargar las canchas:",
-          error
+          resultadoCanchas.error
         );
 
         setCanchas([]);
@@ -302,14 +260,52 @@ if (jugadorRecienCreadoId) {
         return;
       }
 
+      if (resultadoFechas.error) {
+        console.error(
+          "No se pudo calcular el uso de las canchas:",
+          resultadoFechas.error
+        );
+      }
+
+      const usosPorCancha =
+        new Map<number, number>();
+
+      (
+        resultadoFechas.data ?? []
+      ).forEach(
+        (fecha: {
+          cancha_id: number | null;
+        }) => {
+          if (
+            fecha.cancha_id === null
+          ) {
+            return;
+          }
+
+          const idCancha =
+            Number(fecha.cancha_id);
+
+          usosPorCancha.set(
+            idCancha,
+            (
+              usosPorCancha.get(
+                idCancha
+              ) ?? 0
+            ) + 1
+          );
+        }
+      );
+
       const canchasNube: Cancha[] = (
-        data ?? []
+        resultadoCanchas.data ?? []
       ).map(
         (cancha: {
           id: number;
           nombre: string;
           par: number;
-          activa: boolean | null;
+          activa:
+            | boolean
+            | null;
         }) => ({
           id: Number(cancha.id),
           nombre: cancha.nombre,
@@ -321,12 +317,41 @@ if (jugadorRecienCreadoId) {
       );
 
       const canchasActivas =
-        canchasNube.filter(
-          (cancha) =>
-            cancha.activa
-        );
+        canchasNube
+          .filter(
+            (cancha) =>
+              cancha.activa
+          )
+          .sort((a, b) => {
+            const usosA =
+              usosPorCancha.get(
+                a.id
+              ) ?? 0;
 
-      setCanchas(canchasActivas);
+            const usosB =
+              usosPorCancha.get(
+                b.id
+              ) ?? 0;
+
+            if (
+              usosB !== usosA
+            ) {
+              return usosB - usosA;
+            }
+
+            return a.nombre.localeCompare(
+              b.nombre,
+              "es",
+              {
+                sensitivity:
+                  "base",
+              }
+            );
+          });
+
+      setCanchas(
+        canchasActivas
+      );
 
       setCanchaId((actual) =>
         canchasActivas.some(
@@ -334,13 +359,15 @@ if (jugadorRecienCreadoId) {
             cancha.id === actual
         )
           ? actual
-          : canchasActivas[0]?.id ??
-            0
+          : canchasActivas[0]
+              ?.id ?? 0
       );
 
       localStorage.setItem(
         "laChangueadaCanchas",
-        JSON.stringify(canchasNube)
+        JSON.stringify(
+          canchasNube
+        )
       );
     }
 
