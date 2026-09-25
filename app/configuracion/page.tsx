@@ -25,21 +25,6 @@ export default function Configuracion() {
     alert("✅ Valor actualizado");
   }
 
-  function borrarDatosPrueba() {
-    if (
-      !confirm("¿Borrar todas las fechas y estadísticas de prueba?")
-    ) {
-      return;
-    }
-
-    localStorage.removeItem("laChangueadaHistorial");
-    localStorage.removeItem("laChangueadaScores");
-    localStorage.removeItem("laChangueadaFechaActual");
-    localStorage.removeItem("laChangueadaFechaParaCompartir");
-
-    alert("✅ Datos de prueba eliminados.");
-  }
-
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
       <div className="sticky top-0 z-20 -mx-6 mb-6 flex items-center justify-between bg-green-900 px-6 py-4">
@@ -98,13 +83,6 @@ export default function Configuracion() {
 >
   💾 Respaldo
 </a>
-
-      <button
-        onClick={borrarDatosPrueba}
-        className="mt-10 w-full rounded-xl bg-red-600 px-6 py-4 text-xl font-bold"
-      >
-        🧹 Borrar datos de prueba
-      </button>
     </main>
   );
 }
