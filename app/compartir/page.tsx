@@ -4,10 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
-import {
-  obtenerCanchasGuardadas,
-  type Cancha,
-} from "../datos/canchas";
+import { createClient } from "../lib/supabase/client";
 
 type Resultado = {
   jugador: {
@@ -37,19 +34,32 @@ type FechaGuardada = {
   categoriaB?: Resultado[];
 };
 
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  fecha_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
+};
+
 function nombreVuelta(
   fechaActual: FechaGuardada,
   historial: FechaGuardada[]
 ) {
-  const diaActual = new Date(
-    fechaActual.id
-  ).toLocaleDateString("es-AR");
-
   const fechasDelMismoDia = historial
     .filter(
       (fecha) =>
-        new Date(fecha.id).toLocaleDateString("es-AR") ===
-        diaActual
+        fecha.fecha === fechaActual.fecha
     )
     .sort((a, b) => a.id - b.id);
 
@@ -120,90 +130,226 @@ export default function Compartir() {
     useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const historialGuardado =
-      localStorage.getItem(
-        "laChangueadaHistorial"
-      );
+    async function cargarFecha() {
+      const fechaElegida =
+        localStorage.getItem(
+          "laChangueadaFechaParaCompartir"
+        );
 
-    const fechaElegida =
-      localStorage.getItem(
-        "laChangueadaFechaParaCompartir"
-      );
+      const supabase = createClient();
 
-    if (!historialGuardado) {
-      return;
-    }
-
-    try {
-      const fechas: FechaGuardada[] =
-        JSON.parse(historialGuardado);
-
-      const fechaSeleccionada =
-        fechaElegida
-          ? fechas.find(
-              (fechaGuardada) =>
-                fechaGuardada.id ===
-                Number(fechaElegida)
+      try {
+        const { data, error } =
+          await supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par"
             )
-          : fechas[0];
+            .order("id", {
+              ascending: false,
+            });
 
-      if (!fechaSeleccionada) {
-        return;
-      }
+        if (error) {
+          throw error;
+        }
 
-      const {
-        formato: formatoFecha,
-        resultadosUno:
-          resultadosCategoriaUno,
-        resultadosDos:
-          resultadosCategoriaDos,
-      } = obtenerResultadosFecha(
-        fechaSeleccionada
-      );
+        const fechasSupabase =
+          (data ?? []) as FechaSupabase[];
 
-      setResultadosUno(
-        resultadosCategoriaUno
-      );
+        const fechaSupabase =
+          fechaElegida
+            ? fechasSupabase.find(
+                (fechaGuardada) =>
+                  Number(
+                    fechaGuardada.id
+                  ) ===
+                  Number(fechaElegida)
+              )
+            : fechasSupabase[0];
 
-      setResultadosDos(
-        resultadosCategoriaDos
-      );
+        if (!fechaSupabase) {
+          return;
+        }
 
-      setFecha(fechaSeleccionada.fecha);
-      setFormato(formatoFecha);
+        const {
+          data: resultadosData,
+          error: errorResultados,
+        } = await supabase
+          .from("resultados")
+          .select(
+            "fecha_id, jugador_nombre, categoria, score, puesto, premio"
+          )
+          .eq(
+            "fecha_id",
+            fechaSupabase.id
+          )
+          .order("puesto", {
+            ascending: true,
+          });
 
-      setNombreDeVuelta(
-        nombreVuelta(
-          fechaSeleccionada,
-          fechas
-        )
-      );
+        if (errorResultados) {
+          throw errorResultados;
+        }
 
-      if (fechaSeleccionada.cancha) {
-        const canchaActual =
-          obtenerCanchasGuardadas().find(
-            (canchaGuardada: Cancha) =>
-              canchaGuardada.id ===
-              fechaSeleccionada.cancha?.id
+        const resultadosSupabase =
+          (resultadosData ??
+            []) as ResultadoSupabase[];
+
+        function convertirResultados(
+          categoria: string
+        ): Resultado[] {
+          return resultadosSupabase
+            .filter(
+              (resultado) =>
+                resultado.categoria ===
+                categoria
+            )
+            .map((resultado) => ({
+              jugador: {
+                nombre:
+                  resultado.jugador_nombre,
+              },
+              score: Number(
+                resultado.score
+              ),
+              puesto: Number(
+                resultado.puesto
+              ),
+              premio: Number(
+                resultado.premio
+              ),
+            }));
+        }
+
+        const formatoFecha:
+          | "edad"
+          | "categorias" =
+          fechaSupabase.formato ===
+          "categorias"
+            ? "categorias"
+            : "edad";
+
+        const fechaSeleccionada:
+          FechaGuardada = {
+          id: Number(fechaSupabase.id),
+          fecha: fechaSupabase.fecha,
+          formato: formatoFecha,
+          cancha:
+            fechaSupabase.cancha_id !==
+              null &&
+            fechaSupabase.cancha_nombre &&
+            fechaSupabase.par !== null
+              ? {
+                  id: Number(
+                    fechaSupabase.cancha_id
+                  ),
+                  nombre:
+                    fechaSupabase.cancha_nombre,
+                  par: Number(
+                    fechaSupabase.par
+                  ),
+                }
+              : null,
+          general:
+            formatoFecha === "edad"
+              ? convertirResultados(
+                  "general"
+                )
+              : [],
+          viejitos:
+            formatoFecha === "edad"
+              ? convertirResultados(
+                  "viejitos"
+                )
+              : [],
+          categoriaA:
+            formatoFecha ===
+            "categorias"
+              ? convertirResultados(
+                  "categoriaA"
+                )
+              : [],
+          categoriaB:
+            formatoFecha ===
+            "categorias"
+              ? convertirResultados(
+                  "categoriaB"
+                )
+              : [],
+        };
+
+        const fechasParaVuelta:
+          FechaGuardada[] =
+          fechasSupabase.map(
+            (fechaGuardada) => ({
+              id: Number(
+                fechaGuardada.id
+              ),
+              fecha:
+                fechaGuardada.fecha,
+              formato:
+                fechaGuardada.formato ===
+                "categorias"
+                  ? "categorias"
+                  : "edad",
+              cancha: null,
+              general: [],
+              viejitos: [],
+              categoriaA: [],
+              categoriaB: [],
+            })
           );
 
-        setCancha({
-          ...fechaSeleccionada.cancha,
-          nombre:
-            canchaActual?.nombre ??
-            fechaSeleccionada.cancha.nombre,
-        });
-      } else {
+        const {
+          resultadosUno:
+            resultadosCategoriaUno,
+          resultadosDos:
+            resultadosCategoriaDos,
+        } = obtenerResultadosFecha(
+          fechaSeleccionada
+        );
+
+        setResultadosUno(
+          resultadosCategoriaUno
+        );
+
+        setResultadosDos(
+          resultadosCategoriaDos
+        );
+
+        setFecha(
+          fechaSeleccionada.fecha
+        );
+
+        setFormato(formatoFecha);
+
+        setNombreDeVuelta(
+          nombreVuelta(
+            fechaSeleccionada,
+            fechasParaVuelta
+          )
+        );
+
+        setCancha(
+          fechaSeleccionada.cancha ??
+            null
+        );
+      } catch (error) {
+        console.error(
+          "No se pudo cargar la fecha para compartir:",
+          error
+        );
+
+        setResultadosUno([]);
+        setResultadosDos([]);
+        setFecha("");
+        setNombreDeVuelta("");
         setCancha(null);
+        setFormato("edad");
       }
-    } catch {
-      setResultadosUno([]);
-      setResultadosDos([]);
-      setFecha("");
-      setNombreDeVuelta("");
-      setCancha(null);
-      setFormato("edad");
     }
+
+    cargarFecha();
   }, []);
 
   async function compartirImagen(
