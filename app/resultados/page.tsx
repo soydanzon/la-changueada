@@ -15,6 +15,7 @@ import { obtenerCanchasGuardadas } from "../datos/canchas";
 import { obtenerTablaPremios } from "../premios/tablaPremios";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+import { createClient } from "../lib/supabase/client";
 
 type Resultado = {
   jugador: Jugador;
@@ -316,6 +317,9 @@ export default function Resultados() {
   const [fechaGuardada, setFechaGuardada] =
     useState(false);
 
+  const [guardandoFecha, setGuardandoFecha] =
+    useState(false);
+
   const [
     idFechaGuardada,
     setIdFechaGuardada,
@@ -509,90 +513,181 @@ export default function Resultados() {
     );
   }
 
-  function guardarFecha() {
-    if (fechaGuardada) {
+  async function guardarFecha() {
+    if (
+      fechaGuardada ||
+      guardandoFecha
+    ) {
       return;
     }
 
-    const historialGuardado = localStorage.getItem(
-      "laChangueadaHistorial"
-    );
+    setGuardandoFecha(true);
 
-    const historial: FechaHistorial[] =
-      historialGuardado
-        ? JSON.parse(historialGuardado)
-        : [];
+    try {
+      const historialGuardado =
+        localStorage.getItem(
+          "laChangueadaHistorial"
+        );
 
-    const nuevoId = Date.now();
+      const historial: FechaHistorial[] =
+        historialGuardado
+          ? JSON.parse(historialGuardado)
+          : [];
 
-    const baseFecha = {
-      id: nuevoId,
-      fecha: new Date(
+      const nuevoId = Date.now();
+
+      const fechaTexto = new Date(
         nuevoId
-      ).toLocaleDateString("es-AR"),
-      cancha: canchaFecha,
-      pagosPendientes:
-        pagosPendientesOriginales,
-      pagosCompletados,
-    };
+      ).toLocaleDateString("es-AR");
 
-    const nuevaFecha =
-      formato === "categorias"
-        ? {
-            ...baseFecha,
-            formato: "categorias" as const,
+      const baseFecha = {
+        id: nuevoId,
+        fecha: fechaTexto,
+        cancha: canchaFecha,
+        pagosPendientes:
+          pagosPendientesOriginales,
+        pagosCompletados,
+      };
 
-            categoriaA: categoriaUno,
-            categoriaB: categoriaDos,
+      const nuevaFecha =
+        formato === "categorias"
+          ? {
+              ...baseFecha,
+              formato:
+                "categorias" as const,
 
-            /*
-              Se mantienen también estas dos copias
-              para que el hándicap y las estadísticas
-              actuales sigan leyendo las vueltas.
-            */
-            general: categoriaUno,
-            viejitos: categoriaDos,
-          }
-        : {
-            ...baseFecha,
-            formato: "edad" as const,
-            general: categoriaUno,
-            viejitos: categoriaDos,
-          };
+              categoriaA: categoriaUno,
+              categoriaB: categoriaDos,
 
-    localStorage.setItem(
-      "laChangueadaHistorial",
-      JSON.stringify([
-        nuevaFecha,
-        ...historial,
-      ])
-    );
+              /*
+                Estas copias se conservan
+                solamente en el respaldo local.
+              */
+              general: categoriaUno,
+              viejitos: categoriaDos,
+            }
+          : {
+              ...baseFecha,
+              formato: "edad" as const,
+              general: categoriaUno,
+              viejitos: categoriaDos,
+            };
 
-    localStorage.setItem(
-  "laChangueadaFechaYaGuardada",
-  "true"
-);
+      const resultadosParaSupabase = [
+        ...categoriaUno.map(
+          (resultado) => ({
+            jugador: {
+              id: resultado.jugador.id,
+              nombre:
+                resultado.jugador.nombre,
+              frecuente:
+                resultado.jugador.frecuente ??
+                false,
+            },
 
-if (formato === "categorias") {
-  localStorage.removeItem(
-    "laChangueadaNuevaFechaCategoriasBorrador"
-  );
+            categoria:
+              formato === "categorias"
+                ? "categoriaA"
+                : "general",
 
-  localStorage.removeItem(
-    "laChangueadaNuevaFechaCategoriasBorradorBackup"
-  );
-} else {
-  localStorage.removeItem(
-    "laChangueadaNuevaFechaBorrador"
-  );
+            score: resultado.score,
+            puesto: resultado.puesto,
+            premio: resultado.premio,
+          })
+        ),
 
-  localStorage.removeItem(
-    "laChangueadaNuevaFechaBorradorBackup"
-  );
-}
+        ...categoriaDos.map(
+          (resultado) => ({
+            jugador: {
+              id: resultado.jugador.id,
+              nombre:
+                resultado.jugador.nombre,
+              frecuente:
+                resultado.jugador.frecuente ??
+                false,
+            },
 
-setIdFechaGuardada(nuevoId);
-setFechaGuardada(true);
+            categoria:
+              formato === "categorias"
+                ? "categoriaB"
+                : "viejitos",
+
+            score: resultado.score,
+            puesto: resultado.puesto,
+            premio: resultado.premio,
+          })
+        ),
+      ];
+
+      const supabase = createClient();
+
+      const { error } = await supabase.rpc(
+        "guardar_fecha_completa",
+        {
+          p_fecha: {
+            id: nuevoId,
+            fecha: fechaTexto,
+            formato,
+            cancha: canchaFecha,
+            pagosPendientes:
+              pagosPendientesOriginales,
+            pagosCompletados,
+          },
+
+          p_resultados:
+            resultadosParaSupabase,
+        }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      localStorage.setItem(
+        "laChangueadaHistorial",
+        JSON.stringify([
+          nuevaFecha,
+          ...historial,
+        ])
+      );
+
+      localStorage.setItem(
+        "laChangueadaFechaYaGuardada",
+        "true"
+      );
+
+      if (formato === "categorias") {
+        localStorage.removeItem(
+          "laChangueadaNuevaFechaCategoriasBorrador"
+        );
+
+        localStorage.removeItem(
+          "laChangueadaNuevaFechaCategoriasBorradorBackup"
+        );
+      } else {
+        localStorage.removeItem(
+          "laChangueadaNuevaFechaBorrador"
+        );
+
+        localStorage.removeItem(
+          "laChangueadaNuevaFechaBorradorBackup"
+        );
+      }
+
+      setIdFechaGuardada(nuevoId);
+      setFechaGuardada(true);
+    } catch (error) {
+      console.error(
+        "No se pudo guardar la fecha:",
+        error
+      );
+
+      alert(
+        "No se pudo guardar la fecha. Los jugadores y scores siguen cargados. Probá nuevamente."
+      );
+    } finally {
+      setGuardandoFecha(false);
+    }
   }
 
   async function compartirResultados() {
@@ -972,9 +1067,12 @@ const resumenCategoriaDos =
        <button
           type="button"
           onClick={guardarFecha}
-          className="mt-2 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white"
+          disabled={guardandoFecha}
+          className="mt-2 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white disabled:bg-gray-400"
         >
-         💾 Guardar fecha
+          {guardandoFecha
+            ? "☁️ Guardando..."
+            : "💾 Guardar fecha"}
         </button>
       ) : (
         <div className="mt-8 rounded-xl bg-white p-5 text-green-900">
