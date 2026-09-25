@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "../lib/supabase/client";
 import { config } from "../config/config";
 import { normalizarTexto } from "../utils/texto";
 
 import {
-  jugadores,
   type Jugador,
 } from "../datos/jugadores";
 
@@ -150,19 +150,59 @@ const [categoriaB, setCategoriaB] =
 
     setCanchaId(canchaInicial);
 
-    const guardados = localStorage.getItem(
-      "laChangueadaJugadores"
-    );
+    async function cargarJugadoresNube() {
+      const supabase = createClient();
 
-    if (guardados) {
-      try {
-        setListaJugadores(JSON.parse(guardados));
-      } catch {
-        setListaJugadores(jugadores);
+      const { data, error } =
+        await supabase
+          .from("jugadores")
+          .select(
+            "id, nombre, frecuente"
+          )
+          .order("nombre");
+
+      if (error) {
+        console.error(
+          "No se pudieron cargar los jugadores:",
+          error
+        );
+
+        alert(
+          "No se pudieron cargar los jugadores."
+        );
+
+        return;
       }
-    } else {
-      setListaJugadores(jugadores);
+
+      const jugadoresNube: Jugador[] = (
+        data ?? []
+      ).map(
+        (jugador: {
+          id: number;
+          nombre: string;
+          frecuente: boolean | null;
+        }) => ({
+          id: Number(jugador.id),
+          nombre: jugador.nombre,
+          frecuente: Boolean(
+            jugador.frecuente
+          ),
+        })
+      );
+
+      setListaJugadores(
+        jugadoresNube
+      );
+
+      localStorage.setItem(
+        "laChangueadaJugadores",
+        JSON.stringify(
+          jugadoresNube
+        )
+      );
     }
+
+    cargarJugadoresNube();
 
     const borradorPrincipal = recuperarBorrador(
       "laChangueadaNuevaFechaCategoriasBorrador"

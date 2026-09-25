@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "../lib/supabase/client";
 import { config } from "../config/config";
 import {
-  jugadores,
   type Jugador,
 } from "../datos/jugadores";
 import {
@@ -121,15 +121,59 @@ export default function NuevaFecha() {
     setCanchas(canchasOrdenadas);
     setCanchaId(canchasOrdenadas[0]?.id ?? 0);
 
-    const guardados = localStorage.getItem(
-      "laChangueadaJugadores"
-    );
+    async function cargarJugadoresNube() {
+      const supabase = createClient();
 
-    if (guardados) {
-      setListaJugadores(JSON.parse(guardados));
-    } else {
-      setListaJugadores(jugadores);
+      const { data, error } =
+        await supabase
+          .from("jugadores")
+          .select(
+            "id, nombre, frecuente"
+          )
+          .order("nombre");
+
+      if (error) {
+        console.error(
+          "No se pudieron cargar los jugadores:",
+          error
+        );
+
+        alert(
+          "No se pudieron cargar los jugadores."
+        );
+
+        return;
+      }
+
+      const jugadoresNube: Jugador[] = (
+        data ?? []
+      ).map(
+        (jugador: {
+          id: number;
+          nombre: string;
+          frecuente: boolean | null;
+        }) => ({
+          id: Number(jugador.id),
+          nombre: jugador.nombre,
+          frecuente: Boolean(
+            jugador.frecuente
+          ),
+        })
+      );
+
+      setListaJugadores(
+        jugadoresNube
+      );
+
+      localStorage.setItem(
+        "laChangueadaJugadores",
+        JSON.stringify(
+          jugadoresNube
+        )
+      );
     }
+
+    cargarJugadoresNube();
 
     const claveBorrador =
   "laChangueadaNuevaFechaBorrador";
