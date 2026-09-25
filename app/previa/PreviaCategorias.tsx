@@ -741,27 +741,28 @@ const premiosB = premiosCategorias.b;
     "es-AR"
   );
 
-  const historialGuardado = localStorage.getItem(
-    "laChangueadaHistorial"
-  );
-
   let esSegundaVuelta = false;
 
-  if (historialGuardado) {
-    try {
-      const historial: Array<{ fecha?: string }> =
-        JSON.parse(historialGuardado);
+  const supabase = createClient();
 
-      esSegundaVuelta = historial.some(
-        (fechaGuardada) =>
-          fechaGuardada.fecha === fechaDeHoy
-      );
-    } catch (error) {
-      console.error(
-        "No se pudo leer el historial:",
-        error
-      );
-    }
+  const {
+    data: fechasDelMismoDia,
+    error: errorFechas,
+  } = await supabase
+    .from("fechas")
+    .select("id")
+    .eq("fecha", fechaDeHoy)
+    .limit(1);
+
+  if (errorFechas) {
+    console.error(
+      "No se pudo revisar si es segunda vuelta:",
+      errorFechas
+    );
+  } else {
+    esSegundaVuelta =
+      (fechasDelMismoDia?.length ?? 0) >
+      0;
   }
 
   function crearTextoPremios(
