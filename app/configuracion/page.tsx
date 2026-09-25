@@ -1,26 +1,120 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 import { config } from "../config/config";
+import { createClient } from "../lib/supabase/client";
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
 
 export default function Configuracion() {
-  const [valor, setValor] = useState(config.valorChangueada);
+  const [valor, setValor] = useState(
+    config.valorChangueada
+  );
+
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [guardando, setGuardando] =
+    useState(false);
 
   useEffect(() => {
-    const guardado = localStorage.getItem("laChangueadaValor");
+    async function cargarValor() {
+      const supabase = createClient();
 
-    if (guardado) {
-      setValor(Number(guardado));
+      const { data, error } =
+        await supabase
+          .from("configuracion")
+          .select("valor")
+          .eq(
+            "clave",
+            "valorChangueada"
+          )
+          .single();
+
+      if (error || !data) {
+        console.error(
+          "No se pudo cargar el valor:",
+          error
+        );
+
+        setCargando(false);
+        return;
+      }
+
+      const valorSupabase = Number(
+        data.valor
+      );
+
+      if (
+        Number.isFinite(
+          valorSupabase
+        ) &&
+        valorSupabase > 0
+      ) {
+        setValor(valorSupabase);
+
+        localStorage.setItem(
+          "laChangueadaValor",
+          String(valorSupabase)
+        );
+      }
+
+      setCargando(false);
     }
+
+    cargarValor();
   }, []);
 
-  function guardarValor() {
+  async function guardarValor() {
+    if (
+      !Number.isFinite(valor) ||
+      valor <= 0
+    ) {
+      alert(
+        "⚠️ Escribí un valor válido."
+      );
+      return;
+    }
+
+    setGuardando(true);
+
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("configuracion")
+      .upsert({
+        clave:
+          "valorChangueada",
+
+        valor,
+
+        actualizado_en:
+          new Date().toISOString(),
+      });
+
+    if (error) {
+      console.error(
+        "No se pudo guardar el valor:",
+        error
+      );
+
+      alert(
+        "⚠️ No se pudo actualizar el valor."
+      );
+
+      setGuardando(false);
+      return;
+    }
+
     localStorage.setItem(
       "laChangueadaValor",
-      valor.toString()
+      String(valor)
     );
+
+    setGuardando(false);
 
     alert("✅ Valor actualizado");
   }
@@ -45,44 +139,61 @@ export default function Configuracion() {
       <input
         type="number"
         value={valor}
-        onChange={(e) => setValor(Number(e.target.value))}
-        className="mt-3 w-full rounded-lg bg-white p-3 text-xl text-black"
+        disabled={
+          cargando || guardando
+        }
+        onChange={(evento) =>
+          setValor(
+            Number(
+              evento.target.value
+            )
+          )
+        }
+        className="mt-3 w-full rounded-lg bg-white p-3 text-xl text-black disabled:bg-gray-200"
       />
 
       <button
+        type="button"
         onClick={guardarValor}
-        className="mt-4 text-xl w-full rounded-xl bg-green-600 px-5 py-3 font-bold text-white"
+        disabled={
+          cargando || guardando
+        }
+        className="mt-4 w-full rounded-xl bg-green-600 px-5 py-3 text-xl font-bold text-white disabled:bg-gray-400"
       >
-        Guardar valor
+        {cargando
+          ? "Cargando..."
+          : guardando
+            ? "Guardando..."
+            : "Guardar valor"}
       </button>
 
       <a
-  href="/tabla-premios"
-  className="mt-8 block text-xl rounded-xl bg-yellow-200 px-5 py-4 text-center font-bold text-green-900"
->
-  🙎🏻‍♂️🧓🏻 Tabla de premios General
-</a>
+        href="/tabla-premios"
+        className="mt-8 block rounded-xl bg-yellow-200 px-5 py-4 text-center text-xl font-bold text-green-900"
+      >
+        🙎🏻‍♂️🧓🏻 Tabla de premios General
+      </a>
 
-<a
-  href="/tabla-premios-categorias"
-  className="mt-4 block text-xl rounded-xl bg-yellow-200 px-5 py-4 text-center font-bold text-green-900"
->
-  🅰️🅱️ Tabla de premios 55-45
-</a>
+      <a
+        href="/tabla-premios-categorias"
+        className="mt-4 block rounded-xl bg-yellow-200 px-5 py-4 text-center text-xl font-bold text-green-900"
+      >
+        🅰️🅱️ Tabla de premios 55-45
+      </a>
 
       <a
         href="/canchas"
-        className="mt-4 block text-xl rounded-xl bg-green-700 px-5 py-4 text-center font-bold text-white"
+        className="mt-4 block rounded-xl bg-green-700 px-5 py-4 text-center text-xl font-bold text-white"
       >
         ⛳ Canchas
       </a>
 
       <a
-  href="/respaldo"
-  className="mt-4 block rounded-xl text-xl bg-blue-600 px-5 py-4 text-center font-bold text-white"
->
-  💾 Respaldo
-</a>
+        href="/respaldo"
+        className="mt-4 block rounded-xl bg-blue-600 px-5 py-4 text-center text-xl font-bold text-white"
+      >
+        💾 Respaldo
+      </a>
     </main>
   );
 }
