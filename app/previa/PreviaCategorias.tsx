@@ -3,6 +3,7 @@
 import { obtenerPremiosCategorias } from "../premios/tablaPremiosCategorias";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "../lib/supabase/client";
 import BotonInicio from "../components/BotonInicio";
 
 import {
@@ -23,6 +24,7 @@ import {
 import {
   calcularHandicap,
   type FechaGuardada,
+  type Resultado,
 } from "../utils/estadisticas";
 
 import { config } from "../config/config";
@@ -44,6 +46,37 @@ type JugadorConHandicap = Jugador & {
 type PremioVisible = {
   premio: number;
   puestoOriginal: number;
+};
+
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+};
+
+type ResultadoSupabase = {
+  fecha_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
+};
+
+type JugadorSupabase = {
+  id: number;
+  nombre: string;
+  frecuente: boolean | null;
+};
+
+type CanchaSupabase = {
+  id: number;
+  nombre: string;
+  par: number;
+  activa: boolean | null;
 };
 
 function formatearDinero(valor: number) {
@@ -124,7 +157,8 @@ export default function PreviaCategorias() {
     useState<Map<string, number>>(new Map());
 
   useEffect(() => {
-    const fechaGuardada = localStorage.getItem(
+    async function cargarPrevia() {
+      const fechaGuardada = localStorage.getItem(
       "laChangueadaFechaActual"
     );
 
@@ -146,25 +180,196 @@ export default function PreviaCategorias() {
         return;
       }
 
-      const jugadoresGuardados =
-        localStorage.getItem(
-          "laChangueadaJugadores"
-        );
+      const supabase = createClient();
+
+      const [
+        respuestaJugadores,
+        respuestaFechas,
+        respuestaResultados,
+        respuestaCanchas,
+      ] = await Promise.all([
+        supabase
+          .from("jugadores")
+          .select(
+            "id, nombre, frecuente"
+          )
+          .order("nombre"),
+
+        supabase
+          .from("fechas")
+          .select(
+            "id, fecha, formato, cancha_id, cancha_nombre, par"
+          )
+          .order("id", {
+            ascending: true,
+          }),
+
+        supabase
+          .from("resultados")
+          .select(
+            "fecha_id, jugador_nombre, categoria, score, puesto, premio"
+          )
+          .order("fecha_id", {
+            ascending: true,
+          })
+          .order("puesto", {
+            ascending: true,
+          }),
+
+        supabase
+          .from("canchas")
+          .select(
+            "id, nombre, par, activa"
+          )
+          .order("id"),
+      ]);
+
+      if (respuestaJugadores.error) {
+        throw respuestaJugadores.error;
+      }
+
+      if (respuestaFechas.error) {
+        throw respuestaFechas.error;
+      }
+
+      if (respuestaResultados.error) {
+        throw respuestaResultados.error;
+      }
+
+      if (respuestaCanchas.error) {
+        throw respuestaCanchas.error;
+      }
 
       const jugadoresDisponibles: Jugador[] =
-        jugadoresGuardados
-          ? JSON.parse(jugadoresGuardados)
-          : jugadores;
+        (
+          (respuestaJugadores.data ??
+            []) as JugadorSupabase[]
+        ).map((jugador) => ({
+          id: Number(jugador.id),
+          nombre: jugador.nombre,
+          frecuente: Boolean(
+            jugador.frecuente
+          ),
+        }));
 
-      const historialGuardado =
-        localStorage.getItem(
-          "laChangueadaHistorial"
-        );
+      const fechasSupabase =
+        (respuestaFechas.data ??
+          []) as FechaSupabase[];
+
+      const resultadosSupabase =
+        (respuestaResultados.data ??
+          []) as ResultadoSupabase[];
 
       const historial: FechaGuardada[] =
-        historialGuardado
-          ? JSON.parse(historialGuardado)
-          : [];
+        fechasSupabase.map(
+          (fechaSupabase) => {
+            const resultadosFecha =
+              resultadosSupabase.filter(
+                (resultado) =>
+                  Number(
+                    resultado.fecha_id
+                  ) ===
+                  Number(
+                    fechaSupabase.id
+                  )
+              );
+
+            function convertirResultados(
+              categoria: string
+            ): Resultado[] {
+              return resultadosFecha
+                .filter(
+                  (resultado) =>
+                    resultado.categoria ===
+                    categoria
+                )
+                .map((resultado) => ({
+                  jugador: {
+                    nombre:
+                      resultado.jugador_nombre,
+                  },
+
+                  score: Number(
+                    resultado.score
+                  ),
+
+                  puesto: Number(
+                    resultado.puesto
+                  ),
+
+                  premio: Number(
+                    resultado.premio
+                  ),
+                }));
+            }
+
+            const formato:
+              | "edad"
+              | "categorias" =
+              fechaSupabase.formato ===
+              "categorias"
+                ? "categorias"
+                : "edad";
+
+            return {
+              id: Number(
+                fechaSupabase.id
+              ),
+
+              fecha:
+                fechaSupabase.fecha,
+
+              formato,
+
+              cancha:
+                fechaSupabase.cancha_id !==
+                  null &&
+                fechaSupabase.cancha_nombre &&
+                fechaSupabase.par !== null
+                  ? {
+                      id: Number(
+                        fechaSupabase.cancha_id
+                      ),
+
+                      nombre:
+                        fechaSupabase.cancha_nombre,
+
+                      par: Number(
+                        fechaSupabase.par
+                      ),
+                    }
+                  : null,
+
+              general:
+                formato === "edad"
+                  ? convertirResultados(
+                      "general"
+                    )
+                  : [],
+
+              viejitos:
+                formato === "edad"
+                  ? convertirResultados(
+                      "viejitos"
+                    )
+                  : [],
+
+              categoriaA:
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaA"
+                    )
+                  : [],
+
+              categoriaB:
+                formato === "categorias"
+                  ? convertirResultados(
+                      "categoriaB"
+                    )
+                  : [],
+            };
+          }
+        );
 
       const handicapsCalculados =
         calcularHandicap(historial);
@@ -172,25 +377,59 @@ export default function PreviaCategorias() {
       const mapaHandicaps =
         new Map<string, number>();
 
-      handicapsCalculados.forEach((jugador) => {
-        mapaHandicaps.set(
-          jugador.nombre,
-          jugador.handicap
-        );
-      });
+      handicapsCalculados.forEach(
+        (jugador) => {
+          mapaHandicaps.set(
+            jugador.nombre,
+            jugador.handicap
+          );
+        }
+      );
 
-      setHandicapsPorNombre(mapaHandicaps);
-      setListaJugadores(jugadoresDisponibles);
-      setFechaActual(fecha);
+      const canchasNube: Cancha[] = (
+        (respuestaCanchas.data ??
+          []) as CanchaSupabase[]
+      ).map((cancha) => ({
+        id: Number(cancha.id),
+        nombre: cancha.nombre,
+        par: Number(cancha.par),
+        activa: Boolean(
+          cancha.activa
+        ),
+      }));
 
       const canchaSeleccionada =
-        obtenerCanchasGuardadas().find(
+        canchasNube.find(
           (canchaGuardada) =>
-            canchaGuardada.id === fecha.cancha
+            canchaGuardada.id ===
+            fecha.cancha
         ) ?? null;
 
+      setHandicapsPorNombre(
+        mapaHandicaps
+      );
+
+      setListaJugadores(
+        jugadoresDisponibles
+      );
+
+      setFechaActual(fecha);
       setCancha(canchaSeleccionada);
-      setTablaPremios(obtenerTablaPremios());
+      setTablaPremios(
+        obtenerTablaPremios()
+      );
+
+      localStorage.setItem(
+        "laChangueadaJugadores",
+        JSON.stringify(
+          jugadoresDisponibles
+        )
+      );
+
+      localStorage.setItem(
+        "laChangueadaCanchas",
+        JSON.stringify(canchasNube)
+      );
 
       const valorGuardado =
         localStorage.getItem(
@@ -297,6 +536,9 @@ if (cambioLaNomina) {
     } finally {
       setCargando(false);
     }
+    }
+
+    cargarPrevia();
   }, []);
 
 useEffect(() => {

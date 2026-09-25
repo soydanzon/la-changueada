@@ -9,15 +9,13 @@ import {
   useRouter,
 } from "next/navigation";
 
+import { createClient } from "../../../lib/supabase/client";
 import BotonInicio from "../../../components/BotonInicio";
 import BotonVolver from "../../../components/BotonVolver";
 
-import {
-  obtenerCanchasGuardadas,
-  type Cancha,
-} from "../../../datos/canchas";
-
+import { type Cancha } from "../../../datos/canchas";
 import { obtenerTablaPremios } from "../../../premios/tablaPremios";
+import { obtenerPremiosCategorias } from "../../../premios/tablaPremiosCategorias";
 
 type JugadorResultado = {
   id?: number;
@@ -59,30 +57,45 @@ type FechaGuardada = {
   pagosCompletados?: number[];
 };
 
-function calcularPremios(
-  resultados: ResultadoBase[]
+type FechaSupabase = {
+  id: number;
+  fecha: string;
+  formato: string;
+  cancha_id: number | null;
+  cancha_nombre: string | null;
+  par: number | null;
+  pagos_pendientes: number[] | null;
+  pagos_completados: number[] | null;
+};
+
+type ResultadoSupabase = {
+  jugador_id: number;
+  jugador_nombre: string;
+  categoria: string;
+  score: number;
+  puesto: number;
+  premio: number;
+};
+
+type CanchaSupabase = {
+  id: number;
+  nombre: string;
+  par: number;
+  activa: boolean | null;
+};
+
+function calcularConPremios(
+  resultados: ResultadoBase[],
+  premios: number[]
 ): Resultado[] {
-  const tablaPremios =
-    obtenerTablaPremios();
-
-  const fila = tablaPremios.find(
-    (filaPremios) =>
-      filaPremios.jugadores ===
-      resultados.length
-  );
-
-  const premios = fila
-    ? fila.premios
-    : [];
-
   const ordenados = [
     ...resultados,
   ].sort(
-    (a, b) => a.score - b.score
+    (a, b) =>
+      a.score - b.score
   );
 
   const finales: Resultado[] = [];
-
   let i = 0;
 
   while (i < ordenados.length) {
@@ -147,6 +160,22 @@ function calcularPremios(
   return finales;
 }
 
+function calcularPremios(
+  resultados: ResultadoBase[]
+): Resultado[] {
+  const fila =
+    obtenerTablaPremios().find(
+      (filaPremios) =>
+        filaPremios.jugadores ===
+        resultados.length
+    );
+
+  return calcularConPremios(
+    resultados,
+    fila?.premios ?? []
+  );
+}
+
 function formatearScore(
   score: number,
   par: number
@@ -168,7 +197,9 @@ export default function EditarFecha() {
   const params = useParams();
   const router = useRouter();
 
-  const idFecha = Number(params.id);
+  const idFecha = Number(
+    params.id
+  );
 
   const [fecha, setFecha] =
     useState<FechaGuardada | null>(
@@ -194,72 +225,269 @@ export default function EditarFecha() {
     setResultadosDos,
   ] = useState<Resultado[]>([]);
 
+  const [cargando, setCargando] =
+    useState(true);
+
+  const [guardando, setGuardando] =
+    useState(false);
+
+  const [mensaje, setMensaje] =
+    useState("");
+
   useEffect(() => {
-    const canchasGuardadas =
-      obtenerCanchasGuardadas();
+    async function cargarFecha() {
+      const supabase =
+        createClient();
 
-    setCanchas(canchasGuardadas);
+      try {
+        const [
+          respuestaFecha,
+          respuestaResultados,
+          respuestaCanchas,
+        ] = await Promise.all([
+          supabase
+            .from("fechas")
+            .select(
+              "id, fecha, formato, cancha_id, cancha_nombre, par, pagos_pendientes, pagos_completados"
+            )
+            .eq("id", idFecha)
+            .single(),
 
-    const datos =
-      localStorage.getItem(
-        "laChangueadaHistorial"
-      );
+          supabase
+            .from("resultados")
+            .select(
+              "jugador_id, jugador_nombre, categoria, score, puesto, premio"
+            )
+            .eq(
+              "fecha_id",
+              idFecha
+            )
+            .order("puesto", {
+              ascending: true,
+            }),
 
-    if (!datos) {
-      return;
+          supabase
+            .from("canchas")
+            .select(
+              "id, nombre, par, activa"
+            )
+            .order("id"),
+        ]);
+
+        if (respuestaFecha.error) {
+          throw respuestaFecha.error;
+        }
+
+        if (
+          respuestaResultados.error
+        ) {
+          throw respuestaResultados.error;
+        }
+
+        if (
+          respuestaCanchas.error
+        ) {
+          throw respuestaCanchas.error;
+        }
+
+        const fechaSupabase =
+          respuestaFecha.data as FechaSupabase;
+
+        const resultadosSupabase =
+          (respuestaResultados.data ??
+            []) as ResultadoSupabase[];
+
+        const canchasSupabase =
+          (respuestaCanchas.data ??
+            []) as CanchaSupabase[];
+
+        const canchasNube: Cancha[] =
+          canchasSupabase.map(
+            (cancha) => ({
+              id: Number(cancha.id),
+              nombre: cancha.nombre,
+              par: Number(cancha.par),
+              activa: Boolean(
+                cancha.activa
+              ),
+            })
+          );
+
+        setCanchas(canchasNube);
+
+        localStorage.setItem(
+          "laChangueadaCanchas",
+          JSON.stringify(
+            canchasNube
+          )
+        );
+
+        function convertirResultados(
+          categoria: string
+        ): Resultado[] {
+          return resultadosSupabase
+            .filter(
+              (resultado) =>
+                resultado.categoria ===
+                categoria
+            )
+            .map(
+              (resultado) => ({
+                jugador: {
+                  id: Number(
+                    resultado.jugador_id
+                  ),
+
+                  nombre:
+                    resultado.jugador_nombre,
+                },
+
+                score: Number(
+                  resultado.score
+                ),
+
+                puesto: Number(
+                  resultado.puesto
+                ),
+
+                premio: Number(
+                  resultado.premio
+                ),
+              })
+            );
+        }
+
+        const formato:
+          | "edad"
+          | "categorias" =
+          fechaSupabase.formato ===
+          "categorias"
+            ? "categorias"
+            : "edad";
+
+        const general =
+          formato === "edad"
+            ? convertirResultados(
+                "general"
+              )
+            : [];
+
+        const viejitos =
+          formato === "edad"
+            ? convertirResultados(
+                "viejitos"
+              )
+            : [];
+
+        const categoriaA =
+          formato === "categorias"
+            ? convertirResultados(
+                "categoriaA"
+              )
+            : [];
+
+        const categoriaB =
+          formato === "categorias"
+            ? convertirResultados(
+                "categoriaB"
+              )
+            : [];
+
+        const fechaConvertida:
+          FechaGuardada = {
+          id: Number(
+            fechaSupabase.id
+          ),
+
+          fecha:
+            fechaSupabase.fecha,
+
+          formato,
+
+          cancha:
+            fechaSupabase.cancha_id !==
+              null &&
+            fechaSupabase.cancha_nombre &&
+            fechaSupabase.par !== null
+              ? {
+                  id: Number(
+                    fechaSupabase.cancha_id
+                  ),
+
+                  nombre:
+                    fechaSupabase.cancha_nombre,
+
+                  par: Number(
+                    fechaSupabase.par
+                  ),
+                }
+              : null,
+
+          general,
+          viejitos,
+          categoriaA,
+          categoriaB,
+
+          pagosPendientes:
+            (
+              fechaSupabase.pagos_pendientes ??
+              []
+            ).map(Number),
+
+          pagosCompletados:
+            (
+              fechaSupabase.pagos_completados ??
+              []
+            ).map(Number),
+        };
+
+        setFecha(fechaConvertida);
+
+        setCanchaId(
+          fechaConvertida.cancha?.id ??
+            0
+        );
+
+        setPar(
+          fechaConvertida.cancha?.par ??
+            0
+        );
+
+        if (
+          formato ===
+          "categorias"
+        ) {
+          setResultadosUno(
+            categoriaA
+          );
+
+          setResultadosDos(
+            categoriaB
+          );
+        } else {
+          setResultadosUno(
+            general
+          );
+
+          setResultadosDos(
+            viejitos
+          );
+        }
+      } catch (error) {
+        console.error(
+          "No se pudo cargar la fecha:",
+          error
+        );
+
+        setMensaje(
+          "⚠️ No se pudo cargar la fecha desde Supabase."
+        );
+      } finally {
+        setCargando(false);
+      }
     }
 
-    try {
-      const historial: FechaGuardada[] =
-        JSON.parse(datos);
-
-      const encontrada =
-        historial.find(
-          (item) =>
-            item.id === idFecha
-        );
-
-      if (!encontrada) {
-        return;
-      }
-
-      setFecha(encontrada);
-
-      setCanchaId(
-        encontrada.cancha?.id ?? 0
-      );
-
-      setPar(
-        encontrada.cancha?.par ?? 0
-      );
-
-      if (
-        encontrada.formato ===
-        "categorias"
-      ) {
-        setResultadosUno(
-          encontrada.categoriaA ??
-            encontrada.general ??
-            []
-        );
-
-        setResultadosDos(
-          encontrada.categoriaB ??
-            encontrada.viejitos ??
-            []
-        );
-      } else {
-        setResultadosUno(
-          encontrada.general ?? []
-        );
-
-        setResultadosDos(
-          encontrada.viejitos ?? []
-        );
-      }
-    } catch {
-      setFecha(null);
-    }
+    cargarFecha();
   }, [idFecha]);
 
   function cambiarCancha(
@@ -282,8 +510,7 @@ export default function EditarFecha() {
     index: number,
     valor: string
   ) {
-    const numero =
-      Number(valor);
+    const numero = Number(valor);
 
     if (
       !Number.isFinite(numero)
@@ -312,8 +539,7 @@ export default function EditarFecha() {
     index: number,
     valor: string
   ) {
-    const numero =
-      Number(valor);
+    const numero = Number(valor);
 
     if (
       !Number.isFinite(numero)
@@ -338,8 +564,11 @@ export default function EditarFecha() {
     );
   }
 
-  function guardarCambios() {
-    if (!fecha) {
+  async function guardarCambios() {
+    if (
+      !fecha ||
+      guardando
+    ) {
       return;
     }
 
@@ -352,41 +581,70 @@ export default function EditarFecha() {
       return;
     }
 
-    const datos =
-      localStorage.getItem(
-        "laChangueadaHistorial"
+    const canchaElegida =
+      canchas.find(
+        (cancha) =>
+          cancha.id === canchaId
       );
 
-    if (!datos) {
-      return;
-    }
-
-    try {
-      const historial: FechaGuardada[] =
-        JSON.parse(datos);
-
-      const canchaElegida =
-        canchas.find(
-          (cancha) =>
-            cancha.id === canchaId
-        );
-
-      const canchaActualizada =
-        canchaElegida
+    const canchaActualizada =
+      canchaElegida
+        ? {
+            id: canchaElegida.id,
+            nombre:
+              canchaElegida.nombre,
+            par,
+          }
+        : fecha.cancha
           ? {
-              id: canchaElegida.id,
-              nombre:
-                canchaElegida.nombre,
+              ...fecha.cancha,
               par,
             }
-          : fecha.cancha
-            ? {
-                ...fecha.cancha,
-                par,
-              }
-            : null;
+          : null;
 
-      const categoriaUnoCalculada =
+    let categoriaUnoCalculada:
+      Resultado[];
+
+    let categoriaDosCalculada:
+      Resultado[];
+
+    if (
+      fecha.formato ===
+      "categorias"
+    ) {
+      const premiosCategorias =
+        obtenerPremiosCategorias(
+          resultadosUno.length +
+            resultadosDos.length
+        );
+
+      categoriaUnoCalculada =
+        calcularConPremios(
+          resultadosUno.map(
+            (resultado) => ({
+              jugador:
+                resultado.jugador,
+              score:
+                resultado.score,
+            })
+          ),
+          premiosCategorias.a
+        );
+
+      categoriaDosCalculada =
+        calcularConPremios(
+          resultadosDos.map(
+            (resultado) => ({
+              jugador:
+                resultado.jugador,
+              score:
+                resultado.score,
+            })
+          ),
+          premiosCategorias.b
+        );
+    } else {
+      categoriaUnoCalculada =
         calcularPremios(
           resultadosUno.map(
             (resultado) => ({
@@ -398,7 +656,7 @@ export default function EditarFecha() {
           )
         );
 
-      const categoriaDosCalculada =
+      categoriaDosCalculada =
         calcularPremios(
           resultadosDos.map(
             (resultado) => ({
@@ -409,78 +667,204 @@ export default function EditarFecha() {
             })
           )
         );
+    }
 
-      const fechaActualizada:
-        FechaGuardada =
-        fecha.formato ===
-        "categorias"
-          ? {
-              ...fecha,
+    const todosLosResultados = [
+      ...categoriaUnoCalculada,
+      ...categoriaDosCalculada,
+    ];
 
-              cancha:
-                canchaActualizada,
-
-              categoriaA:
-                categoriaUnoCalculada,
-
-              categoriaB:
-                categoriaDosCalculada,
-
-              // Se mantienen estas
-              // copias por compatibilidad
-              // con handicap y estadísticas.
-              general:
-                categoriaUnoCalculada,
-
-              viejitos:
-                categoriaDosCalculada,
-            }
-          : {
-              ...fecha,
-
-              cancha:
-                canchaActualizada,
-
-              general:
-                categoriaUnoCalculada,
-
-              viejitos:
-                categoriaDosCalculada,
-            };
-
-      const nuevoHistorial =
-        historial.map((item) =>
-          item.id === fecha.id
-            ? fechaActualizada
-            : item
-        );
-
-      localStorage.setItem(
-        "laChangueadaHistorial",
-        JSON.stringify(
-          nuevoHistorial
-        )
+    const faltaJugadorId =
+      todosLosResultados.some(
+        (resultado) =>
+          !Number.isFinite(
+            Number(
+              resultado.jugador.id
+            )
+          )
       );
 
-      router.push(
-        `/historial/${fecha.id}`
+    if (faltaJugadorId) {
+      alert(
+        "No se pudo identificar a uno de los jugadores."
       );
-    } catch (error) {
+      return;
+    }
+
+    const resultadosParaSupabase =
+      fecha.formato ===
+      "categorias"
+        ? [
+            ...categoriaUnoCalculada.map(
+              (resultado) => ({
+                ...resultado,
+                categoria:
+                  "categoriaA",
+              })
+            ),
+
+            ...categoriaDosCalculada.map(
+              (resultado) => ({
+                ...resultado,
+                categoria:
+                  "categoriaB",
+              })
+            ),
+          ]
+        : [
+            ...categoriaUnoCalculada.map(
+              (resultado) => ({
+                ...resultado,
+                categoria:
+                  "general",
+              })
+            ),
+
+            ...categoriaDosCalculada.map(
+              (resultado) => ({
+                ...resultado,
+                categoria:
+                  "viejitos",
+              })
+            ),
+          ];
+
+    setGuardando(true);
+    setMensaje("");
+
+    const supabase =
+      createClient();
+
+    const { error } =
+      await supabase.rpc(
+        "editar_fecha_completa",
+        {
+          p_fecha: {
+            id: fecha.id,
+            fecha: fecha.fecha,
+            formato:
+              fecha.formato ===
+              "categorias"
+                ? "categorias"
+                : "edad",
+            cancha:
+              canchaActualizada,
+            pagosPendientes:
+              fecha.pagosPendientes ??
+              [],
+            pagosCompletados:
+              fecha.pagosCompletados ??
+              [],
+          },
+
+          p_resultados:
+            resultadosParaSupabase,
+        }
+      );
+
+    if (error) {
       console.error(
         "No se pudo editar la fecha:",
         error
       );
 
       alert(
-        "No se pudieron guardar los cambios."
+        "No se pudieron guardar los cambios. La fecha original sigue intacta."
       );
+
+      setGuardando(false);
+      return;
     }
+
+    const fechaActualizada:
+      FechaGuardada =
+      fecha.formato ===
+      "categorias"
+        ? {
+            ...fecha,
+
+            cancha:
+              canchaActualizada,
+
+            categoriaA:
+              categoriaUnoCalculada,
+
+            categoriaB:
+              categoriaDosCalculada,
+
+            general:
+              categoriaUnoCalculada,
+
+            viejitos:
+              categoriaDosCalculada,
+          }
+        : {
+            ...fecha,
+
+            cancha:
+              canchaActualizada,
+
+            general:
+              categoriaUnoCalculada,
+
+            viejitos:
+              categoriaDosCalculada,
+          };
+
+    const datosLocales =
+      localStorage.getItem(
+        "laChangueadaHistorial"
+      );
+
+    if (datosLocales) {
+      try {
+        const historialLocal:
+          FechaGuardada[] =
+          JSON.parse(datosLocales);
+
+        localStorage.setItem(
+          "laChangueadaHistorial",
+          JSON.stringify(
+            historialLocal.map(
+              (item) =>
+                item.id ===
+                fecha.id
+                  ? fechaActualizada
+                  : item
+            )
+          )
+        );
+      } catch {
+        // La edición ya quedó guardada
+        // correctamente en Supabase.
+      }
+    }
+
+    router.push(
+      `/historial/${fecha.id}`
+    );
+  }
+
+  if (cargando) {
+    return (
+      <main className="min-h-screen bg-green-900 p-6 text-white">
+        Cargando fecha...
+      </main>
+    );
   }
 
   if (!fecha) {
     return (
       <main className="min-h-screen bg-green-900 p-6 text-white">
-        Cargando...
+        <div className="mb-6 flex justify-end gap-2">
+          <BotonVolver />
+          <BotonInicio />
+        </div>
+
+        <div className="rounded-xl bg-white p-5 text-green-900">
+          {mensaje ||
+            "No se encontró la fecha."}
+        </div>
       </main>
     );
   }
@@ -521,6 +905,7 @@ export default function EditarFecha() {
 
         <select
           value={canchaId}
+          disabled={guardando}
           onChange={(evento) =>
             cambiarCancha(
               Number(
@@ -528,7 +913,7 @@ export default function EditarFecha() {
               )
             )
           }
-          className="mt-2 w-full rounded-lg border p-3 text-black"
+          className="mt-2 w-full rounded-lg border p-3 text-black disabled:bg-gray-200"
         >
           {canchas.map(
             (cancha) => (
@@ -549,6 +934,7 @@ export default function EditarFecha() {
         <input
           type="number"
           value={par}
+          disabled={guardando}
           onChange={(evento) =>
             setPar(
               Number(
@@ -556,7 +942,7 @@ export default function EditarFecha() {
               )
             )
           }
-          className="mt-2 w-full rounded-lg border p-3 text-black"
+          className="mt-2 w-full rounded-lg border p-3 text-black disabled:bg-gray-200"
         />
       </div>
 
@@ -597,6 +983,7 @@ export default function EditarFecha() {
                   value={
                     resultado.score
                   }
+                  disabled={guardando}
                   onChange={(
                     evento
                   ) =>
@@ -606,7 +993,7 @@ export default function EditarFecha() {
                         .value
                     )
                   }
-                  className="w-20 rounded-lg border p-2 text-center text-lg font-bold text-black"
+                  className="w-20 rounded-lg border p-2 text-center text-lg font-bold text-black disabled:bg-gray-200"
                 />
               </div>
             )
@@ -653,6 +1040,7 @@ export default function EditarFecha() {
                     value={
                       resultado.score
                     }
+                    disabled={guardando}
                     onChange={(
                       evento
                     ) =>
@@ -662,7 +1050,7 @@ export default function EditarFecha() {
                           .value
                       )
                     }
-                    className="w-20 rounded-lg border p-2 text-center text-lg font-bold text-black"
+                    className="w-20 rounded-lg border p-2 text-center text-lg font-bold text-black disabled:bg-gray-200"
                   />
                 </div>
               )
@@ -673,10 +1061,13 @@ export default function EditarFecha() {
 
       <button
         type="button"
+        disabled={guardando}
         onClick={guardarCambios}
-        className="mt-6 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white"
+        className="mt-6 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white disabled:bg-gray-400"
       >
-        💾 Guardar cambios
+        {guardando
+          ? "☁️ Guardando..."
+          : "💾 Guardar cambios"}
       </button>
     </main>
   );
