@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { config } from "../config/config";
@@ -44,6 +48,9 @@ function recuperarBorrador(
   }
 }
 
+const LETRAS_JUGADORES =
+  "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("");
+
 export default function NuevaFechaCategorias() {
   const router = useRouter();
 
@@ -60,6 +67,14 @@ export default function NuevaFechaCategorias() {
     useState<Jugador[]>([]);
 
   const [busqueda, setBusqueda] = useState("");
+
+  const [
+    letraSeleccionada,
+    setLetraSeleccionada,
+  ] = useState("");
+
+  const tecladoRef =
+    useRef<HTMLDivElement>(null);
 
   const [
     jugadoresSeleccionados,
@@ -536,33 +551,31 @@ if (jugadorRecienCreadoId) {
   ]);
 
   function cambiarJugador(id: number) {
-  const posicionActual = window.scrollY;
+    setJugadoresSeleccionados((actual) => {
+      if (actual.includes(id)) {
+        setPagosPendientes((pendientes) =>
+          pendientes.filter(
+            (jugadorId) =>
+              jugadorId !== id
+          )
+        );
 
-  setJugadoresSeleccionados((actual) => {
-    if (actual.includes(id)) {
-      setPagosPendientes((pendientes) =>
-        pendientes.filter(
-          (jugadorId) => jugadorId !== id
-        )
-      );
+        return actual.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        );
+      }
 
-      return actual.filter(
-        (jugadorId) => jugadorId !== id
-      );
-    }
+      return [...actual, id];
+    });
 
-    return [...actual, id];
-  });
-
-  window.requestAnimationFrame(() => {
     window.requestAnimationFrame(() => {
-      window.scrollTo({
-        top: posicionActual,
-        behavior: "auto",
+      tecladoRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
     });
-  });
-}
+  }
 
   function cambiarPagoPendiente(id: number) {
     if (!jugadoresSeleccionados.includes(id)) {
@@ -633,11 +646,19 @@ categoriaB: categoriaB.filter((id) =>
   }
 
   const jugadoresFiltrados = listaJugadores
-    .filter((jugador) =>
-      normalizarTexto(jugador.nombre).includes(
-        normalizarTexto(busqueda)
-      )
-    )
+    .filter((jugador) => {
+      if (!letraSeleccionada) {
+        return true;
+      }
+
+      return normalizarTexto(
+        jugador.nombre
+      ).startsWith(
+        normalizarTexto(
+          letraSeleccionada
+        )
+      );
+    })
     .sort((a, b) => {
       if (a.frecuente && !b.frecuente) return -1;
       if (!a.frecuente && b.frecuente) return 1;
@@ -761,15 +782,52 @@ categoriaB: categoriaB.filter((id) =>
         </div>
       )}
 
-      <input
-        type="text"
-        placeholder="Buscar jugador..."
-        value={busqueda}
-        onChange={(evento) =>
-          setBusqueda(evento.target.value)
-        }
-        className="w-full rounded-lg bg-white p-4 text-xl text-black"
-      />
+      <div
+        ref={tecladoRef}
+        className="scroll-mt-24 rounded-xl bg-white p-4 text-green-900"
+      >
+        <p className="mb-3 text-lg font-bold">
+          Buscar por inicial
+        </p>
+
+        <button
+          type="button"
+          onClick={() =>
+            setLetraSeleccionada("")
+          }
+          className={`mb-3 w-full rounded-lg py-2 font-bold ${
+            letraSeleccionada === ""
+              ? "bg-green-700 text-white"
+              : "bg-gray-200 text-gray-700"
+          }`}
+        >
+          Todos
+        </button>
+
+        <div className="grid grid-cols-9 gap-2">
+          {LETRAS_JUGADORES.map(
+            (letra) => (
+              <button
+                key={letra}
+                type="button"
+                onClick={() =>
+                  setLetraSeleccionada(
+                    letra
+                  )
+                }
+                className={`h-10 rounded-lg font-bold ${
+                  letraSeleccionada ===
+                  letra
+                    ? "bg-green-700 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                {letra}
+              </button>
+            )
+          )}
+        </div>
+      </div>
 
       <button
         onClick={agregarJugadorDesdeFecha}
