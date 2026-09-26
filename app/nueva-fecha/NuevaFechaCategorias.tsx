@@ -550,6 +550,25 @@ if (jugadorRecienCreadoId) {
     jugadoresSeleccionados,
   ]);
 
+function elegirLetra(letra: string) {
+    setLetraSeleccionada(letra);
+  }
+
+  useEffect(() => {
+    if (!letraSeleccionada) return;
+
+    const id = window.requestAnimationFrame(() => {
+      document
+        .querySelector("#lista-jugadores > div")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    });
+
+    return () => window.cancelAnimationFrame(id);
+  }, [letraSeleccionada, listaJugadores]);
+
   function cambiarJugador(id: number) {
     setJugadoresSeleccionados((actual) => {
       if (actual.includes(id)) {
@@ -793,8 +812,8 @@ categoriaB: categoriaB.filter((id) =>
         <button
           type="button"
           onClick={() =>
-            setLetraSeleccionada("")
-          }
+  elegirLetra("")
+}
           className={`mb-3 w-full rounded-lg py-2 font-bold ${
             letraSeleccionada === ""
               ? "bg-green-700 text-white"
@@ -873,8 +892,13 @@ categoriaB: categoriaB.filter((id) =>
         </div>
       )}
 
-      <div className="space-y-3">
-        {jugadoresFiltrados.map((jugador) => {
+      <div
+  id="lista-jugadores"
+  className={`scroll-mt-24 space-y-3 ${
+  letraSeleccionada ? "pb-[100dvh]" : ""
+}`}
+>
+  {jugadoresFiltrados.map((jugador) => {
           const jugadorAnotado =
             jugadoresSeleccionados.includes(
               jugador.id
@@ -887,7 +911,7 @@ categoriaB: categoriaB.filter((id) =>
             <div
               id={`jugador-${jugador.id}`}
               key={jugador.id}
-              className="rounded-xl bg-white p-4 text-green-900"
+              className="scroll-mt-24 rounded-xl bg-white p-4 text-green-900"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 text-lg font-bold">
