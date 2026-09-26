@@ -484,6 +484,49 @@ export default function DetalleHandicap() {
           )}
       </div>
 
+      {jugador.fechasAnteriores.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-xl font-bold text-gray-200">
+            Tarjetas anteriores
+          </h2>
+
+          <div className="space-y-2">
+            {[...jugador.fechasAnteriores]
+              .reverse()
+              .map((fecha, index) => (
+                <div
+                  key={`anterior-${fecha.fecha}-${fecha.cancha}-${index}`}
+                  className={`rounded-xl border border-gray-500 px-4 py-2 ${
+                    fecha.cuenta
+                      ? "bg-gray-200 text-gray-700"
+                      : "bg-gray-400 text-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-1 items-center gap-4">
+                      <span className="w-24 shrink-0 font-medium">
+                        {fecha.fecha}
+                      </span>
+
+                      <span className="ml-auto font-bold">
+                        {fecha.lp
+                          ? "LP"
+                          : `${fecha.golpes} (${formatearScore(
+                              fecha.score
+                            )})`}
+                      </span>
+                    </div>
+
+                    <span className="ml-4 text-2xl font-bold text-gray-600">
+                      {fecha.cuenta ? "✓" : "×"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </section>
+      )}
+      
       <button
         type="button"
         onClick={() =>

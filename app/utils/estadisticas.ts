@@ -97,7 +97,8 @@ export type HandicapJugador = {
   nombre: string;
   handicap: number;
   fechas: FechaHandicap[];
-};
+  fechasAnteriores: FechaHandicap[];
+};;
 
 const VALOR_CHANGUEADA = 10000;
 const SCORE_LP = 120;
@@ -536,24 +537,23 @@ export function calcularHandicap(
   const historialOrdenado = [
     ...historial,
   ].sort((a, b) => a.id - b.id);
-  
+
   historialOrdenado.forEach((fecha) => {
-  if (!fecha.cancha) {
-    return;
-  }
+    if (!fecha.cancha) {
+      return;
+    }
 
-  const cancha = fecha.cancha;
+    const cancha = fecha.cancha;
 
-  const nombreCancha = obtenerNombreCanchaActual(
-    cancha
-  )
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+    const nombreCancha =
+      obtenerNombreCanchaActual(cancha)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
 
-  if (!nombreCancha.includes("alamos")) {
-    return;
-  }
+    if (!nombreCancha.includes("alamos")) {
+      return;
+    }
 
     const {
       categoriaUno,
@@ -590,97 +590,151 @@ export function calcularHandicap(
       const fechasJugador =
         mapa.get(nombre) ?? [];
 
-        const cantidad = historialOrdenado.filter(
-  (f) => f.fecha === fecha.fecha && f.id <= fecha.id
-).length;
+      const cantidad =
+        historialOrdenado.filter(
+          (fechaHistorial) =>
+            fechaHistorial.fecha === fecha.fecha &&
+            fechaHistorial.id <= fecha.id
+        ).length;
 
-let vuelta: string | undefined;
+      let vuelta: string | undefined;
 
-switch (cantidad) {
-  case 1:
-    vuelta = "Primera vuelta";
-    break;
-  case 2:
-    vuelta = "Segunda vuelta";
-    break;
-  case 3:
-    vuelta = "Tercera vuelta";
-    break;
-  case 4:
-    vuelta = "Cuarta vuelta";
-    break;
-  default:
-    if (cantidad > 4) {
-      vuelta = `${cantidad}ª vuelta`;
-    }
-}
+      switch (cantidad) {
+        case 1:
+          vuelta = "Primera vuelta";
+          break;
+        case 2:
+          vuelta = "Segunda vuelta";
+          break;
+        case 3:
+          vuelta = "Tercera vuelta";
+          break;
+        case 4:
+          vuelta = "Cuarta vuelta";
+          break;
+        default:
+          if (cantidad > 4) {
+            vuelta = `${cantidad}ª vuelta`;
+          }
+      }
 
       fechasJugador.push({
-  fecha: fecha.fecha,
+        fecha: fecha.fecha,
 
-  cancha:
-    obtenerNombreCanchaActual(
-      cancha
-    ),
+        cancha:
+          obtenerNombreCanchaActual(
+            cancha
+          ),
 
-  vuelta,
+        vuelta,
 
-  score:
-    resultado.score - cancha.par,
+        score:
+          resultado.score - cancha.par,
 
-  golpes: resultado.score,
+        golpes: resultado.score,
 
-  lp: esLP(resultado.score),
-});
+        lp: esLP(resultado.score),
+      });
 
       mapa.set(nombre, fechasJugador);
     });
   });
 
+  function marcarTarjetas(
+    tarjetas: Omit<
+      FechaHandicap,
+      "cuenta"
+    >[]
+  ): FechaHandicap[] {
+    const cantidadQueCuenta =
+      Math.min(
+        8,
+        Math.ceil(
+          tarjetas.length / 2
+        )
+      );
+
+    const indicesQueCuentan =
+      tarjetas
+        .map((fecha, index) => ({
+          index,
+          score: fecha.score,
+          lp: fecha.lp,
+        }))
+        .filter((fecha) => !fecha.lp)
+        .sort(
+          (a, b) =>
+            a.score - b.score
+        )
+        .slice(0, cantidadQueCuenta)
+        .map((fecha) => fecha.index);
+
+    return tarjetas.map(
+      (fecha, index) => ({
+        ...fecha,
+
+        cuenta:
+          indicesQueCuentan.includes(
+            index
+          ),
+      })
+    );
+  }
+
   return Array.from(mapa.entries())
     .map(
       ([nombre, todasLasFechas]) => {
-        const ultimas16 =
+        const ultimas16Base =
           todasLasFechas.slice(-16);
 
-        const cantidadQueCuenta =
-          Math.min(
-            8,
-            Math.ceil(
-              ultimas16.length / 2
-            )
-          );
+        const indiceInicioAnteriores =
+  Math.max(
+    0,
+    todasLasFechas.length - 24
+  );
 
-        const indicesQueCuentan =
-  ultimas16
-    .map((fecha, index) => ({
-      index,
-      score: fecha.score,
-      lp: fecha.lp,
-    }))
-    .filter((fecha) => !fecha.lp)
-    .sort(
-      (a, b) =>
-        a.score - b.score
-    )
-    .slice(
-      0,
-      cantidadQueCuenta
-    )
-    .map(
-      (fecha) => fecha.index
-    );
+const indiceFinAnteriores =
+  Math.max(
+    0,
+    todasLasFechas.length - 16
+  );
 
-        const fechas = ultimas16.map(
-          (fecha, index) => ({
-            ...fecha,
+const anteriores8Base =
+  todasLasFechas.slice(
+    indiceInicioAnteriores,
+    indiceFinAnteriores
+  );
 
-            cuenta:
-              indicesQueCuentan.includes(
-                index
-              ),
-          })
+const fechas =
+  marcarTarjetas(
+    ultimas16Base
+  );
+
+const fechasAnteriores =
+  anteriores8Base.map(
+    (fecha, indice) => {
+      const indiceOriginal =
+        indiceInicioAnteriores + indice;
+
+      const ventanaAntesDeSalir =
+        todasLasFechas.slice(
+          indiceOriginal,
+          indiceOriginal + 16
         );
+
+      const ventanaMarcada =
+        marcarTarjetas(
+          ventanaAntesDeSalir
+        );
+
+      return {
+        ...fecha,
+        cuenta:
+          ventanaMarcada[0]
+            ?.cuenta ?? false,
+      };
+    }
+  );
 
         const fechasQueCuentan =
           fechas.filter(
@@ -701,6 +755,7 @@ switch (cantidad) {
           nombre,
           handicap,
           fechas,
+          fechasAnteriores,
         };
       }
     )
