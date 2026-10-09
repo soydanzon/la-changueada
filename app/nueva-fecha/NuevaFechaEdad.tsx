@@ -8,18 +8,23 @@ import {
 import { useRouter } from "next/navigation";
 import { createClient } from "../lib/supabase/client";
 import { config } from "../config/config";
+
 import {
   type Jugador,
 } from "../datos/jugadores";
+
 import {
   type Cancha,
 } from "../datos/canchas";
+
 import BotonInicio from "../components/BotonInicio";
 import BotonVolver from "../components/BotonVolver";
+
 import {
   obtenerTablaPremios,
   type FilaPremios,
 } from "../premios/tablaPremios";
+
 import { normalizarTexto } from "../utils/texto";
 
 type BorradorNuevaFecha = {
@@ -27,6 +32,7 @@ type BorradorNuevaFecha = {
   general?: number[];
   viejitos?: number[];
   pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
   busqueda?: string;
 };
 
@@ -36,41 +42,76 @@ const LETRAS_JUGADORES =
 export default function NuevaFecha() {
   const router = useRouter();
 
-  const [canchas, setCanchas] = useState<Cancha[]>([]);
-  const [canchaId, setCanchaId] = useState(0);
+  const [canchas, setCanchas] =
+    useState<Cancha[]>([]);
 
-  const [valorChangueada, setValorChangueada] =
-    useState(config.valorChangueada);
+  const [canchaId, setCanchaId] =
+    useState(0);
 
-  const [listaJugadores, setListaJugadores] =
-    useState<Jugador[]>([]);
+  const [
+    valorChangueada,
+    setValorChangueada,
+  ] = useState(
+    config.valorChangueada
+  );
 
-  const [letraSeleccionada, setLetraSeleccionada] =
-    useState("");
+  const [
+    listaJugadores,
+    setListaJugadores,
+  ] = useState<Jugador[]>([]);
 
-  const tecladoRef = useRef<HTMLDivElement>(null);
+  const [
+    letraSeleccionada,
+    setLetraSeleccionada,
+  ] = useState("");
 
-  const [general, setGeneral] = useState<number[]>([]);
-  const [viejitos, setViejitos] = useState<number[]>([]);
+  const tecladoRef =
+    useRef<HTMLDivElement>(null);
 
-  const [pagosPendientes, setPagosPendientes] =
+  const [general, setGeneral] =
     useState<number[]>([]);
 
-  const [tablaPremios, setTablaPremios] =
-    useState<FilaPremios[]>([]);
+  const [viejitos, setViejitos] =
+    useState<number[]>([]);
 
-  const [borradorCargado, setBorradorCargado] =
-    useState(false);
+  const [
+    pagosPendientes,
+    setPagosPendientes,
+  ] = useState<number[]>([]);
 
-  const [tablaPremiosCargada, setTablaPremiosCargada] =
-    useState(false);
+  const [
+    pagosDosVueltas,
+    setPagosDosVueltas,
+  ] = useState<number[]>([]);
 
-  const [jugadorParaScroll, setJugadorParaScroll] =
-    useState<number | null>(null);
+  const [
+    tablaPremios,
+    setTablaPremios,
+  ] = useState<FilaPremios[]>([]);
+
+  const [
+    borradorCargado,
+    setBorradorCargado,
+  ] = useState(false);
+
+  const [
+    tablaPremiosCargada,
+    setTablaPremiosCargada,
+  ] = useState(false);
+
+  const [
+    jugadorParaScroll,
+    setJugadorParaScroll,
+  ] = useState<number | null>(
+    null
+  );
 
   const cancha =
-    canchas.find((c) => c.id === canchaId) ??
-    canchas[0];
+    canchas.find(
+      (canchaDisponible) =>
+        canchaDisponible.id ===
+        canchaId
+    ) ?? canchas[0];
 
   useEffect(() => {
     localStorage.removeItem(
@@ -129,10 +170,14 @@ export default function NuevaFecha() {
           );
 
         if (
-          Number.isFinite(valorNube) &&
+          Number.isFinite(
+            valorNube
+          ) &&
           valorNube > 0
         ) {
-          setValorChangueada(valorNube);
+          setValorChangueada(
+            valorNube
+          );
 
           localStorage.setItem(
             "laChangueadaValor",
@@ -153,14 +198,20 @@ export default function NuevaFecha() {
           const tablaNube =
             configuracionTabla.valor as unknown as FilaPremios[];
 
-          setTablaPremios(tablaNube);
+          setTablaPremios(
+            tablaNube
+          );
 
           localStorage.setItem(
             "laChangueadaTablaPremios",
-            JSON.stringify(tablaNube)
+            JSON.stringify(
+              tablaNube
+            )
           );
         } else {
-          setTablaPremios(tablaLocal);
+          setTablaPremios(
+            tablaLocal
+          );
         }
       } catch (error) {
         console.error(
@@ -174,16 +225,21 @@ export default function NuevaFecha() {
           );
         }
 
-        setTablaPremios(tablaLocal);
+        setTablaPremios(
+          tablaLocal
+        );
       } finally {
-        setTablaPremiosCargada(true);
+        setTablaPremiosCargada(
+          true
+        );
       }
     }
 
     cargarConfiguracionNube();
 
     async function cargarJugadoresNube() {
-      const supabase = createClient();
+      const supabase =
+        createClient();
 
       const { data, error } =
         await supabase
@@ -206,21 +262,28 @@ export default function NuevaFecha() {
         return;
       }
 
-      const jugadoresNube: Jugador[] = (
-        data ?? []
-      ).map(
-        (jugador: {
-          id: number;
-          nombre: string;
-          frecuente: boolean | null;
-        }) => ({
-          id: Number(jugador.id),
-          nombre: jugador.nombre,
-          frecuente: Boolean(
-            jugador.frecuente
-          ),
-        })
-      );
+      const jugadoresNube: Jugador[] =
+        (data ?? []).map(
+          (jugador: {
+            id: number;
+            nombre: string;
+            frecuente:
+              | boolean
+              | null;
+          }) => ({
+            id: Number(
+              jugador.id
+            ),
+
+            nombre:
+              jugador.nombre,
+
+            frecuente:
+              Boolean(
+                jugador.frecuente
+              ),
+          })
+        );
 
       setListaJugadores(
         jugadoresNube
@@ -245,10 +308,14 @@ export default function NuevaFecha() {
     function recuperarBorrador(
       datos: string | null
     ): BorradorNuevaFecha | null {
-      if (!datos) return null;
+      if (!datos) {
+        return null;
+      }
 
       try {
-        return JSON.parse(datos);
+        return JSON.parse(
+          datos
+        ) as BorradorNuevaFecha;
       } catch {
         return null;
       }
@@ -285,8 +352,27 @@ export default function NuevaFecha() {
         borrador.viejitos ?? []
       );
 
+      const pendientes =
+        borrador.pagosPendientes ??
+        [];
+
+      const dosVueltas =
+        (
+          borrador.pagosDosVueltas ??
+          []
+        ).filter(
+          (jugadorId) =>
+            !pendientes.includes(
+              jugadorId
+            )
+        );
+
       setPagosPendientes(
-        borrador.pagosPendientes ?? []
+        pendientes
+      );
+
+      setPagosDosVueltas(
+        dosVueltas
       );
 
       if (
@@ -324,7 +410,8 @@ export default function NuevaFecha() {
 
   useEffect(() => {
     async function cargarCanchasNube() {
-      const supabase = createClient();
+      const supabase =
+        createClient();
 
       const [
         resultadoCanchas,
@@ -341,7 +428,9 @@ export default function NuevaFecha() {
           .select("cancha_id"),
       ]);
 
-      if (resultadoCanchas.error) {
+      if (
+        resultadoCanchas.error
+      ) {
         console.error(
           "No se pudieron cargar las canchas:",
           resultadoCanchas.error
@@ -356,7 +445,9 @@ export default function NuevaFecha() {
         return;
       }
 
-      if (resultadoFechas.error) {
+      if (
+        resultadoFechas.error
+      ) {
         console.error(
           "No se pudo calcular el uso de las canchas:",
           resultadoFechas.error
@@ -367,19 +458,25 @@ export default function NuevaFecha() {
         new Map<number, number>();
 
       (
-        resultadoFechas.data ?? []
+        resultadoFechas.data ??
+        []
       ).forEach(
         (fecha: {
-          cancha_id: number | null;
+          cancha_id:
+            | number
+            | null;
         }) => {
           if (
-            fecha.cancha_id === null
+            fecha.cancha_id ===
+            null
           ) {
             return;
           }
 
           const idCancha =
-            Number(fecha.cancha_id);
+            Number(
+              fecha.cancha_id
+            );
 
           usosPorCancha.set(
             idCancha,
@@ -392,29 +489,42 @@ export default function NuevaFecha() {
         }
       );
 
-      const canchasNube: Cancha[] = (
-        resultadoCanchas.data ?? []
-      ).map(
-        (cancha: {
-          id: number;
-          nombre: string;
-          par: number;
-          activa: boolean | null;
-        }) => ({
-          id: Number(cancha.id),
-          nombre: cancha.nombre,
-          par: Number(cancha.par),
-          activa: Boolean(
-            cancha.activa
-          ),
-        })
-      );
+      const canchasNube: Cancha[] =
+        (
+          resultadoCanchas.data ??
+          []
+        ).map(
+          (canchaNube: {
+            id: number;
+            nombre: string;
+            par: number;
+            activa:
+              | boolean
+              | null;
+          }) => ({
+            id: Number(
+              canchaNube.id
+            ),
+
+            nombre:
+              canchaNube.nombre,
+
+            par: Number(
+              canchaNube.par
+            ),
+
+            activa:
+              Boolean(
+                canchaNube.activa
+              ),
+          })
+        );
 
       const canchasActivas =
         canchasNube
           .filter(
-            (cancha) =>
-              cancha.activa
+            (canchaDisponible) =>
+              canchaDisponible.activa
           )
           .sort((a, b) => {
             const usosA =
@@ -427,7 +537,9 @@ export default function NuevaFecha() {
                 b.id
               ) ?? 0;
 
-            if (usosB !== usosA) {
+            if (
+              usosB !== usosA
+            ) {
               return usosB - usosA;
             }
 
@@ -435,7 +547,8 @@ export default function NuevaFecha() {
               b.nombre,
               "es",
               {
-                sensitivity: "base",
+                sensitivity:
+                  "base",
               }
             );
           });
@@ -444,14 +557,18 @@ export default function NuevaFecha() {
         canchasActivas
       );
 
-      setCanchaId((actual) =>
-        canchasActivas.some(
-          (cancha) =>
-            cancha.id === actual
-        )
-          ? actual
-          : canchasActivas[0]
-              ?.id ?? 0
+      setCanchaId(
+        (actual) =>
+          canchasActivas.some(
+            (
+              canchaDisponible
+            ) =>
+              canchaDisponible.id ===
+              actual
+          )
+            ? actual
+            : canchasActivas[0]
+                ?.id ?? 0
       );
 
       localStorage.setItem(
@@ -466,7 +583,9 @@ export default function NuevaFecha() {
   }, []);
 
   useEffect(() => {
-    if (!borradorCargado) return;
+    if (!borradorCargado) {
+      return;
+    }
 
     const claveBorrador =
       "laChangueadaNuevaFechaBorrador";
@@ -474,12 +593,14 @@ export default function NuevaFecha() {
     const claveBackup =
       "laChangueadaNuevaFechaBorradorBackup";
 
-    const borrador: BorradorNuevaFecha = {
-      canchaId,
-      general,
-      viejitos,
-      pagosPendientes,
-    };
+    const borrador: BorradorNuevaFecha =
+      {
+        canchaId,
+        general,
+        viejitos,
+        pagosPendientes,
+        pagosDosVueltas,
+      };
 
     try {
       const borradorAnterior =
@@ -496,7 +617,9 @@ export default function NuevaFecha() {
 
       localStorage.setItem(
         claveBorrador,
-        JSON.stringify(borrador)
+        JSON.stringify(
+          borrador
+        )
       );
     } catch {
       // Se conserva la última copia válida.
@@ -507,10 +630,13 @@ export default function NuevaFecha() {
     general,
     viejitos,
     pagosPendientes,
+    pagosDosVueltas,
   ]);
 
   useEffect(() => {
-    if (jugadorParaScroll === null) {
+    if (
+      jugadorParaScroll === null
+    ) {
       return;
     }
 
@@ -527,7 +653,9 @@ export default function NuevaFecha() {
             block: "center",
           });
 
-          setJugadorParaScroll(null);
+          setJugadorParaScroll(
+            null
+          );
         }
       }, 100);
 
@@ -560,30 +688,73 @@ export default function NuevaFecha() {
         }
       );
 
-    return () =>
-      window.cancelAnimationFrame(id);
+    return () => {
+      window.cancelAnimationFrame(
+        id
+      );
+    };
   }, [
     letraSeleccionada,
     listaJugadores,
   ]);
 
   function volverAlTeclado() {
-    window.requestAnimationFrame(() => {
-      tecladoRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+    window.requestAnimationFrame(
+      () => {
+        tecladoRef.current?.scrollIntoView(
+          {
+            behavior: "smooth",
+            block: "start",
+          }
+        );
+      }
+    );
   }
 
-  function cambiarGeneral(id: number) {
-    if (general.includes(id)) {
-      setGeneral((actual) =>
+  function limpiarPagosJugador(
+    id: number
+  ) {
+    setPagosPendientes(
+      (actual) =>
         actual.filter(
           (jugadorId) =>
             jugadorId !== id
         )
+    );
+
+    setPagosDosVueltas(
+      (actual) =>
+        actual.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        )
+    );
+  }
+
+  function cambiarGeneral(
+    id: number,
+    pagoInicial?:
+      | "pendiente"
+      | "dosVueltas"
+  ) {
+    if (general.includes(id)) {
+      const nuevoGeneral =
+        general.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        );
+
+      setGeneral(
+        nuevoGeneral
       );
+
+      if (
+        !viejitos.includes(id)
+      ) {
+        limpiarPagosJugador(
+          id
+        );
+      }
 
       volverAlTeclado();
       return;
@@ -594,8 +765,53 @@ export default function NuevaFecha() {
       id,
     ];
 
+    let nuevosPendientes =
+      pagosPendientes;
+
+    let nuevosDosVueltas =
+      pagosDosVueltas;
+
     if (
-      nuevoGeneral.length === 14
+      pagoInicial ===
+      "pendiente"
+    ) {
+      nuevosPendientes = [
+        ...pagosPendientes.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        ),
+        id,
+      ];
+
+      nuevosDosVueltas =
+        pagosDosVueltas.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        );
+    }
+
+    if (
+      pagoInicial ===
+      "dosVueltas"
+    ) {
+      nuevosDosVueltas = [
+        ...pagosDosVueltas.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        ),
+        id,
+      ];
+
+      nuevosPendientes =
+        pagosPendientes.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        );
+    }
+
+    if (
+      nuevoGeneral.length ===
+      14
     ) {
       const pasarACategorias =
         window.confirm(
@@ -614,7 +830,15 @@ export default function NuevaFecha() {
           );
 
         const pendientesMigrados =
-          pagosPendientes.filter(
+          nuevosPendientes.filter(
+            (jugadorId) =>
+              jugadoresMigrados.includes(
+                jugadorId
+              )
+          );
+
+        const dosVueltasMigrados =
+          nuevosDosVueltas.filter(
             (jugadorId) =>
               jugadoresMigrados.includes(
                 jugadorId
@@ -625,10 +849,16 @@ export default function NuevaFecha() {
           "laChangueadaNuevaFechaCategoriasBorrador",
           JSON.stringify({
             canchaId,
+
             jugadores:
               jugadoresMigrados,
+
             pagosPendientes:
               pendientesMigrados,
+
+            pagosDosVueltas:
+              dosVueltasMigrados,
+
             categoriaA: [],
             categoriaB: [],
             busqueda: "",
@@ -638,44 +868,152 @@ export default function NuevaFecha() {
         router.push(
           "/nueva-fecha/categorias"
         );
+
         return;
       }
     }
 
-    setGeneral(nuevoGeneral);
+    setGeneral(
+      nuevoGeneral
+    );
+
+    if (pagoInicial) {
+      setPagosPendientes(
+        nuevosPendientes
+      );
+
+      setPagosDosVueltas(
+        nuevosDosVueltas
+      );
+    }
+
     volverAlTeclado();
   }
 
-  function cambiarViejitos(id: number) {
-    setViejitos((actual) =>
-      actual.includes(id)
-        ? actual.filter(
+  function cambiarViejitos(
+    id: number
+  ) {
+    if (
+      viejitos.includes(id)
+    ) {
+      const nuevosViejitos =
+        viejitos.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        );
+
+      setViejitos(
+        nuevosViejitos
+      );
+
+      if (
+        !general.includes(id)
+      ) {
+        limpiarPagosJugador(
+          id
+        );
+      }
+    } else {
+      setViejitos(
+        (actual) => [
+          ...actual,
+          id,
+        ]
+      );
+    }
+
+    volverAlTeclado();
+  }
+
+  function cambiarPagoPendiente(
+    id: number
+  ) {
+    if (
+      !general.includes(id)
+    ) {
+      cambiarGeneral(
+        id,
+        "pendiente"
+      );
+
+      return;
+    }
+
+    if (
+      pagosPendientes.includes(
+        id
+      )
+    ) {
+      setPagosPendientes(
+        (actual) =>
+          actual.filter(
             (jugadorId) =>
               jugadorId !== id
           )
-        : [...actual, id]
-    );
+      );
 
-    volverAlTeclado();
-  }
-
-  function cambiarPagoPendiente(id: number) {
-    const jugadorAnotado =
-      general.includes(id) ||
-      viejitos.includes(id);
-
-    if (!jugadorAnotado) {
       return;
     }
 
     setPagosPendientes(
+      (actual) => [
+        ...actual,
+        id,
+      ]
+    );
+
+    setPagosDosVueltas(
       (actual) =>
-        actual.includes(id)
-          ? actual.filter(
-              (jugadorId) =>
-                jugadorId !== id
-            )
-          : [...actual, id]
+        actual.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        )
+    );
+  }
+
+  function cambiarPagoDosVueltas(
+    id: number
+  ) {
+    if (
+      !general.includes(id)
+    ) {
+      cambiarGeneral(
+        id,
+        "dosVueltas"
+      );
+
+      return;
+    }
+
+    if (
+      pagosDosVueltas.includes(
+        id
+      )
+    ) {
+      setPagosDosVueltas(
+        (actual) =>
+          actual.filter(
+            (jugadorId) =>
+              jugadorId !== id
+          )
+      );
+
+      return;
+    }
+
+    setPagosDosVueltas(
+      (actual) => [
+        ...actual,
+        id,
+      ]
+    );
+
+    setPagosPendientes(
+      (actual) =>
+        actual.filter(
+          (jugadorId) =>
+            jugadorId !== id
+        )
     );
   }
 
@@ -687,6 +1025,7 @@ export default function NuevaFecha() {
         general,
         viejitos,
         pagosPendientes,
+        pagosDosVueltas,
         busqueda: "",
       })
     );
@@ -720,13 +1059,26 @@ export default function NuevaFecha() {
           )
       );
 
+    const dosVueltasAnotados =
+      pagosDosVueltas.filter(
+        (jugadorId) =>
+          jugadoresAnotados.has(
+            jugadorId
+          )
+      );
+
     localStorage.setItem(
       "laChangueadaFechaActual",
       JSON.stringify({
         general,
         viejitos,
+
         pagosPendientes:
           pendientesAnotados,
+
+        pagosDosVueltas:
+          dosVueltasAnotados,
+
         cancha: cancha.id,
       })
     );
@@ -839,7 +1191,9 @@ export default function NuevaFecha() {
               className="flex-1 rounded-lg border px-3 py-2 text-black"
             >
               {canchas.map(
-                (canchaDisponible) => (
+                (
+                  canchaDisponible
+                ) => (
                   <option
                     key={
                       canchaDisponible.id
@@ -1013,6 +1367,7 @@ export default function NuevaFecha() {
           </div>
 
           <button
+            type="button"
             onClick={continuar}
             disabled={
               !puedeContinuar
@@ -1079,6 +1434,7 @@ export default function NuevaFecha() {
       </div>
 
       <button
+        type="button"
         onClick={
           agregarJugadorDesdeFecha
         }
@@ -1086,6 +1442,14 @@ export default function NuevaFecha() {
       >
         ➕ Agregar jugador
       </button>
+
+      <div className="mb-5 rounded-xl bg-green-800 p-3 text-sm font-bold text-white">
+        🔴 Pago pendiente
+        <span className="mx-3">
+          ·
+        </span>
+        🔵 Pagó las dos vueltas
+      </div>
 
       {jugadoresAnotados.size >
         0 && (
@@ -1113,26 +1477,42 @@ export default function NuevaFecha() {
                 )
               )
               .map(
-                (jugador) => (
-                  <span
-                    key={
+                (jugador) => {
+                  const pagoPendiente =
+                    pagosPendientes.includes(
                       jugador.id
-                    }
-                    className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
-                  >
-                    {
-                      jugador.nombre
-                    }
+                    );
 
-                    {pagosPendientes.includes(
+                  const pagoDosVueltas =
+                    pagosDosVueltas.includes(
                       jugador.id
-                    ) && (
-                      <span className="ml-2 text-red-600">
-                        🔴
-                      </span>
-                    )}
-                  </span>
-                )
+                    );
+
+                  return (
+                    <span
+                      key={
+                        jugador.id
+                      }
+                      className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold"
+                    >
+                      {
+                        jugador.nombre
+                      }
+
+                      {pagoPendiente && (
+                        <span className="ml-2 text-red-600">
+                          🔴
+                        </span>
+                      )}
+
+                      {pagoDosVueltas && (
+                        <span className="ml-2 text-blue-600">
+                          🔵
+                        </span>
+                      )}
+                    </span>
+                  );
+                }
               )}
           </div>
         </div>
@@ -1148,16 +1528,13 @@ export default function NuevaFecha() {
       >
         {jugadoresFiltrados.map(
           (jugador) => {
-            const jugadorAnotado =
-              general.includes(
-                jugador.id
-              ) ||
-              viejitos.includes(
+            const pagoPendiente =
+              pagosPendientes.includes(
                 jugador.id
               );
 
-            const pagoPendiente =
-              pagosPendientes.includes(
+            const pagoDosVueltas =
+              pagosDosVueltas.includes(
                 jugador.id
               );
 
@@ -1175,38 +1552,52 @@ export default function NuevaFecha() {
                     {jugador.nombre}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      cambiarPagoPendiente(
-                        jugador.id
-                      )
-                    }
-                    disabled={
-                      !jugadorAnotado
-                    }
-                    aria-label={
-                      pagoPendiente
-                        ? `Quitar pago pendiente de ${jugador.nombre}`
-                        : `Marcar pago pendiente de ${jugador.nombre}`
-                    }
-                    title={
-                      jugadorAnotado
-                        ? "Pago pendiente"
-                        : "Primero anotá al jugador"
-                    }
-                    className={`h-4 w-4 shrink-0 rounded-full border-2 ${
-                      pagoPendiente
-                        ? "border-red-600 bg-red-600"
-                        : jugadorAnotado
-                          ? "border-gray-400 bg-transparent"
-                          : "cursor-not-allowed border-gray-200 bg-gray-100"
-                    }`}
-                  />
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarPagoPendiente(
+                          jugador.id
+                        )
+                      }
+                      aria-label={
+                        pagoPendiente
+                          ? `Quitar pago pendiente de ${jugador.nombre}`
+                          : `Marcar pago pendiente de ${jugador.nombre}`
+                      }
+                      title="Pago pendiente"
+                      className={`h-5 w-5 rounded-full border-2 ${
+                        pagoPendiente
+                          ? "border-red-600 bg-red-600"
+                          : "border-red-400 bg-transparent"
+                      }`}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cambiarPagoDosVueltas(
+                          jugador.id
+                        )
+                      }
+                      aria-label={
+                        pagoDosVueltas
+                          ? `Quitar pago de dos vueltas de ${jugador.nombre}`
+                          : `Marcar dos vueltas pagadas de ${jugador.nombre}`
+                      }
+                      title="Pagó las dos vueltas"
+                      className={`h-5 w-5 rounded-full border-2 ${
+                        pagoDosVueltas
+                          ? "border-blue-600 bg-blue-600"
+                          : "border-blue-400 bg-transparent"
+                      }`}
+                    />
+                  </div>
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-4">
                   <button
+                    type="button"
                     onClick={() =>
                       cambiarGeneral(
                         jugador.id
@@ -1224,6 +1615,7 @@ export default function NuevaFecha() {
                   </button>
 
                   <button
+                    type="button"
                     onClick={() =>
                       cambiarViejitos(
                         jugador.id
