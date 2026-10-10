@@ -35,7 +35,8 @@ type FechaActual = {
   categoriaA: number[];
   categoriaB: number[];
   pagosPendientes?: number[];
-  pagosCompletados?: number[];
+pagosDosVueltas?: number[];
+pagosCompletados?: number[];
   cancha: number;
 };
 
@@ -561,8 +562,12 @@ useEffect(() => {
       canchaId: fechaActual.cancha,
       jugadores: fechaActual.jugadores,
       pagosPendientes:
-        fechaActual.pagosPendientes ?? [],
-      categoriaA,
+  fechaActual.pagosPendientes ?? [],
+
+pagosDosVueltas:
+  fechaActual.pagosDosVueltas ?? [],
+
+categoriaA,
       categoriaB,
       busqueda: "",
     })
@@ -893,8 +898,12 @@ const premiosB = premiosCategorias.b;
     canchaId: fechaActual.cancha,
     jugadores: fechaActual.jugadores,
     pagosPendientes:
-      fechaActual.pagosPendientes ?? [],
-    categoriaA,
+  fechaActual.pagosPendientes ?? [],
+
+pagosDosVueltas:
+  fechaActual.pagosDosVueltas ?? [],
+
+categoriaA,
     categoriaB,
     busqueda: "",
   })

@@ -27,7 +27,8 @@ type FechaActual = {
   general: number[];
   viejitos: number[];
   pagosPendientes?: number[];
-  pagosCompletados?: number[];
+pagosDosVueltas?: number[];
+pagosCompletados?: number[];
   cancha: number;
 };
 
@@ -221,8 +222,12 @@ export default function Previa() {
         general: fechaActual.general,
         viejitos: fechaActual.viejitos,
         pagosPendientes:
-          fechaActual.pagosPendientes ?? [],
-        busqueda: "",
+  fechaActual.pagosPendientes ?? [],
+
+pagosDosVueltas:
+  fechaActual.pagosDosVueltas ?? [],
+
+busqueda: "",
       })
     );
 

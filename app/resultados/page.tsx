@@ -2,7 +2,10 @@
 
 import { obtenerPremiosCategorias } from "../premios/tablaPremiosCategorias";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -40,6 +43,7 @@ type FechaPorEdad = {
   general: number[];
   viejitos: number[];
   pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
   pagosCompletados?: number[];
   cancha: number;
 };
@@ -50,6 +54,7 @@ type FechaPorCategorias = {
   categoriaA: number[];
   categoriaB: number[];
   pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
   pagosCompletados?: number[];
   cancha: number;
 };
@@ -63,6 +68,9 @@ type FechaHistorial = {
   fecha: string;
   formato?: "edad" | "categorias";
   cancha?: CanchaFecha | null;
+  pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
+  pagosCompletados?: number[];
   general?: Resultado[];
   viejitos?: Resultado[];
   categoriaA?: Resultado[];
@@ -72,58 +80,87 @@ type FechaHistorial = {
 function calcularPremios(
   resultados: ResultadoBase[]
 ): Resultado[] {
-  const tablaPremios = obtenerTablaPremios();
+  const tablaPremios =
+    obtenerTablaPremios();
 
-  const fila = tablaPremios.find(
-    (filaPremios) =>
-      filaPremios.jugadores === resultados.length
-  );
+  const fila =
+    tablaPremios.find(
+      (filaPremios) =>
+        filaPremios.jugadores ===
+        resultados.length
+    );
 
-  const premios = fila ? fila.premios : [];
+  const premios =
+    fila ? fila.premios : [];
 
   const finales: Resultado[] = [];
+
   let i = 0;
 
-  while (i < resultados.length) {
-    const scoreActual = resultados[i].score;
+  while (
+    i < resultados.length
+  ) {
+    const scoreActual =
+      resultados[i].score;
 
     let cantidad = 1;
 
     while (
-      i + cantidad < resultados.length &&
-      resultados[i + cantidad].score === scoreActual
+      i + cantidad <
+        resultados.length &&
+      resultados[
+        i + cantidad
+      ].score === scoreActual
     ) {
       cantidad += 1;
     }
 
-    const premiosInvolucrados = premios.slice(
-      i,
-      i + cantidad
-    );
+    const premiosInvolucrados =
+      premios.slice(
+        i,
+        i + cantidad
+      );
 
     const totalPremios =
       premiosInvolucrados.reduce(
-        (suma, premio) => suma + premio,
+        (suma, premio) =>
+          suma + premio,
         0
       );
 
-    const premioBase = Math.floor(
-      totalPremios / cantidad
-    );
+    const premioBase =
+      Math.floor(
+        totalPremios /
+          cantidad
+      );
 
     const resto =
-      totalPremios - premioBase * cantidad;
+      totalPremios -
+      premioBase * cantidad;
 
     resultados
-      .slice(i, i + cantidad)
-      .forEach((resultado, index) => {
-        finales.push({
-          ...resultado,
-          puesto: i + 1,
-          premio:
-            premioBase + (index === 0 ? resto : 0),
-        });
-      });
+      .slice(
+        i,
+        i + cantidad
+      )
+      .forEach(
+        (
+          resultado,
+          index
+        ) => {
+          finales.push({
+            ...resultado,
+
+            puesto: i + 1,
+
+            premio:
+              premioBase +
+              (index === 0
+                ? resto
+                : 0),
+          });
+        }
+      );
 
     i += cantidad;
   }
@@ -135,50 +172,75 @@ function calcularPremiosCategorias(
   resultados: ResultadoBase[],
   premios: number[]
 ): Resultado[] {
-  const finales: Resultado[] = [];
+  const finales: Resultado[] =
+    [];
+
   let i = 0;
 
-  while (i < resultados.length) {
-    const scoreActual = resultados[i].score;
+  while (
+    i < resultados.length
+  ) {
+    const scoreActual =
+      resultados[i].score;
 
     let cantidad = 1;
 
     while (
-      i + cantidad < resultados.length &&
-      resultados[i + cantidad].score === scoreActual
+      i + cantidad <
+        resultados.length &&
+      resultados[
+        i + cantidad
+      ].score === scoreActual
     ) {
       cantidad += 1;
     }
 
-    const premiosInvolucrados = premios.slice(
-      i,
-      i + cantidad
-    );
+    const premiosInvolucrados =
+      premios.slice(
+        i,
+        i + cantidad
+      );
 
     const totalPremios =
       premiosInvolucrados.reduce(
-        (suma, premio) => suma + premio,
+        (suma, premio) =>
+          suma + premio,
         0
       );
 
-    const premioBase = Math.floor(
-      totalPremios / cantidad
-    );
+    const premioBase =
+      Math.floor(
+        totalPremios /
+          cantidad
+      );
 
     const resto =
-      totalPremios - premioBase * cantidad;
+      totalPremios -
+      premioBase * cantidad;
 
     resultados
-      .slice(i, i + cantidad)
-      .forEach((resultado, index) => {
-        finales.push({
-          ...resultado,
-          puesto: i + 1,
-          premio:
-            premioBase +
-            (index === 0 ? resto : 0),
-        });
-      });
+      .slice(
+        i,
+        i + cantidad
+      )
+      .forEach(
+        (
+          resultado,
+          index
+        ) => {
+          finales.push({
+            ...resultado,
+
+            puesto: i + 1,
+
+            premio:
+              premioBase +
+              (index === 0
+                ? resto
+                : 0),
+          });
+        }
+      );
 
     i += cantidad;
   }
@@ -186,21 +248,38 @@ function calcularPremiosCategorias(
   return finales;
 }
 
-function formatearPesos(valor: number) {
-  return `$${valor.toLocaleString("es-AR")}`;
+function formatearPesos(
+  valor: number
+) {
+  return `$${valor.toLocaleString(
+    "es-AR"
+  )}`;
 }
 
-function obtenerResumenPremios(resultados: Resultado[]) {
-  const fila = obtenerTablaPremios().find(
-    (f) => f.jugadores === resultados.length
-  );
+function obtenerResumenPremios(
+  resultados: Resultado[]
+) {
+  const fila =
+    obtenerTablaPremios().find(
+      (filaPremios) =>
+        filaPremios.jugadores ===
+        resultados.length
+    );
 
   return {
-    jugadores: resultados.length,
+    jugadores:
+      resultados.length,
+
     premios: fila
       ? fila.premios
-      .filter((premio) => premio > 0)    
-      .map((premio) => premio / 1000)
+          .filter(
+            (premio) =>
+              premio > 0
+          )
+          .map(
+            (premio) =>
+              premio / 1000
+          )
           .join(" - ")
       : "",
   };
@@ -210,11 +289,14 @@ function formatearScore(
   score: number,
   par?: number
 ) {
-  if (typeof par !== "number") {
+  if (
+    typeof par !== "number"
+  ) {
     return String(score);
   }
 
-  const respectoPar = score - par;
+  const respectoPar =
+    score - par;
 
   if (respectoPar === 0) {
     return `${score} (P)`;
@@ -227,7 +309,9 @@ function formatearScore(
   return `${score} (${respectoPar})`;
 }
 
-function medalla(puesto: number) {
+function medalla(
+  puesto: number
+) {
   if (puesto === 1) {
     return "🥇";
   }
@@ -247,25 +331,39 @@ function obtenerNombreVuelta(
   idFecha: number,
   historial: FechaHistorial[]
 ) {
-  const diaActual = new Date(
-    idFecha
-  ).toLocaleDateString("es-AR");
+  const diaActual =
+    new Date(
+      idFecha
+    ).toLocaleDateString(
+      "es-AR"
+    );
 
-  const fechasDelMismoDia = historial
-    .filter(
-      (fecha) =>
-        new Date(fecha.id).toLocaleDateString("es-AR") ===
-        diaActual
-    )
-    .sort((a, b) => a.id - b.id);
+  const fechasDelMismoDia =
+    historial
+      .filter(
+        (fecha) =>
+          new Date(
+            fecha.id
+          ).toLocaleDateString(
+            "es-AR"
+          ) === diaActual
+      )
+      .sort(
+        (a, b) =>
+          a.id - b.id
+      );
 
-  if (fechasDelMismoDia.length <= 1) {
+  if (
+    fechasDelMismoDia.length <=
+    1
+  ) {
     return "";
   }
 
   const posicion =
     fechasDelMismoDia.findIndex(
-      (fecha) => fecha.id === idFecha
+      (fecha) =>
+        fecha.id === idFecha
     ) + 1;
 
   if (posicion === 1) {
@@ -283,54 +381,110 @@ function obtenerNombreVuelta(
   return `${posicion}ª vuelta`;
 }
 
-export default function Resultados() {
-  const [categoriaUno, setCategoriaUno] = useState<
-    Resultado[]
-  >([]);
+function cantidadFechasMismoDia(
+  idFecha: number,
+  historial: FechaHistorial[]
+) {
+  const dia =
+    new Date(
+      idFecha
+    ).toLocaleDateString(
+      "es-AR"
+    );
 
+  return historial.filter(
+    (fecha) =>
+      new Date(
+        fecha.id
+      ).toLocaleDateString(
+        "es-AR"
+      ) === dia
+  ).length;
+}
+
+export default function Resultados() {
   const router = useRouter();
 
-  
-  const [categoriaDos, setCategoriaDos] = useState<
-    Resultado[]
-  >([]);
+  const [
+    categoriaUno,
+    setCategoriaUno,
+  ] = useState<Resultado[]>([]);
 
-  const [formato, setFormato] = useState<
+  const [
+    categoriaDos,
+    setCategoriaDos,
+  ] = useState<Resultado[]>([]);
+
+  const [
+    formato,
+    setFormato,
+  ] = useState<
     "edad" | "categorias"
   >("edad");
 
-  const [listaJugadores, setListaJugadores] = useState<
-    Jugador[]
-  >([]);
+  const [
+    listaJugadores,
+    setListaJugadores,
+  ] = useState<Jugador[]>([]);
 
   const [
     pagosPendientesOriginales,
     setPagosPendientesOriginales,
   ] = useState<number[]>([]);
 
-  const [pagosCompletados, setPagosCompletados] =
-    useState<number[]>([]);
+  const [
+    pagosDosVueltas,
+    setPagosDosVueltas,
+  ] = useState<number[]>([]);
 
-  const [canchaFecha, setCanchaFecha] =
-    useState<CanchaFecha | null>(null);
+  const [
+    pagosCompletados,
+    setPagosCompletados,
+  ] = useState<number[]>([]);
 
-  const [fechaGuardada, setFechaGuardada] =
-    useState(false);
+  const [
+    canchaFecha,
+    setCanchaFecha,
+  ] = useState<CanchaFecha | null>(
+    null
+  );
 
-  const [guardandoFecha, setGuardandoFecha] =
-    useState(false);
+  const [
+    fechaGuardada,
+    setFechaGuardada,
+  ] = useState(false);
+
+  const [
+    guardandoFecha,
+    setGuardandoFecha,
+  ] = useState(false);
 
   const [
     idFechaGuardada,
     setIdFechaGuardada,
-  ] = useState<number | null>(null);
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    puedeCrearSegundaVuelta,
+    setPuedeCrearSegundaVuelta,
+  ] = useState(false);
+
+  const [
+    eligiendoSegundaVuelta,
+    setEligiendoSegundaVuelta,
+  ] = useState(false);
 
   useEffect(() => {
-    const yaGuardada = localStorage.getItem(
-      "laChangueadaFechaYaGuardada"
-    );
+    const yaGuardada =
+      localStorage.getItem(
+        "laChangueadaFechaYaGuardada"
+      );
 
-    if (yaGuardada === "true") {
+    if (
+      yaGuardada === "true"
+    ) {
       setFechaGuardada(true);
 
       const historialGuardado =
@@ -341,139 +495,229 @@ export default function Resultados() {
       if (historialGuardado) {
         try {
           const historial: FechaHistorial[] =
-            JSON.parse(historialGuardado);
+            JSON.parse(
+              historialGuardado
+            );
 
-          if (historial.length > 0) {
+          if (
+            historial.length > 0
+          ) {
+            const fechaMasReciente =
+              historial[0];
+
             setIdFechaGuardada(
-              historial[0].id
+              fechaMasReciente.id
+            );
+
+            setPuedeCrearSegundaVuelta(
+              cantidadFechasMismoDia(
+                fechaMasReciente.id,
+                historial
+              ) === 1
             );
           }
         } catch {
-          setIdFechaGuardada(null);
+          setIdFechaGuardada(
+            null
+          );
+
+          setPuedeCrearSegundaVuelta(
+            false
+          );
         }
       }
     }
 
-    const fechaGuardadaActual = localStorage.getItem(
-      "laChangueadaFechaActual"
-    );
+    const fechaGuardadaActual =
+      localStorage.getItem(
+        "laChangueadaFechaActual"
+      );
 
-    const scoresGuardados = localStorage.getItem(
-      "laChangueadaScores"
-    );
+    const scoresGuardados =
+      localStorage.getItem(
+        "laChangueadaScores"
+      );
 
-    const jugadoresGuardados = localStorage.getItem(
-      "laChangueadaJugadores"
-    );
+    const jugadoresGuardados =
+      localStorage.getItem(
+        "laChangueadaJugadores"
+      );
 
-    if (!fechaGuardadaActual || !scoresGuardados) {
+    if (
+      !fechaGuardadaActual ||
+      !scoresGuardados
+    ) {
       return;
     }
 
     try {
-      const datos: FechaActual = JSON.parse(
-        fechaGuardadaActual
-      );
+      const datos: FechaActual =
+        JSON.parse(
+          fechaGuardadaActual
+        );
 
-      const scores: Record<number, string> =
-        JSON.parse(scoresGuardados);
+      const scores: Record<
+        number,
+        string
+      > = JSON.parse(
+        scoresGuardados
+      );
 
       const canchaEncontrada =
         obtenerCanchasGuardadas().find(
-          (cancha) => cancha.id === datos.cancha
+          (cancha) =>
+            cancha.id ===
+            datos.cancha
         );
 
       if (canchaEncontrada) {
         setCanchaFecha({
-          id: canchaEncontrada.id,
-          nombre: canchaEncontrada.nombre,
-          par: canchaEncontrada.par,
+          id:
+            canchaEncontrada.id,
+
+          nombre:
+            canchaEncontrada.nombre,
+
+          par:
+            canchaEncontrada.par,
         });
       }
 
-      const lista: Jugador[] = jugadoresGuardados
-        ? JSON.parse(jugadoresGuardados)
-        : jugadores;
+      const lista: Jugador[] =
+        jugadoresGuardados
+          ? JSON.parse(
+              jugadoresGuardados
+            )
+          : jugadores;
 
-      setListaJugadores(lista);
+      setListaJugadores(
+        lista
+      );
 
       setPagosPendientesOriginales(
-        datos.pagosPendientes ?? []
+        datos.pagosPendientes ??
+          []
+      );
+
+      setPagosDosVueltas(
+        datos.pagosDosVueltas ??
+          []
       );
 
       setPagosCompletados(
-        datos.pagosCompletados ?? []
+        datos.pagosCompletados ??
+          []
       );
 
       const idsCategoriaUno =
-        datos.formato === "categorias"
-          ? datos.categoriaA ?? []
-          : datos.general ?? [];
+        datos.formato ===
+        "categorias"
+          ? datos.categoriaA ??
+            []
+          : datos.general ??
+            [];
 
       const idsCategoriaDos =
-        datos.formato === "categorias"
-          ? datos.categoriaB ?? []
-          : datos.viejitos ?? [];
+        datos.formato ===
+        "categorias"
+          ? datos.categoriaB ??
+            []
+          : datos.viejitos ??
+            [];
 
       setFormato(
-        datos.formato === "categorias"
+        datos.formato ===
+          "categorias"
           ? "categorias"
           : "edad"
       );
 
-      const resultadosCategoriaUno = lista
-        .filter((jugador) =>
-          idsCategoriaUno.includes(jugador.id)
-        )
-        .map((jugador) => ({
-          jugador,
-          score: Number(
-            scores[jugador.id] ?? 999
-          ),
-        }))
-        .sort((a, b) => a.score - b.score);
+      const resultadosCategoriaUno =
+        lista
+          .filter(
+            (jugador) =>
+              idsCategoriaUno.includes(
+                jugador.id
+              )
+          )
+          .map(
+            (jugador) => ({
+              jugador,
 
-      const resultadosCategoriaDos = lista
-        .filter((jugador) =>
-          idsCategoriaDos.includes(jugador.id)
-        )
-        .map((jugador) => ({
-          jugador,
-          score: Number(
-            scores[jugador.id] ?? 999
-          ),
-        }))
-        .sort((a, b) => a.score - b.score);
+              score: Number(
+                scores[
+                  jugador.id
+                ] ?? 999
+              ),
+            })
+          )
+          .sort(
+            (a, b) =>
+              a.score -
+              b.score
+          );
 
-      if (datos.formato === "categorias") {
-  const premiosCategorias =
-    obtenerPremiosCategorias(
-      resultadosCategoriaUno.length +
-        resultadosCategoriaDos.length
-    );
+      const resultadosCategoriaDos =
+        lista
+          .filter(
+            (jugador) =>
+              idsCategoriaDos.includes(
+                jugador.id
+              )
+          )
+          .map(
+            (jugador) => ({
+              jugador,
 
-  setCategoriaUno(
-    calcularPremiosCategorias(
-      resultadosCategoriaUno,
-      premiosCategorias.a
-    )
-  );
+              score: Number(
+                scores[
+                  jugador.id
+                ] ?? 999
+              ),
+            })
+          )
+          .sort(
+            (a, b) =>
+              a.score -
+              b.score
+          );
 
-  setCategoriaDos(
-    calcularPremiosCategorias(
-      resultadosCategoriaDos,
-      premiosCategorias.b
-    )
-  );
-} else {
-  setCategoriaUno(
-    calcularPremios(resultadosCategoriaUno)
-  );
+      if (
+        datos.formato ===
+        "categorias"
+      ) {
+        const premiosCategorias =
+          obtenerPremiosCategorias(
+            resultadosCategoriaUno.length +
+              resultadosCategoriaDos.length
+          );
 
-  setCategoriaDos(
-    calcularPremios(resultadosCategoriaDos)
-  );
-}
+        setCategoriaUno(
+          calcularPremiosCategorias(
+            resultadosCategoriaUno,
+            premiosCategorias.a
+          )
+        );
+
+        setCategoriaDos(
+          calcularPremiosCategorias(
+            resultadosCategoriaDos,
+            premiosCategorias.b
+          )
+        );
+      } else {
+        setCategoriaUno(
+          calcularPremios(
+            resultadosCategoriaUno
+          )
+        );
+
+        setCategoriaDos(
+          calcularPremios(
+            resultadosCategoriaDos
+          )
+        );
+      }
     } catch (error) {
       console.error(
         "No se pudieron calcular los resultados:",
@@ -482,33 +726,49 @@ export default function Resultados() {
     }
   }, []);
 
-  function cambiarEstadoPago(jugadorId: number) {
+  function cambiarEstadoPago(
+    jugadorId: number
+  ) {
     const nuevosPagosCompletados =
-      pagosCompletados.includes(jugadorId)
+      pagosCompletados.includes(
+        jugadorId
+      )
         ? pagosCompletados.filter(
-            (id) => id !== jugadorId
+            (id) =>
+              id !== jugadorId
           )
-        : [...pagosCompletados, jugadorId];
+        : [
+            ...pagosCompletados,
+            jugadorId,
+          ];
 
-    setPagosCompletados(nuevosPagosCompletados);
-
-    const fechaGuardadaActual = localStorage.getItem(
-      "laChangueadaFechaActual"
+    setPagosCompletados(
+      nuevosPagosCompletados
     );
 
-    if (!fechaGuardadaActual) {
+    const fechaGuardadaActual =
+      localStorage.getItem(
+        "laChangueadaFechaActual"
+      );
+
+    if (
+      !fechaGuardadaActual
+    ) {
       return;
     }
 
-    const datosFecha: FechaActual = JSON.parse(
-      fechaGuardadaActual
-    );
+    const datosFecha: FechaActual =
+      JSON.parse(
+        fechaGuardadaActual
+      );
 
     localStorage.setItem(
       "laChangueadaFechaActual",
       JSON.stringify({
         ...datosFecha,
-        pagosCompletados: nuevosPagosCompletados,
+
+        pagosCompletados:
+          nuevosPagosCompletados,
       })
     );
   }
@@ -531,124 +791,186 @@ export default function Resultados() {
 
       const historial: FechaHistorial[] =
         historialGuardado
-          ? JSON.parse(historialGuardado)
+          ? JSON.parse(
+              historialGuardado
+            )
           : [];
 
-      const nuevoId = Date.now();
+      const nuevoId =
+        Date.now();
 
-      const fechaTexto = new Date(
-        nuevoId
-      ).toLocaleDateString("es-AR");
+      const fechaTexto =
+        new Date(
+          nuevoId
+        ).toLocaleDateString(
+          "es-AR"
+        );
 
       const baseFecha = {
         id: nuevoId,
         fecha: fechaTexto,
         cancha: canchaFecha,
+
         pagosPendientes:
           pagosPendientesOriginales,
+
+        pagosDosVueltas,
+
         pagosCompletados,
       };
 
-      const nuevaFecha =
-        formato === "categorias"
+      const nuevaFecha:
+        FechaHistorial =
+        formato ===
+        "categorias"
           ? {
               ...baseFecha,
+
               formato:
-                "categorias" as const,
+                "categorias",
 
-              categoriaA: categoriaUno,
-              categoriaB: categoriaDos,
+              categoriaA:
+                categoriaUno,
 
-              /*
-                Estas copias se conservan
-                solamente en el respaldo local.
-              */
-              general: categoriaUno,
-              viejitos: categoriaDos,
+              categoriaB:
+                categoriaDos,
+
+              general:
+                categoriaUno,
+
+              viejitos:
+                categoriaDos,
             }
           : {
               ...baseFecha,
-              formato: "edad" as const,
-              general: categoriaUno,
-              viejitos: categoriaDos,
+
+              formato: "edad",
+
+              general:
+                categoriaUno,
+
+              viejitos:
+                categoriaDos,
             };
 
-      const resultadosParaSupabase = [
-        ...categoriaUno.map(
-          (resultado) => ({
-            jugador: {
-              id: resultado.jugador.id,
-              nombre:
-                resultado.jugador.nombre,
-              frecuente:
-                resultado.jugador.frecuente ??
-                false,
+      const resultadosParaSupabase =
+        [
+          ...categoriaUno.map(
+            (resultado) => ({
+              jugador: {
+                id:
+                  resultado
+                    .jugador.id,
+
+                nombre:
+                  resultado
+                    .jugador
+                    .nombre,
+
+                frecuente:
+                  resultado
+                    .jugador
+                    .frecuente ??
+                  false,
+              },
+
+              categoria:
+                formato ===
+                "categorias"
+                  ? "categoriaA"
+                  : "general",
+
+              score:
+                resultado.score,
+
+              puesto:
+                resultado.puesto,
+
+              premio:
+                resultado.premio,
+            })
+          ),
+
+          ...categoriaDos.map(
+            (resultado) => ({
+              jugador: {
+                id:
+                  resultado
+                    .jugador.id,
+
+                nombre:
+                  resultado
+                    .jugador
+                    .nombre,
+
+                frecuente:
+                  resultado
+                    .jugador
+                    .frecuente ??
+                  false,
+              },
+
+              categoria:
+                formato ===
+                "categorias"
+                  ? "categoriaB"
+                  : "viejitos",
+
+              score:
+                resultado.score,
+
+              puesto:
+                resultado.puesto,
+
+              premio:
+                resultado.premio,
+            })
+          ),
+        ];
+
+      const supabase =
+        createClient();
+
+      const { error } =
+        await supabase.rpc(
+          "guardar_fecha_completa",
+          {
+            p_fecha: {
+              id: nuevoId,
+              fecha:
+                fechaTexto,
+              formato,
+              cancha:
+                canchaFecha,
+
+              pagosPendientes:
+                pagosPendientesOriginales,
+
+              pagosDosVueltas,
+
+              pagosCompletados,
             },
 
-            categoria:
-              formato === "categorias"
-                ? "categoriaA"
-                : "general",
-
-            score: resultado.score,
-            puesto: resultado.puesto,
-            premio: resultado.premio,
-          })
-        ),
-
-        ...categoriaDos.map(
-          (resultado) => ({
-            jugador: {
-              id: resultado.jugador.id,
-              nombre:
-                resultado.jugador.nombre,
-              frecuente:
-                resultado.jugador.frecuente ??
-                false,
-            },
-
-            categoria:
-              formato === "categorias"
-                ? "categoriaB"
-                : "viejitos",
-
-            score: resultado.score,
-            puesto: resultado.puesto,
-            premio: resultado.premio,
-          })
-        ),
-      ];
-
-      const supabase = createClient();
-
-      const { error } = await supabase.rpc(
-        "guardar_fecha_completa",
-        {
-          p_fecha: {
-            id: nuevoId,
-            fecha: fechaTexto,
-            formato,
-            cancha: canchaFecha,
-            pagosPendientes:
-              pagosPendientesOriginales,
-            pagosCompletados,
-          },
-
-          p_resultados:
-            resultadosParaSupabase,
-        }
-      );
+            p_resultados:
+              resultadosParaSupabase,
+          }
+        );
 
       if (error) {
         throw error;
       }
 
-      localStorage.setItem(
-        "laChangueadaHistorial",
-        JSON.stringify([
+      const historialActualizado =
+        [
           nuevaFecha,
           ...historial,
-        ])
+        ];
+
+      localStorage.setItem(
+        "laChangueadaHistorial",
+        JSON.stringify(
+          historialActualizado
+        )
       );
 
       localStorage.setItem(
@@ -656,7 +978,10 @@ export default function Resultados() {
         "true"
       );
 
-      if (formato === "categorias") {
+      if (
+        formato ===
+        "categorias"
+      ) {
         localStorage.removeItem(
           "laChangueadaNuevaFechaCategoriasBorrador"
         );
@@ -674,8 +999,20 @@ export default function Resultados() {
         );
       }
 
-      setIdFechaGuardada(nuevoId);
-      setFechaGuardada(true);
+      setIdFechaGuardada(
+        nuevoId
+      );
+
+      setPuedeCrearSegundaVuelta(
+        cantidadFechasMismoDia(
+          nuevoId,
+          historialActualizado
+        ) === 1
+      );
+
+      setFechaGuardada(
+        true
+      );
     } catch (error) {
       console.error(
         "No se pudo guardar la fecha:",
@@ -686,95 +1023,237 @@ export default function Resultados() {
         "No se pudo guardar la fecha. Los jugadores y scores siguen cargados. Probá nuevamente."
       );
     } finally {
-      setGuardandoFecha(false);
+      setGuardandoFecha(
+        false
+      );
     }
   }
 
-  async function compartirResultados() {
-    if (!fechaGuardada || !idFechaGuardada) {
+  function prepararSegundaVuelta(
+    nuevoFormato:
+      | "general"
+      | "categorias"
+  ) {
+    if (!canchaFecha) {
+      alert(
+        "No se encontró la cancha de esta fecha."
+      );
+
       return;
     }
 
-    const historialGuardado = localStorage.getItem(
-      "laChangueadaHistorial"
+    const jugadoresSegundaVuelta =
+      Array.from(
+        new Set(
+          pagosDosVueltas
+        )
+      );
+
+    localStorage.removeItem(
+      "laChangueadaScores"
     );
 
-    let historial: FechaHistorial[] = [];
+    localStorage.removeItem(
+      "laChangueadaFechaYaGuardada"
+    );
+
+    localStorage.removeItem(
+      "laChangueadaNuevaFechaBorrador"
+    );
+
+    localStorage.removeItem(
+      "laChangueadaNuevaFechaBorradorBackup"
+    );
+
+    localStorage.removeItem(
+      "laChangueadaNuevaFechaCategoriasBorrador"
+    );
+
+    localStorage.removeItem(
+      "laChangueadaNuevaFechaCategoriasBorradorBackup"
+    );
+
+    if (
+      nuevoFormato ===
+      "categorias"
+    ) {
+      localStorage.setItem(
+        "laChangueadaNuevaFechaCategoriasBorrador",
+        JSON.stringify({
+          canchaId:
+            canchaFecha.id,
+
+          jugadores:
+            jugadoresSegundaVuelta,
+
+          pagosPendientes: [],
+
+          pagosDosVueltas:
+            jugadoresSegundaVuelta,
+
+          categoriaA: [],
+          categoriaB: [],
+          busqueda: "",
+        })
+      );
+
+      router.push(
+        "/nueva-fecha/categorias"
+      );
+
+      return;
+    }
+
+    localStorage.setItem(
+      "laChangueadaNuevaFechaBorrador",
+      JSON.stringify({
+        canchaId:
+          canchaFecha.id,
+
+        general:
+          jugadoresSegundaVuelta,
+
+        viejitos: [],
+
+        pagosPendientes: [],
+
+        pagosDosVueltas:
+          jugadoresSegundaVuelta,
+
+        busqueda: "",
+      })
+    );
+
+    router.push(
+      "/nueva-fecha/edad"
+    );
+  }
+
+  async function compartirResultados() {
+    if (
+      !fechaGuardada ||
+      !idFechaGuardada
+    ) {
+      return;
+    }
+
+    const historialGuardado =
+      localStorage.getItem(
+        "laChangueadaHistorial"
+      );
+
+    let historial: FechaHistorial[] =
+      [];
 
     if (historialGuardado) {
       try {
-        historial = JSON.parse(
-          historialGuardado
-        );
+        historial =
+          JSON.parse(
+            historialGuardado
+          );
       } catch {
         historial = [];
       }
     }
 
-    const vuelta = obtenerNombreVuelta(
-      idFechaGuardada,
-      historial
-    );
+    const vuelta =
+      obtenerNombreVuelta(
+        idFechaGuardada,
+        historial
+      );
 
-    const crearTextoResultados = (
-  resultados: Resultado[]
-) => {
-  const conPremio = resultados.filter(
-    (r) => r.premio > 0
-  );
-
-  const sinPremio = resultados.filter(
-    (r) => r.premio === 0
-  );
-
-  const lineas: string[] = [];
-
-  conPremio.forEach((resultado) => {
-  const scoreTexto =
-    resultado.score === 120
-      ? "LP"
-      : formatearScore(
-          resultado.score,
-          canchaFecha?.par
+    function crearTextoResultados(
+      resultados: Resultado[]
+    ) {
+      const conPremio =
+        resultados.filter(
+          (resultado) =>
+            resultado.premio > 0
         );
 
-  lineas.push(
-    `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${scoreTexto}`
-  );
-
-    lineas.push(
-      `   ${formatearPesos(resultado.premio)}`
-    );
-  });
-
-  if (conPremio.length && sinPremio.length) {
-    lineas.push("");
-  }
-
-  sinPremio.forEach((resultado) => {
-  const scoreTexto =
-    resultado.score === 120
-      ? "LP"
-      : formatearScore(
-          resultado.score,
-          canchaFecha?.par
+      const sinPremio =
+        resultados.filter(
+          (resultado) =>
+            resultado.premio ===
+            0
         );
 
-  lineas.push(
-    `${medalla(resultado.puesto)} ${resultado.jugador.nombre} - ${scoreTexto}`
-  );
-});
+      const lineas: string[] =
+        [];
 
-  return lineas.join("\n");
-};
+      conPremio.forEach(
+        (resultado) => {
+          const scoreTexto =
+            resultado.score ===
+            120
+              ? "LP"
+              : formatearScore(
+                  resultado.score,
+                  canchaFecha?.par
+                );
+
+          lineas.push(
+            `${medalla(
+              resultado.puesto
+            )} ${
+              resultado.jugador
+                .nombre
+            } - ${scoreTexto}`
+          );
+
+          lineas.push(
+            `   ${formatearPesos(
+              resultado.premio
+            )}`
+          );
+        }
+      );
+
+      if (
+        conPremio.length >
+          0 &&
+        sinPremio.length > 0
+      ) {
+        lineas.push("");
+      }
+
+      sinPremio.forEach(
+        (resultado) => {
+          const scoreTexto =
+            resultado.score ===
+            120
+              ? "LP"
+              : formatearScore(
+                  resultado.score,
+                  canchaFecha?.par
+                );
+
+          lineas.push(
+            `${medalla(
+              resultado.puesto
+            )} ${
+              resultado.jugador
+                .nombre
+            } - ${scoreTexto}`
+          );
+        }
+      );
+
+      return lineas.join(
+        "\n"
+      );
+    }
+
     const lineas: string[] = [
-  "⚽️ La Changueada 🚩",
-  "🏆 Resultados",
-  "",
-  new Date(
-    idFechaGuardada
-  ).toLocaleDateString("es-AR"),
-];
+      "⚽️ La Changueada 🚩",
+      "🏆 Resultados",
+      "",
+      new Date(
+        idFechaGuardada
+      ).toLocaleDateString(
+        "es-AR"
+      ),
+    ];
 
     if (vuelta) {
       lineas.push(vuelta);
@@ -787,35 +1266,49 @@ export default function Resultados() {
       );
     }
 
-    if (categoriaUno.length > 0) {
+    if (
+      categoriaUno.length >
+      0
+    ) {
       lineas.push(
         "",
-        formato === "categorias"
+        formato ===
+          "categorias"
           ? "🅰️ CATEGORÍA A"
           : "🙎🏻‍♂️ GENERAL",
         "",
-        crearTextoResultados(categoriaUno)
+        crearTextoResultados(
+          categoriaUno
+        )
       );
     }
 
-    if (categoriaDos.length > 0) {
+    if (
+      categoriaDos.length >
+      0
+    ) {
       lineas.push(
         "",
-        formato === "categorias"
+        formato ===
+          "categorias"
           ? "🅱️ CATEGORÍA B"
           : "🧓🏻 VIEJITOS",
         "",
-        crearTextoResultados(categoriaDos)
+        crearTextoResultados(
+          categoriaDos
+        )
       );
     }
 
-    const texto = lineas.join("\n");
+    const texto =
+      lineas.join("\n");
 
     try {
       if (navigator.share) {
         await navigator.share({
           title:
             "Resultados de La Changueada",
+
           text: texto,
         });
 
@@ -832,7 +1325,8 @@ export default function Resultados() {
     } catch (error) {
       if (
         error instanceof Error &&
-        error.name === "AbortError"
+        error.name ===
+          "AbortError"
       ) {
         return;
       }
@@ -850,25 +1344,38 @@ export default function Resultados() {
 
   const jugadoresConPagoMarcado =
     pagosPendientesOriginales
-      .map((jugadorId) =>
-        listaJugadores.find(
-          (jugador) => jugador.id === jugadorId
-        )
+      .map(
+        (jugadorId) =>
+          listaJugadores.find(
+            (jugador) =>
+              jugador.id ===
+              jugadorId
+          )
       )
       .filter(
-        (jugador): jugador is Jugador =>
-          jugador !== undefined
+        (
+          jugador
+        ): jugador is Jugador =>
+          jugador !==
+          undefined
       )
       .sort((a, b) =>
-        a.nombre.localeCompare(b.nombre, "es", {
-          sensitivity: "base",
-        })
+        a.nombre.localeCompare(
+          b.nombre,
+          "es",
+          {
+            sensitivity:
+              "base",
+          }
+        )
       );
 
   const cantidadPagosPendientes =
     pagosPendientesOriginales.filter(
       (jugadorId) =>
-        !pagosCompletados.includes(jugadorId)
+        !pagosCompletados.includes(
+          jugadorId
+        )
     ).length;
 
   const nombreCategoriaUno =
@@ -881,35 +1388,59 @@ export default function Resultados() {
       ? "Categoría B"
       : "🧓🏻 Viejitos";
 
-const premiosCategoriasResumen =
-  formato === "categorias"
-    ? obtenerPremiosCategorias(
-        categoriaUno.length +
-          categoriaDos.length
-      )
-    : null;
+  const premiosCategoriasResumen =
+    formato === "categorias"
+      ? obtenerPremiosCategorias(
+          categoriaUno.length +
+            categoriaDos.length
+        )
+      : null;
 
-const resumenCategoriaUno =
-  formato === "categorias"
-    ? {
-        jugadores: categoriaUno.length,
-        premios:
-          premiosCategoriasResumen?.a
-            .map((premio) => premio / 1000)
-            .join(" - ") ?? "",
-      }
-    : obtenerResumenPremios(categoriaUno);
+  const resumenCategoriaUno =
+    formato === "categorias"
+      ? {
+          jugadores:
+            categoriaUno.length,
 
-const resumenCategoriaDos =
-  formato === "categorias"
-    ? {
-        jugadores: categoriaDos.length,
-        premios:
-          premiosCategoriasResumen?.b
-            .map((premio) => premio / 1000)
-            .join(" - ") ?? "",
-      }
-    : obtenerResumenPremios(categoriaDos);
+          premios:
+            premiosCategoriasResumen?.a
+              .filter(
+                (premio) =>
+                  premio > 0
+              )
+              .map(
+                (premio) =>
+                  premio / 1000
+              )
+              .join(" - ") ??
+            "",
+        }
+      : obtenerResumenPremios(
+          categoriaUno
+        );
+
+  const resumenCategoriaDos =
+    formato === "categorias"
+      ? {
+          jugadores:
+            categoriaDos.length,
+
+          premios:
+            premiosCategoriasResumen?.b
+              .filter(
+                (premio) =>
+                  premio > 0
+              )
+              .map(
+                (premio) =>
+                  premio / 1000
+              )
+              .join(" - ") ??
+            "",
+        }
+      : obtenerResumenPremios(
+          categoriaDos
+        );
 
   return (
     <main className="min-h-screen bg-green-900 p-6 text-white">
@@ -928,13 +1459,17 @@ const resumenCategoriaDos =
         <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
           <p className="text-xl">
             <span className="font-bold">
-              ⛳ {canchaFecha.nombre}
+              ⛳{" "}
+              {
+                canchaFecha.nombre
+              }
             </span>
 
             &nbsp;&nbsp;&nbsp;
 
             <span className="font-normal">
-              Par {canchaFecha.par}
+              Par{" "}
+              {canchaFecha.par}
             </span>
           </p>
         </div>
@@ -942,81 +1477,142 @@ const resumenCategoriaDos =
 
       <div className="mb-8 rounded-xl bg-white p-3 text-green-900">
         <h2 className="mb-2 text-2xl font-bold">
-          {formato === "categorias" ? "🅰️ " : ""}
+          {formato ===
+          "categorias"
+            ? "🅰️ "
+            : ""}
           {nombreCategoriaUno}
         </h2>
 
-        {categoriaUno.map((resultado) => (
-          <div
-            key={resultado.jugador.id}
-            className="flex items-center justify-between gap-4 border-b py-3"
-          >
-            <span>
-              {resultado.puesto}.{" "}
-              {resultado.jugador.nombre} -{" "}
-              {resultado.score === 120 ? "LP" : resultado.score}
-            </span>
-
-            <strong>
-              {resultado.premio > 0
-                ? formatearPesos(
-                    resultado.premio
-                  )
-                : "-"}
-            </strong>
-          </div>
-        ))}
-        <div className="mt-3 text-sm text-gray-600">
-  <div>{resumenCategoriaUno.jugadores} jugadores</div>
-  <div>
-    Premios: {resumenCategoriaUno.premios}
-  </div>
-</div>
-      </div>
-
-      {categoriaDos.length > 0 && (
-        <div className="rounded-xl bg-white p-3 text-green-900">
-          <h2 className="mb-2 text-2xl font-bold">
-            {formato === "categorias"
-              ? "🅱️ "
-              : ""}
-            {nombreCategoriaDos}
-          </h2>
-
-          {categoriaDos.map((resultado) => (
+        {categoriaUno.map(
+          (resultado) => (
             <div
-              key={resultado.jugador.id}
+              key={
+                resultado.jugador
+                  .id
+              }
               className="flex items-center justify-between gap-4 border-b py-3"
             >
               <span>
-                {resultado.puesto}.{" "}
-                {resultado.jugador.nombre} -{" "}
-                {resultado.score === 120 ? "LP" : resultado.score}
+                {
+                  resultado.puesto
+                }
+                .{" "}
+                {
+                  resultado.jugador
+                    .nombre
+                }{" "}
+                -{" "}
+                {resultado.score ===
+                120
+                  ? "LP"
+                  : resultado.score}
               </span>
 
               <strong>
-                {resultado.premio > 0
+                {resultado.premio >
+                0
                   ? formatearPesos(
                       resultado.premio
                     )
                   : "-"}
               </strong>
             </div>
-          ))}
+          )
+        )}
+
+        <div className="mt-3 text-sm text-gray-600">
+          <div>
+            {
+              resumenCategoriaUno.jugadores
+            }{" "}
+            jugadores
+          </div>
+
+          <div>
+            Premios:{" "}
+            {
+              resumenCategoriaUno.premios
+            }
+          </div>
+        </div>
+      </div>
+
+      {categoriaDos.length >
+        0 && (
+        <div className="rounded-xl bg-white p-3 text-green-900">
+          <h2 className="mb-2 text-2xl font-bold">
+            {formato ===
+            "categorias"
+              ? "🅱️ "
+              : ""}
+            {nombreCategoriaDos}
+          </h2>
+
+          {categoriaDos.map(
+            (resultado) => (
+              <div
+                key={
+                  resultado.jugador
+                    .id
+                }
+                className="flex items-center justify-between gap-4 border-b py-3"
+              >
+                <span>
+                  {
+                    resultado.puesto
+                  }
+                  .{" "}
+                  {
+                    resultado
+                      .jugador.nombre
+                  }{" "}
+                  -{" "}
+                  {resultado.score ===
+                  120
+                    ? "LP"
+                    : resultado.score}
+                </span>
+
+                <strong>
+                  {resultado.premio >
+                  0
+                    ? formatearPesos(
+                        resultado.premio
+                      )
+                    : "-"}
+                </strong>
+              </div>
+            )
+          )}
+
           <div className="mt-3 text-sm text-gray-600">
-  <div>{resumenCategoriaDos.jugadores} jugadores</div>
-  <div>
-    Premios: {resumenCategoriaDos.premios}
-  </div>
-</div>
+            <div>
+              {
+                resumenCategoriaDos.jugadores
+              }{" "}
+              jugadores
+            </div>
+
+            <div>
+              Premios:{" "}
+              {
+                resumenCategoriaDos.premios
+              }
+            </div>
+          </div>
         </div>
       )}
 
-      {jugadoresConPagoMarcado.length > 0 && (
+      {jugadoresConPagoMarcado.length >
+        0 && (
         <div className="mt-5 rounded-xl bg-white p-3 text-green-900">
           <h2 className="mb-3 text-2xl font-bold">
             📌 Pagos pendientes (
-            {cantidadPagosPendientes})
+            {
+              cantidadPagosPendientes
+            }
+            )
           </h2>
 
           {jugadoresConPagoMarcado.map(
@@ -1028,15 +1624,23 @@ const resumenCategoriaDos =
 
               return (
                 <div
-                  key={jugador.id}
+                  key={
+                    jugador.id
+                  }
                   className="flex items-center justify-between gap-4 py-2 last:border-b-0"
                 >
-                  <span>{jugador.nombre}</span>
+                  <span>
+                    {
+                      jugador.nombre
+                    }
+                  </span>
 
                   <button
                     type="button"
                     onClick={() =>
-                      cambiarEstadoPago(jugador.id)
+                      cambiarEstadoPago(
+                        jugador.id
+                      )
                     }
                     aria-label={
                       pagoCompletado
@@ -1057,17 +1661,26 @@ const resumenCategoriaDos =
       )}
 
       <button
-  onClick={() => router.push("/scores")}
-  className="mt-3 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
->
-  ✏️ Modificar scores
-</button>
-      
-      {!fechaGuardada ? (       
-       <button
+        type="button"
+        onClick={() =>
+          router.push(
+            "/scores"
+          )
+        }
+        className="mt-3 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+      >
+        ✏️ Modificar scores
+      </button>
+
+      {!fechaGuardada ? (
+        <button
           type="button"
-          onClick={guardarFecha}
-          disabled={guardandoFecha}
+          onClick={
+            guardarFecha
+          }
+          disabled={
+            guardandoFecha
+          }
           className="mt-2 w-full rounded-xl bg-blue-600 p-5 text-2xl font-bold text-white disabled:bg-gray-400"
         >
           {guardandoFecha
@@ -1082,22 +1695,88 @@ const resumenCategoriaDos =
 
           <button
             type="button"
-            onClick={compartirResultados}
-            className="mt-5 w-full text-xl rounded-xl bg-blue-600 p-4 text-center font-bold text-white"
+            onClick={
+              compartirResultados
+            }
+            className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-center text-xl font-bold text-white"
           >
             📤 Compartir resultados
           </button>
 
           <a
             href="/historial"
-            className="mt-3 block w-full text-xl rounded-xl bg-green-900 p-4 text-center font-bold text-white"
+            className="mt-3 block w-full rounded-xl bg-green-900 p-4 text-center text-xl font-bold text-white"
           >
             📜 Ver historial
           </a>
 
+          {puedeCrearSegundaVuelta &&
+            !eligiendoSegundaVuelta && (
+              <button
+                type="button"
+                onClick={() =>
+                  setEligiendoSegundaVuelta(
+                    true
+                  )
+                }
+                className="mt-3 w-full rounded-xl bg-blue-700 p-4 text-xl font-bold text-white"
+              >
+                🔄 Segunda vuelta
+              </button>
+            )}
+
+          {puedeCrearSegundaVuelta &&
+            eligiendoSegundaVuelta && (
+              <div className="mt-3 rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+                <p className="text-center text-lg font-bold text-green-950">
+                  ¿Cómo se juega la segunda vuelta?
+                </p>
+
+                <p className="mt-2 text-center text-sm text-gray-600">
+                  Los jugadores azules aparecerán anotados.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    prepararSegundaVuelta(
+                      "general"
+                    )
+                  }
+                  className="mt-4 w-full rounded-xl bg-green-700 p-4 text-xl font-bold text-white"
+                >
+                  🙎🏻‍♂️ General
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    prepararSegundaVuelta(
+                      "categorias"
+                    )
+                  }
+                  className="mt-3 w-full rounded-xl bg-blue-700 p-4 text-xl font-bold text-white"
+                >
+                  🅰️ 🅱️ Categorías
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEligiendoSegundaVuelta(
+                      false
+                    )
+                  }
+                  className="mt-3 w-full rounded-xl bg-gray-300 p-3 font-bold text-gray-800"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
           <a
             href="/nueva-fecha"
-            className="mt-3 block w-full text-xl rounded-xl bg-green-700 p-4 text-center font-bold text-white"
+            className="mt-3 block w-full rounded-xl bg-green-700 p-4 text-center text-xl font-bold text-white"
           >
             ➕ Nueva fecha
           </a>
