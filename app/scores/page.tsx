@@ -18,6 +18,7 @@ type FechaPorEdad = {
   viejitos: number[];
   cancha: number;
   pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
 };
 
 type FechaPorCategorias = {
@@ -27,6 +28,7 @@ type FechaPorCategorias = {
   categoriaB: number[];
   cancha: number;
   pagosPendientes?: number[];
+  pagosDosVueltas?: number[];
 };
 
 type FechaActual =
@@ -156,47 +158,82 @@ export default function Scores() {
   }
 
   function anotarJugador() {
-    const fechaGuardada = localStorage.getItem(
+  const fechaGuardada =
+    localStorage.getItem(
       "laChangueadaFechaActual"
     );
 
-    if (!fechaGuardada) return;
+  if (!fechaGuardada) return;
 
-    const fechaActual: FechaActual =
-      JSON.parse(fechaGuardada);
+  const fechaActual: FechaActual =
+    JSON.parse(fechaGuardada);
 
-    if (fechaActual.formato === "categorias") {
-      localStorage.setItem(
-        "laChangueadaNuevaFechaCategoriasBorrador",
-        JSON.stringify({
-          canchaId: fechaActual.cancha,
-          jugadores: fechaActual.jugadores,
-          categoriaA: fechaActual.categoriaA,
-          categoriaB: fechaActual.categoriaB,
-          pagosPendientes:
-            fechaActual.pagosPendientes ?? [],
-          busqueda: "",
-        })
-      );
-
-      router.push("/nueva-fecha/categorias");
-      return;
-    }
-
+  if (
+    fechaActual.formato ===
+    "categorias"
+  ) {
     localStorage.setItem(
-      "laChangueadaNuevaFechaBorrador",
+      "laChangueadaNuevaFechaCategoriasBorrador",
       JSON.stringify({
-        canchaId: fechaActual.cancha,
-        general: fechaActual.general,
-        viejitos: fechaActual.viejitos,
+        canchaId:
+          fechaActual.cancha,
+
+        jugadores:
+          fechaActual.jugadores,
+
+        categoriaA:
+          fechaActual.categoriaA,
+
+        categoriaB:
+          fechaActual.categoriaB,
+
         pagosPendientes:
-          fechaActual.pagosPendientes ?? [],
+          fechaActual.pagosPendientes ??
+          [],
+
+        pagosDosVueltas:
+          fechaActual.pagosDosVueltas ??
+          [],
+
         busqueda: "",
       })
     );
 
-    router.push("/nueva-fecha/edad");
+    router.push(
+      "/nueva-fecha/categorias"
+    );
+
+    return;
   }
+
+  localStorage.setItem(
+    "laChangueadaNuevaFechaBorrador",
+    JSON.stringify({
+      canchaId:
+        fechaActual.cancha,
+
+      general:
+        fechaActual.general,
+
+      viejitos:
+        fechaActual.viejitos,
+
+      pagosPendientes:
+        fechaActual.pagosPendientes ??
+        [],
+
+      pagosDosVueltas:
+        fechaActual.pagosDosVueltas ??
+        [],
+
+      busqueda: "",
+    })
+  );
+
+  router.push(
+    "/nueva-fecha/edad"
+  );
+}
 
   function calcularResultados() {
     localStorage.setItem(
